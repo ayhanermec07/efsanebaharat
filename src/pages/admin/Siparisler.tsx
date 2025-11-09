@@ -16,28 +16,40 @@ export default function Siparisler() {
   async function loadSiparisler() {
     setLoading(true)
     
-    // Siparişleri çek
-    const { data: siparisData } = await supabase
-      .from('siparisler')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
-    if (siparisData && siparisData.length > 0) {
-      // Müşteri bilgilerini çek
-      const musteriIds = [...new Set(siparisData.map(s => s.musteri_id))]
-      const { data: musteriler } = await supabase
-        .from('musteriler')
-        .select('id, ad, soyad')
-        .in('id', musteriIds)
+    try {
+      // Siparişleri çek
+      const { data: siparisData, error } = await supabase
+        .from('siparisler')
+        .select('*')
+        .order('created_at', { ascending: false })
       
-      // Siparişlere müşteri bilgilerini ekle
-      const siparislerWithMusteriler = siparisData.map(siparis => ({
-        ...siparis,
-        musteri: musteriler?.find(m => m.id === siparis.musteri_id)
-      }))
+      if (error) {
+        console.error('Sipariş yükleme hatası:', error)
+        setSiparisler([])
+        setLoading(false)
+        return
+      }
       
-      setSiparisler(siparislerWithMusteriler)
-    } else {
+      if (siparisData && siparisData.length > 0) {
+        // Müşteri bilgilerini çek
+        const musteriIds = [...new Set(siparisData.map(s => s.musteri_id))]
+        const { data: musteriler } = await supabase
+          .from('musteriler')
+          .select('id, ad, soyad')
+          .in('id', musteriIds)
+        
+        // Siparişlere müşteri bilgilerini ekle
+        const siparislerWithMusteriler = siparisData.map(siparis => ({
+          ...siparis,
+          musteri: musteriler?.find(m => m.id === siparis.musteri_id)
+        }))
+        
+        setSiparisler(siparislerWithMusteriler)
+      } else {
+        setSiparisler([])
+      }
+    } catch (error) {
+      console.error('Sipariş yükleme hatası:', error)
       setSiparisler([])
     }
     
