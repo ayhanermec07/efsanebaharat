@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Kullanıcı Oluştur - Efsane Baharat</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .message {
+            margin-top: 20px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #004085;
+        }
+        
+        .info-box strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Admin Kullanıcı Oluştur</h1>
+        <p class="subtitle">Efsane Baharat Admin Paneli</p>
+        
+        <div class="info-box">
+            <strong>ℹ️ Bilgi:</strong>
+            Bu form ile yeni bir admin kullanıcısı oluşturabilirsiniz. Kullanıcı oluşturulduktan sonra admin_users tablosuna otomatik olarak eklenecektir.
+        </div>
+        
+        <form id="adminForm">
+            <div class="form-group">
+                <label for="email">E-posta Adresi</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="admin@efsanebaharat.com"
+                    required
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Şifre (Min. 6 karakter)</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    placeholder="••••••••"
+                    minlength="6"
+                    required
+                >
+            </div>
+            
+            <button type="submit" id="submitBtn">
+                Admin Kullanıcı Oluştur
+            </button>
+        </form>
+        
+        <div id="message" class="message"></div>
+    </div>
+
+    <script>
+        // Supabase yapılandırması
+        const SUPABASE_URL = 'https://uvagzvevktzzfrzkvtsd.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2YWd6dmV2a3R6emZyemt2dHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyNzA1NDMsImV4cCI6MjA3Nzg0NjU0M30.ENrSW4rJmbwEWi6eSynCuXv8CdC9JroK-fpiIiVYwP0';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        const form = document.getElementById('adminForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageDiv = document.getElementById('message');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Butonu devre dışı bırak
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span>Oluşturuluyor...';
+            messageDiv.style.display = 'none';
+            
+            try {
+                // 1. Kullanıcıyı oluştur
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        emailRedirectTo: window.location.origin,
+                        data: {
+                            role: 'admin'
+                        }
+                    }
+                });
+                
+                if (authError) throw authError;
+                
+                if (!authData.user) {
+                    throw new Error('Kullanıcı oluşturulamadı');
+                }
+                
+                // 2. Admin_users tablosuna ekle
+                const { error: adminError } = await supabase
+                    .from('admin_users')
+                    .insert({
+                        user_id: authData.user.id,
+                        email: email,
+                        aktif: true
+                    });
+                
+                if (adminError) {
+                    console.error('Admin kaydı hatası:', adminError);
+                    // Hata olsa bile devam et, kullanıcı oluşturuldu
+                }
+                
+                // Başarı mesajı
+                messageDiv.className = 'message success';
+                messageDiv.innerHTML = `
+                    <strong>✅ Başarılı!</strong><br>
+                    Admin kullanıcı başarıyla oluşturuldu.<br>
+                    <strong>E-posta:</strong> ${email}<br>
+                    <strong>User ID:</strong> ${authData.user.id}<br><br>
+                    <small>⚠️ E-posta doğrulama linki gönderildi. Lütfen e-postanızı kontrol edin.</small>
+                `;
+                
+                // Formu temizle
+                form.reset();
+                
+            } catch (error) {
+                console.error('Hata:', error);
+                messageDiv.className = 'message error';
+                messageDiv.innerHTML = `
+                    <strong>❌ Hata!</strong><br>
+                    ${error.message || 'Kullanıcı oluşturulurken bir hata oluştu.'}
+                `;
+            } finally {
+                // Butonu tekrar aktif et
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Admin Kullanıcı Oluştur';
+            }
+        });
+    </script>
+</body>
+</html>
