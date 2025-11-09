@@ -21,7 +21,7 @@ export default function Siparisler() {
       const { data: siparisData, error } = await supabase
         .from('siparisler')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('olusturma_tarihi', { ascending: false })
       
       if (error) {
         console.error('Sipariş yükleme hatası:', error)

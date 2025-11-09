@@ -72,7 +72,10 @@ export default function AdminBayiSatislari() {
         .eq('aktif', true)
         .order('bayi_adi')
 
-      if (bayilerError) throw bayilerError
+      if (bayilerError) {
+        console.error('Bayiler yükleme hatası:', bayilerError)
+        // Hata olsa bile devam et
+      }
       setBayiler(bayilerData || [])
 
       // Kategoriler yükle
@@ -104,31 +107,32 @@ export default function AdminBayiSatislari() {
 
   async function loadSatislar() {
     try {
-      // Mock data - Tablo henüz oluşturulmamış
-      const satislarData: any[] = []
-      
-      // Gerçek veri yükleme (tablo varsa)
-      // let query = supabase
-      //   .from('bayi_satislari')
-      //   .select('*')
-      //   .order('satis_tarihi', { ascending: false })
+      // Gerçek veri yükleme
+      let query = supabase
+        .from('bayi_satislari')
+        .select('*')
+        .order('satis_tarihi', { ascending: false })
 
-      // // Bayi filtresi
-      // if (selectedBayi !== 'all') {
-      //   query = query.eq('bayi_id', selectedBayi)
-      // }
+      // Bayi filtresi
+      if (selectedBayi !== 'all') {
+        query = query.eq('bayi_id', selectedBayi)
+      }
 
-      // // Tarih filtreleri
-      // if (startDate) {
-      //   query = query.gte('satis_tarihi', startDate)
-      // }
-      // if (endDate) {
-      //   query = query.lte('satis_tarihi', endDate)
-      // }
+      // Tarih filtreleri
+      if (startDate) {
+        query = query.gte('satis_tarihi', startDate)
+      }
+      if (endDate) {
+        query = query.lte('satis_tarihi', endDate)
+      }
 
-      // const { data: satislarData, error: satislarError } = await query
+      const { data: satislarData, error: satislarError } = await query
 
-      // if (satislarError) throw satislarError
+      if (satislarError) {
+        console.error('Satışlar yükleme hatası:', satislarError)
+        setSatislar([])
+        return
+      }
 
       // Bayi bilgilerini manuel ekle
       const satislarWithBayi = await Promise.all(
