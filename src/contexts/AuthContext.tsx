@@ -37,13 +37,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setIsAdmin(!!adminData)
           
           // Müşteri bilgilerini al
-          const { data: musteri } = await supabase
+          const { data: musteri, error: musteriError } = await supabase
             .from('musteriler')
-            .select('*, fiyat_gruplari(*)')
+            .select('*')
             .eq('user_id', user.id)
             .maybeSingle()
           
-          setMusteriData(musteri)
+          if (musteriError) {
+            console.error('Müşteri bilgisi yükleme hatası:', musteriError)
+          }
+          
+          // Fiyat grubu bilgisini ayrı çek
+          if (musteri && musteri.fiyat_grubu_id) {
+            const { data: fiyatGrubu } = await supabase
+              .from('fiyat_gruplari')
+              .select('*')
+              .eq('id', musteri.fiyat_grubu_id)
+              .maybeSingle()
+            
+            setMusteriData({ ...musteri, fiyat_gruplari: fiyatGrubu })
+          } else {
+            setMusteriData(musteri)
+          }
         }
       } finally {
         setLoading(false)
@@ -80,13 +95,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsAdmin(!!adminData)
       
       // Müşteri bilgilerini al
-      const { data: musteri } = await supabase
+      const { data: musteri, error: musteriError } = await supabase
         .from('musteriler')
-        .select('*, fiyat_gruplari(*)')
+        .select('*')
         .eq('user_id', result.data.user.id)
         .maybeSingle()
       
-      setMusteriData(musteri)
+      if (musteriError) {
+        console.error('Müşteri bilgisi yükleme hatası:', musteriError)
+      }
+      
+      // Fiyat grubu bilgisini ayrı çek
+      if (musteri && musteri.fiyat_grubu_id) {
+        const { data: fiyatGrubu } = await supabase
+          .from('fiyat_gruplari')
+          .select('*')
+          .eq('id', musteri.fiyat_grubu_id)
+          .maybeSingle()
+        
+        setMusteriData({ ...musteri, fiyat_gruplari: fiyatGrubu })
+      } else {
+        setMusteriData(musteri)
+      }
     }
     
     return result
