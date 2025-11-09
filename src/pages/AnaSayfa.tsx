@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { ChevronLeft, ChevronRight, ShoppingBag, TruckIcon, Shield, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ShoppingBag, TruckIcon, Shield } from 'lucide-react'
 import CanliDestekWidget from '../components/CanliDestekWidget'
 
 export default function AnaSayfa() {
@@ -11,125 +11,126 @@ export default function AnaSayfa() {
   const [yeniEklenenler, setYeniEklenenler] = useState<any[]>([])
   const [markalar, setMarkalar] = useState<any[]>([])
   const [currentBanner, setCurrentBanner] = useState(0)
-  const [searchQuery, setSearchQuery] = useState('')
   const [bestsellerPage, setBestsellerPage] = useState(0)
   const [newProductsPage, setNewProductsPage] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const hasLoadedRef = useRef(false)
   const navigate = useNavigate()
 
   useEffect(() => {
-    loadData()
-  }, [])
+    if (hasLoadedRef.current) return
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      navigate(`/urunler?q=${encodeURIComponent(searchQuery.trim())}`)
-    }
-  }
-
-  async function loadData() {
-    // Banner'ları yükle
-    const { data: bannerData } = await supabase
-      .from('bannerlar')
-      .select('*')
-      .eq('aktif_durum', true)
-      .order('sira_no')
-    
-    if (bannerData) setBanners(bannerData)
-
-    // Öne çıkan ürünleri yükle (admin'in seçtikleri)
-    const { data: onerilenData } = await supabase
-      .from('onerilen_urunler')
-      .select('urun_id')
-      .eq('manuel_secim', true)
-      .order('goruntuleme_sirasi')
-      .limit(4)
-    
-    if (onerilenData && onerilenData.length > 0) {
-      const urunIds = onerilenData.map(o => o.urun_id)
-      await loadUrunlerByIds(urunIds, setOneCikanUrunler)
-    } else {
-      // Fallback: Random 4 ürün
-      const { data: fallbackData } = await supabase
+    async function loadUrunlerByIds(urunIds: string[], setter: Function) {
+      const { data: urunData } = await supabase
         .from('urunler')
-        .select('id')
+        .select('*')
+        .in('id', urunIds)
         .eq('aktif_durum', true)
-        .limit(4)
       
-      if (fallbackData && fallbackData.length > 0) {
-        const urunIds = fallbackData.map(u => u.id)
-        await loadUrunlerByIds(urunIds, setOneCikanUrunler)
+      if (urunData && urunData.length > 0) {
+        const { data: gorseller } = await supabase
+          .from('urun_gorselleri')
+          .select('*')
+          .in('urun_id', urunIds)
+          .order('sira_no')
+        
+        const { data: stoklar } = await supabase
+          .from('urun_stoklari')
+          .select('*')
+          .in('urun_id', urunIds)
+          .eq('aktif_durum', true)
+        
+        const urunlerWithData = urunData.map(urun => ({
+          ...urun,
+          urun_gorselleri: gorseller?.filter(g => g.urun_id === urun.id) || [],
+          urun_stoklari: stoklar?.filter(s => s.urun_id === urun.id) || []
+        }))
+        
+        setter(urunlerWithData)
       }
     }
 
-    // En çok satanları yükle (12 ürün - 3 sayfa x 4 ürün)
-    // Fallback: created_at'e göre sıralama (satış verisi yoksa)
-    const { data: bestsellerData } = await supabase
-      .from('urunler')
-      .select('id')
-      .eq('aktif_durum', true)
-      .order('created_at', { ascending: false })
-      .limit(12)
-    
-    if (bestsellerData && bestsellerData.length > 0) {
-      const urunIds = bestsellerData.map(u => u.id)
-      await loadUrunlerByIds(urunIds, setEnCokSatanlar)
+    async function loadData() {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const { data: bannerData, error: bannerError } = await supabase
+          .from('bannerlar')
+          .select('*')
+          .eq('aktif_durum', true)
+          .order('sira_no')
+        
+        if (bannerError) console.error('Banner yükleme hatası:', bannerError)
+        if (bannerData) setBanners(bannerData)
+
+        const { data: onerilenData } = await supabase
+          .from('onerilen_urunler')
+          .select('urun_id')
+          .eq('manuel_secim', true)
+          .order('goruntuleme_sirasi')
+          .limit(4)
+        
+        if (onerilenData && onerilenData.length > 0) {
+          const urunIds = onerilenData.map(o => o.urun_id)
+          await loadUrunlerByIds(urunIds, setOneCikanUrunler)
+        } else {
+          const { data: fallbackData } = await supabase
+            .from('urunler')
+            .select('id')
+            .eq('aktif_durum', true)
+            .limit(4)
+          
+          if (fallbackData && fallbackData.length > 0) {
+            const urunIds = fallbackData.map(u => u.id)
+            await loadUrunlerByIds(urunIds, setOneCikanUrunler)
+          }
+        }
+
+        const { data: bestsellerData } = await supabase
+          .from('urunler')
+          .select('id')
+          .eq('aktif_durum', true)
+          .order('created_at', { ascending: false })
+          .limit(12)
+        
+        if (bestsellerData && bestsellerData.length > 0) {
+          const urunIds = bestsellerData.map(u => u.id)
+          await loadUrunlerByIds(urunIds, setEnCokSatanlar)
+        }
+
+        const { data: yeniData } = await supabase
+          .from('urunler')
+          .select('id')
+          .eq('aktif_durum', true)
+          .order('created_at', { ascending: false })
+          .limit(16)
+        
+        if (yeniData && yeniData.length > 0) {
+          const urunIds = yeniData.map(u => u.id)
+          await loadUrunlerByIds(urunIds, setYeniEklenenler)
+        }
+
+        const { data: markaData } = await supabase
+          .from('markalar')
+          .select('*')
+          .eq('aktif_durum', true)
+          .order('marka_adi')
+        
+        if (markaData) setMarkalar(markaData)
+        
+        hasLoadedRef.current = true
+      } catch (err) {
+        console.error('Veri yükleme hatası:', err)
+        setError('Veriler yüklenirken bir hata oluştu.')
+      } finally {
+        setLoading(false)
+      }
     }
 
-    // Yeni eklenen ürünleri yükle (16 ürün - 4 sayfa x 4 ürün)
-    const { data: yeniData } = await supabase
-      .from('urunler')
-      .select('id')
-      .eq('aktif_durum', true)
-      .order('created_at', { ascending: false })
-      .limit(16)
-    
-    if (yeniData && yeniData.length > 0) {
-      const urunIds = yeniData.map(u => u.id)
-      await loadUrunlerByIds(urunIds, setYeniEklenenler)
-    }
-
-    // Markaları yükle
-    const { data: markaData } = await supabase
-      .from('markalar')
-      .select('*')
-      .eq('aktif_durum', true)
-      .order('marka_adi')
-    
-    if (markaData) setMarkalar(markaData)
-  }
-
-  async function loadUrunlerByIds(urunIds: string[], setter: Function) {
-    const { data: urunData } = await supabase
-      .from('urunler')
-      .select('*')
-      .in('id', urunIds)
-      .eq('aktif_durum', true)
-    
-    if (urunData && urunData.length > 0) {
-      // Ürün görselleri ve stokları ayrı çek
-      const { data: gorseller } = await supabase
-        .from('urun_gorselleri')
-        .select('*')
-        .in('urun_id', urunIds)
-        .order('sira_no')
-      
-      const { data: stoklar } = await supabase
-        .from('urun_stoklari')
-        .select('*')
-        .in('urun_id', urunIds)
-        .eq('aktif_durum', true)
-      
-      // Ürünlere görselleri ve stokları ekle
-      const urunlerWithData = urunData.map(urun => ({
-        ...urun,
-        urun_gorselleri: gorseller?.filter(g => g.urun_id === urun.id) || [],
-        urun_stoklari: stoklar?.filter(s => s.urun_id === urun.id) || []
-      }))
-      
-      setter(urunlerWithData)
-    }
-  }
+    loadData()
+  }, [])
 
   const nextBanner = () => {
     setCurrentBanner((prev) => (prev + 1) % banners.length)
@@ -137,6 +138,33 @@ export default function AnaSayfa() {
 
   const prevBanner = () => {
     setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition"
+          >
+            Tekrar Dene
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
