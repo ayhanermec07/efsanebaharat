@@ -24,13 +24,24 @@ export default function Kayit() {
     setError('')
 
     try {
-      const { error } = await signUp(formData.email, formData.password, formData)
-      if (error) throw error
+      const result = await signUp(formData.email, formData.password, formData)
+      
+      if (result.error) {
+        // E-posta zaten kayıtlı hatası
+        if (result.error.message.includes('already registered')) {
+          throw new Error('Bu e-posta adresi zaten kayıtlı. Lütfen giriş yapın veya farklı bir e-posta kullanın.')
+        }
+        throw result.error
+      }
 
-      alert('Kayıt başarılı! Giriş yapabilirsiniz.')
+      // Başarılı kayıt
+      alert('✅ Kayıt başarılı!\n\n' + 
+            'Hesabınız oluşturuldu. E-posta adresinize bir doğrulama linki gönderildi.\n\n' +
+            'E-postanızı doğrulamadan da giriş yapabilirsiniz.')
       navigate('/giris')
     } catch (err: any) {
-      setError(err.message || 'Kayıt olurken bir hata oluştu')
+      console.error('Kayıt hatası:', err)
+      setError(err.message || 'Kayıt olurken bir hata oluştu. Lütfen tekrar deneyin.')
     } finally {
       setLoading(false)
     }
@@ -53,6 +64,13 @@ export default function Kayit() {
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Kayıt Ol</h1>
             <p className="text-gray-600 mt-2">Yeni hesap oluşturun</p>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-800">
+              ℹ️ <strong>Bilgi:</strong> Kayıt olduktan sonra e-posta adresinize bir doğrulama linki gönderilecektir. 
+              E-postanızı doğrulamadan da giriş yapabilir ve alışveriş yapabilirsiniz.
+            </p>
           </div>
 
           {error && (
