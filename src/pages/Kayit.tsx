@@ -26,19 +26,35 @@ export default function Kayit() {
     try {
       const result = await signUp(formData.email, formData.password, formData)
       
+      console.log('SignUp result:', result) // Debug için
+      
+      // Hata kontrolü
       if (result.error) {
         // E-posta zaten kayıtlı hatası
-        if (result.error.message.includes('already registered')) {
+        if (result.error.message.includes('already registered') || 
+            result.error.message.includes('User already registered') ||
+            result.error.message.includes('already been registered')) {
           throw new Error('Bu e-posta adresi zaten kayıtlı. Lütfen giriş yapın veya farklı bir e-posta kullanın.')
         }
         throw result.error
       }
 
-      // Başarılı kayıt
-      alert('✅ Kayıt başarılı!\n\n' + 
-            'Hesabınız oluşturuldu. E-posta adresinize bir doğrulama linki gönderildi.\n\n' +
-            'E-postanızı doğrulamadan da giriş yapabilirsiniz.')
-      navigate('/giris')
+      // Supabase bazen hata döndürmez ama user null olabilir veya identities boş olabilir
+      // Bu durumda kullanıcı zaten var demektir
+      if (result.data?.user) {
+        // Eğer identities boşsa, kullanıcı zaten var
+        if (!result.data.user.identities || result.data.user.identities.length === 0) {
+          throw new Error('Bu e-posta adresi zaten kayıtlı. Lütfen giriş yapın veya farklı bir e-posta kullanın.')
+        }
+        
+        // Yeni kullanıcı başarıyla oluşturuldu
+        alert('✅ Kayıt başarılı!\n\n' + 
+              'Hesabınız oluşturuldu. E-posta adresinize bir doğrulama linki gönderildi.\n\n' +
+              'E-postanızı doğrulamadan da giriş yapabilirsiniz.')
+        navigate('/giris')
+      } else {
+        throw new Error('Kayıt işlemi tamamlanamadı. Lütfen tekrar deneyin.')
+      }
     } catch (err: any) {
       console.error('Kayıt hatası:', err)
       setError(err.message || 'Kayıt olurken bir hata oluştu. Lütfen tekrar deneyin.')
