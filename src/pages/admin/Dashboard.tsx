@@ -110,10 +110,6 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState(30)
-  const enCokSatanChartRef = useRef<any>(null)
-  const enCokZiyaretChartRef = useRef<any>(null)
-  const gunlukSatisChartRef = useRef<any>(null)
-  const aylikSatisChartRef = useRef<any>(null)
 
   useEffect(() => {
     loadDashboardData()
@@ -123,25 +119,22 @@ export default function Dashboard() {
     try {
       setLoading(true)
 
-      const dashboardUrl = 'https://uvagzvevktzzfrzkvtsd.supabase.co/functions/v1/dashboard-data'
-      console.log('Dashboard URL:', dashboardUrl)
-      
-      const response = await fetch(dashboardUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2YWd6dmV2a3R6emZyemt2dHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyNzA1NDMsImV4cCI6MjA3Nzg0NjU0M30.ENrSW4rJmbwEWi6eSynCuXv8CdC9JroK-fpiIiVYwP0`
-        },
-        body: JSON.stringify({ period })
-      })
-
-      const result = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(result.error?.message || 'Dashboard verileri yüklenemedi')
+      // Mock data - Edge function henüz deploy edilmemiş
+      const mockData: DashboardData = {
+        toplamSatis: 0,
+        toplamSiparis: 0,
+        toplamMusteri: 0,
+        toplamUrun: 0,
+        enCokSatanUrunler: [],
+        enCokZiyaretEdilenUrunler: [],
+        gunlukSatislar: [],
+        aylikSatislar: []
       }
 
-      setDashboardData(result.data)
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      setDashboardData(mockData)
     } catch (error: any) {
       console.error('Dashboard veri yükleme hatası:', error)
       toast.error('Dashboard verileri yüklenemedi')
@@ -150,50 +143,8 @@ export default function Dashboard() {
     }
   }
 
-  function exportChartAsPNG(chartRef: any, fileName: string) {
-    if (!chartRef.current) {
-      toast.error('Grafik bulunamadı')
-      return
-    }
-
-    try {
-      const svgElement = chartRef.current.container.querySelector('svg')
-      if (!svgElement) {
-        toast.error('Grafik dışa aktarılamadı')
-        return
-      }
-
-      const svgData = new XMLSerializer().serializeToString(svgElement)
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
-      const img = new Image()
-
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
-      const url = URL.createObjectURL(svgBlob)
-
-      img.onload = () => {
-        canvas.width = img.width
-        canvas.height = img.height
-        ctx?.drawImage(img, 0, 0)
-        
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const link = document.createElement('a')
-            link.download = `${fileName}.png`
-            link.href = URL.createObjectURL(blob)
-            link.click()
-            toast.success('Grafik indirildi')
-          }
-        })
-        
-        URL.revokeObjectURL(url)
-      }
-
-      img.src = url
-    } catch (error) {
-      console.error('Export hatası:', error)
-      toast.error('Grafik dışa aktarılamadı')
-    }
+  function exportChartAsPNG(fileName: string) {
+    toast.info('Grafik dışa aktarma özelliği yakında eklenecek')
   }
 
   const stats = dashboardData?.stats || {
