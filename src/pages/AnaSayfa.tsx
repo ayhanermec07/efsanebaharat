@@ -192,7 +192,7 @@ export default function AnaSayfa() {
         </div>
       )}
 
-      {/* Öne Çıkan Ürünler - Horizontal Scroll */}
+      {/* Öne Çıkan Ürünler - Grid Layout */}
       {oneCikanUrunler.length > 0 && (
         <div className="bg-white py-16">
           <div className="container mx-auto px-4">
@@ -202,52 +202,50 @@ export default function AnaSayfa() {
                 Tümünü Gör
               </Link>
             </div>
-            <div className="overflow-x-auto pb-4 hide-scrollbar">
-              <div className="flex gap-6 min-w-min">
-                {oneCikanUrunler.map((urun) => {
-                  const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
-                  const ilkStok = urun.urun_stoklari?.[0]
-                  
-                  return (
-                    <Link
-                      key={urun.id}
-                      to={`/urun/${urun.id}`}
-                      className="flex-shrink-0 w-64 bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden"
-                    >
-                      <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                        {ilkGorsel ? (
-                          <img
-                            src={ilkGorsel}
-                            alt={urun.urun_adi}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
-                              <span className="text-white text-4xl font-bold">
-                                {urun.urun_adi.charAt(0)}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-4">
-                        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                          {urun.urun_adi}
-                        </h3>
-                        {ilkStok && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-orange-600 font-bold">
-                              {ilkStok.fiyat.toFixed(2)} ₺
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {oneCikanUrunler.map((urun) => {
+                const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
+                const ilkStok = urun.urun_stoklari?.[0]
+                
+                return (
+                  <Link
+                    key={urun.id}
+                    to={`/urun/${urun.id}`}
+                    className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden"
+                  >
+                    <div className="aspect-square bg-gray-100 relative overflow-hidden">
+                      {ilkGorsel ? (
+                        <img
+                          src={ilkGorsel}
+                          alt={urun.urun_adi}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
+                            <span className="text-white text-4xl font-bold">
+                              {urun.urun_adi.charAt(0)}
                             </span>
-                            <span className="text-sm text-gray-500">{ilkStok.birim_turu}</span>
                           </div>
-                        )}
-                      </div>
-                    </Link>
-                  )
-                })}
-              </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                        {urun.urun_adi}
+                      </h3>
+                      {ilkStok && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-orange-600 font-bold">
+                            {ilkStok.fiyat.toFixed(2)} ₺
+                          </span>
+                          <span className="text-sm text-gray-500">{ilkStok.birim_turu}</span>
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           </div>
         </div>
