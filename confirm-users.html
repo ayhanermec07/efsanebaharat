@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kullanıcıları Onayla - Efsane Baharat</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+            color: #004085;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .message {
+            margin-top: 20px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        
+        .users-list {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .user-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-item:last-child {
+            border-bottom: none;
+        }
+        
+        .user-email {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .user-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .status-confirmed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Kullanıcıları Onayla</h1>
+        <p class="subtitle">E-posta doğrulaması bekleyen kullanıcıları onaylayın</p>
+        
+        <div class="warning-box">
+            <strong>⚠️ Uyarı:</strong> Bu araç TEST amaçlıdır. Production'da e-posta doğrulama sistemini kullanmanız önerilir.
+        </div>
+        
+        <div class="info-box">
+            <strong>ℹ️ Bilgi:</strong> Bu araç ile onaylanmamış tüm kullanıcıları toplu olarak onaylayabilir veya kullanıcı listesini görüntüleyebilirsiniz.
+        </div>
+        
+        <button id="listBtn" onclick="listUsers()">
+            📋 Kullanıcıları Listele
+        </button>
+        
+        <button id="confirmAllBtn" onclick="confirmAllUsers()">
+            ✅ Tüm Kullanıcıları Onayla
+        </button>
+        
+        <div id="message" class="message"></div>
+        
+        <div id="usersList" class="users-list" style="display: none;"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://uvagzvevktzzfrzkvtsd.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2YWd6dmV2a3R6emZyemt2dHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyNzA1NDMsImV4cCI6MjA3Nzg0NjU0M30.ENrSW4rJmbwEWi6eSynCuXv8CdC9JroK-fpiIiVYwP0';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        const messageDiv = document.getElementById('message');
+        const usersListDiv = document.getElementById('usersList');
+        
+        async function listUsers() {
+            const listBtn = document.getElementById('listBtn');
+            listBtn.disabled = true;
+            listBtn.textContent = '⏳ Yükleniyor...';
+            messageDiv.style.display = 'none';
+            
+            try {
+                // Not: auth.users tablosuna doğrudan erişim olmayabilir
+                // Bu durumda Supabase Dashboard kullanılmalı
+                
+                messageDiv.className = 'message error';
+                messageDiv.innerHTML = `
+                    <strong>❌ Hata!</strong><br>
+                    Bu işlem için Supabase Dashboard kullanmanız gerekiyor:<br><br>
+                    1. <a href="https://app.supabase.com" target="_blank">Supabase Dashboard</a> > Projeniz<br>
+                    2. <strong>Authentication</strong> > <strong>Users</strong><br>
+                    3. Onaylanmamış kullanıcıları görebilirsiniz<br>
+                    4. Her kullanıcının yanındaki menüden "Confirm email" seçin
+                `;
+                
+            } catch (error) {
+                console.error('Hata:', error);
+                messageDiv.className = 'message error';
+                messageDiv.innerHTML = `<strong>❌ Hata!</strong><br>${error.message}`;
+            } finally {
+                listBtn.disabled = false;
+                listBtn.textContent = '📋 Kullanıcıları Listele';
+            }
+        }
+        
+        async function confirmAllUsers() {
+            if (!confirm('Tüm onaylanmamış kullanıcıları onaylamak istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            const confirmBtn = document.getElementById('confirmAllBtn');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = '⏳ İşleniyor...';
+            messageDiv.style.display = 'none';
+            
+            try {
+                messageDiv.className = 'message error';
+                messageDiv.innerHTML = `
+                    <strong>❌ Bu işlem için SQL kullanmanız gerekiyor!</strong><br><br>
+                    <strong>Supabase SQL Editor'de şu komutu çalıştırın:</strong><br><br>
+                    <code style="background: #f5f5f5; padding: 10px; display: block; border-radius: 5px; margin: 10px 0;">
+                    UPDATE auth.users<br>
+                    SET email_confirmed_at = NOW(),<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;updated_at = NOW()<br>
+                    WHERE email_confirmed_at IS NULL;
+                    </code><br>
+                    <strong>Adımlar:</strong><br>
+                    1. <a href="https://app.supabase.com" target="_blank">Supabase Dashboard</a> > Projeniz<br>
+                    2. <strong>SQL Editor</strong> > <strong>New Query</strong><br>
+                    3. Yukarıdaki SQL'i yapıştırın<br>
+                    4. <strong>Run</strong> butonuna tıklayın
+                `;
+                
+            } catch (error) {
+                console.error('Hata:', error);
+                messageDiv.className = 'message error';
+                messageDiv.innerHTML = `<strong>❌ Hata!</strong><br>${error.message}`;
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = '✅ Tüm Kullanıcıları Onayla';
+            }
+        }
+    </script>
+</body>
+</html>
