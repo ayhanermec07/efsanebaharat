@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import {
@@ -13,10 +13,7 @@ import {
   Truck,
   Store,
   BarChart3,
-  TrendingDown,
-  Activity,
-  Download,
-  Eye
+  TrendingDown
 } from 'lucide-react'
 import {
   BarChart,
@@ -30,8 +27,6 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts'
-import { format } from 'date-fns'
-import { tr } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 
 interface Stats {
@@ -119,22 +114,60 @@ export default function Dashboard() {
     try {
       setLoading(true)
 
-      // Mock data - Edge function henüz deploy edilmemiş
-      const mockData: DashboardData = {
-        toplamSatis: 0,
-        toplamSiparis: 0,
-        toplamMusteri: 0,
-        toplamUrun: 0,
-        enCokSatanUrunler: [],
-        enCokZiyaretEdilenUrunler: [],
-        gunlukSatislar: [],
-        aylikSatislar: []
+      // Gerçek verileri çek
+      const [
+        { count: toplamUrun },
+        { count: toplamSiparis },
+        { count: toplamMusteri },
+        { count: bekleyenSorular },
+        { count: aktifKampanyalar },
+        { count: aktifBayiler },
+        { count: bannerSayisi },
+        { count: onerilenUrunler }
+      ] = await Promise.all([
+        supabase.from('urunler').select('*', { count: 'exact', head: true }).eq('aktif_durum', true),
+        supabase.from('siparisler').select('*', { count: 'exact', head: true }),
+        supabase.from('musteriler').select('*', { count: 'exact', head: true }).eq('aktif_durum', true),
+        supabase.from('sorular').select('*', { count: 'exact', head: true }).eq('durum', 'beklemede'),
+        supabase.from('kampanyalar').select('*', { count: 'exact', head: true }).eq('aktif_durum', true),
+        supabase.from('bayiler').select('*', { count: 'exact', head: true }).eq('aktif', true),
+        supabase.from('bannerlar').select('*', { count: 'exact', head: true }).eq('aktif_durum', true),
+        supabase.from('onerilen_urunler').select('*', { count: 'exact', head: true })
+      ])
+
+      // Toplam gelir hesapla
+      const { data: siparisler } = await supabase
+        .from('siparisler')
+        .select('toplam_tutar')
+      
+      const toplamGelir = siparisler?.reduce((sum, s) => sum + (s.toplam_tutar || 0), 0) || 0
+
+      // Kargo bekleyen siparişler
+      const { count: kargoBekleyen } = await supabase
+        .from('siparisler')
+        .select('*', { count: 'exact', head: true })
+        .eq('siparis_durumu', 'Hazırlanıyor')
+
+      const stats: Stats = {
+        toplamUrun: toplamUrun || 0,
+        toplamSiparis: toplamSiparis || 0,
+        toplamMusteri: toplamMusteri || 0,
+        toplamGelir: toplamGelir,
+        bekleyenSorular: bekleyenSorular || 0,
+        aktifKampanyalar: aktifKampanyalar || 0,
+        aktifBayiler: aktifBayiler || 0,
+        kargoBekleyen: kargoBekleyen || 0,
+        bannerSayisi: bannerSayisi || 0,
+        onerilenUrunler: onerilenUrunler || 0
       }
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      setDashboardData(mockData)
+      setDashboardData({
+        stats,
+        enCokSatanlar: [],
+        enCokZiyaretEdilen: [],
+        gunlukSatislar: [],
+        aylikSatislar: []
+      })
     } catch (error: any) {
       console.error('Dashboard veri yükleme hatası:', error)
       toast.error('Dashboard verileri yüklenemedi')
@@ -143,9 +176,7 @@ export default function Dashboard() {
     }
   }
 
-  function exportChartAsPNG(fileName: string) {
-    toast.info('Grafik dışa aktarma özelliği yakında eklenecek')
-  }
+
 
   const stats = dashboardData?.stats || {
     toplamUrun: 0,
@@ -162,12 +193,11 @@ export default function Dashboard() {
 
   const quickAccessCards: QuickAccessCard[] = [
     { title: 'Ürünler', value: stats.toplamUrun, icon: Package, color: 'blue', link: '/admin/urunler' },
-    { title: 'Siparişler', value: stats.toplamSiparis, icon: ShoppingCart, color: 'green', link: '/admin/siparisler' },
+    { title: 'Müşteriler', value: stats.toplamMusteri, icon: Users, color: 'purple', link: '/admin/musteriler' },
     { title: 'Kampanyalar', value: stats.aktifKampanyalar, icon: Megaphone, color: 'purple', link: '/admin/kampanyalar' },
     { title: 'Bannerlar', value: stats.bannerSayisi, icon: Image, color: 'pink', link: '/admin/bannerlar' },
     { title: 'Önerilen Ürünler', value: stats.onerilenUrunler, icon: Star, color: 'yellow', link: '/admin/urunler' },
     { title: 'Sorular', value: stats.bekleyenSorular, icon: MessageSquare, color: 'red', link: '/admin/sorular' },
-    { title: 'Kargo', value: stats.kargoBekleyen, icon: Truck, color: 'orange', link: '/admin/kargo' },
     { title: 'Bayiler', value: stats.aktifBayiler, icon: Store, color: 'indigo', link: '/admin/bayiler' },
     { title: 'Bayi Satışları', value: 'Rapor', icon: BarChart3, color: 'teal', link: '/admin/bayi-satislari' }
   ]
@@ -179,31 +209,35 @@ export default function Dashboard() {
       icon: TrendingUp,
       color: 'bg-green-500',
       trend: '+12%',
-      trendUp: true
+      trendUp: true,
+      link: '/admin/siparisler'
     },
     {
-      title: 'Toplam Ürün',
-      value: stats.toplamUrun,
-      icon: Package,
-      color: 'bg-blue-500',
-      trend: '+5',
-      trendUp: true
+      title: 'Kargo Bekleyen',
+      value: stats.kargoBekleyen,
+      icon: Truck,
+      color: 'bg-orange-500',
+      trend: stats.kargoBekleyen > 0 ? `${stats.kargoBekleyen}` : '0',
+      trendUp: false,
+      link: '/admin/kargo'
     },
     {
-      title: 'Toplam Müşteri',
-      value: stats.toplamMusteri,
-      icon: Users,
-      color: 'bg-purple-500',
+      title: 'Toplam Sipariş',
+      value: stats.toplamSiparis,
+      icon: ShoppingCart,
+      color: 'bg-green-500',
       trend: '+18',
-      trendUp: true
+      trendUp: true,
+      link: '/admin/siparisler'
     },
     {
       title: 'Bekleyen Sorular',
       value: stats.bekleyenSorular,
       icon: MessageSquare,
-      color: 'bg-orange-500',
+      color: 'bg-red-500',
       trend: stats.bekleyenSorular > 0 ? `${stats.bekleyenSorular}` : '0',
-      trendUp: false
+      trendUp: false,
+      link: '/admin/sorular'
     }
   ]
 
@@ -225,7 +259,11 @@ export default function Dashboard() {
           {mainStats.map((stat) => {
             const Icon = stat.icon
             return (
-              <div key={stat.title} className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+              <Link 
+                key={stat.title} 
+                to={stat.link}
+                className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-all hover:scale-105 cursor-pointer"
+              >
                 <div className="flex items-center justify-between mb-4">
                   <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}>
                     <Icon className="w-6 h-6 text-white" />
@@ -237,7 +275,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
                 <div className="text-sm text-gray-600">{stat.title}</div>
-              </div>
+              </Link>
             )
           })}
         </div>
@@ -247,14 +285,14 @@ export default function Dashboard() {
       {loading ? (
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Hızlı Erişim</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {[1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => <SkeletonCard key={i} />)}
           </div>
         </div>
       ) : (
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Hızlı Erişim</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {quickAccessCards.map((card) => {
               const Icon = card.icon
               const colorClasses = {
@@ -273,11 +311,11 @@ export default function Dashboard() {
                 <Link
                   key={card.title}
                   to={card.link}
-                  className={`${colorClasses[card.color as keyof typeof colorClasses]} rounded-lg p-4 transition-all hover:scale-105 hover:shadow-md`}
+                  className={`${colorClasses[card.color as keyof typeof colorClasses]} rounded-lg p-6 transition-all hover:scale-105 hover:shadow-md`}
                 >
-                  <div className="flex flex-col items-center text-center gap-2">
-                    <Icon className="w-8 h-8" />
-                    <div className="text-2xl font-bold">{card.value}</div>
+                  <div className="flex flex-col items-center text-center gap-3">
+                    <Icon className="w-10 h-10" />
+                    <div className="text-3xl font-bold">{card.value}</div>
                     <div className="text-sm font-medium">{card.title}</div>
                   </div>
                 </Link>
@@ -299,18 +337,11 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">En Çok Satan Ürünler</h2>
-              <button
-                onClick={() => exportChartAsPNG(enCokSatanChartRef, 'en-cok-satan-urunler')}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
-                title="PNG olarak indir"
-              >
-                <Download className="w-5 h-5" />
-              </button>
             </div>
             {dashboardData?.enCokSatanlar && dashboardData.enCokSatanlar.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 {/* @ts-ignore */}
-                <BarChart data={dashboardData.enCokSatanlar} layout="vertical" ref={enCokSatanChartRef}>
+                <BarChart data={dashboardData.enCokSatanlar} layout="vertical">
                   {/* @ts-ignore */}
                   <CartesianGrid strokeDasharray="3 3" />
                   {/* @ts-ignore */}
@@ -334,18 +365,11 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">En Çok Ziyaret Edilen</h2>
-              <button
-                onClick={() => exportChartAsPNG(enCokZiyaretChartRef, 'en-cok-ziyaret-edilen')}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
-                title="PNG olarak indir"
-              >
-                <Download className="w-5 h-5" />
-              </button>
             </div>
             {dashboardData?.enCokZiyaretEdilen && dashboardData.enCokZiyaretEdilen.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 {/* @ts-ignore */}
-                <BarChart data={dashboardData.enCokZiyaretEdilen} ref={enCokZiyaretChartRef}>
+                <BarChart data={dashboardData.enCokZiyaretEdilen}>
                   {/* @ts-ignore */}
                   <CartesianGrid strokeDasharray="3 3" />
                   {/* @ts-ignore */}
@@ -404,19 +428,12 @@ export default function Dashboard() {
                 >
                   90 Gün
                 </button>
-                <button
-                  onClick={() => exportChartAsPNG(gunlukSatisChartRef, 'gunluk-satis-trendi')}
-                  className="p-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
-                  title="PNG olarak indir"
-                >
-                  <Download className="w-5 h-5" />
-                </button>
               </div>
             </div>
             {dashboardData?.gunlukSatislar && dashboardData.gunlukSatislar.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 {/* @ts-ignore */}
-                <LineChart data={dashboardData.gunlukSatislar} ref={gunlukSatisChartRef}>
+                <LineChart data={dashboardData.gunlukSatislar}>
                   {/* @ts-ignore */}
                   <CartesianGrid strokeDasharray="3 3" />
                   {/* @ts-ignore */}
@@ -442,18 +459,11 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">Aylık Satış Karşılaştırması</h2>
-              <button
-                onClick={() => exportChartAsPNG(aylikSatisChartRef, 'aylik-satis-karsilastirmasi')}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
-                title="PNG olarak indir"
-              >
-                <Download className="w-5 h-5" />
-              </button>
             </div>
             {dashboardData?.aylikSatislar && dashboardData.aylikSatislar.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 {/* @ts-ignore */}
-                <BarChart data={dashboardData.aylikSatislar} ref={aylikSatisChartRef}>
+                <BarChart data={dashboardData.aylikSatislar}>
                   {/* @ts-ignore */}
                   <CartesianGrid strokeDasharray="3 3" />
                   {/* @ts-ignore */}
