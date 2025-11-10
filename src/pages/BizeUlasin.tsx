@@ -201,17 +201,26 @@ export default function BizeUlasin() {
               <button
                 type="submit"
                 disabled={loading || formData.soru_metni.trim().length < 10}
-                className="w-full bg-orange-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-orange-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className={`w-full py-3 px-6 rounded-lg font-medium transition flex items-center justify-center space-x-2 ${
+                  loading || formData.soru_metni.trim().length < 10
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-orange-600 text-white hover:bg-orange-700'
+                }`}
               >
                 {loading ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                     <span>Gönderiliyor...</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-5 h-5" />
-                    <span>Gönder</span>
+                    <span>
+                      {formData.soru_metni.trim().length < 10 
+                        ? `Gönder (En az ${10 - formData.soru_metni.trim().length} karakter daha)`
+                        : 'Gönder'
+                      }
+                    </span>
                   </>
                 )}
               </button>
