@@ -14,7 +14,8 @@ import {
   MessageSquare,
   Truck,
   Store,
-  BarChart3
+  BarChart3,
+  Headphones
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -51,18 +52,18 @@ export default function AdminLayout() {
     { path: '/admin/bannerlar', icon: Image, label: 'Banner' },
     { path: '/admin/kampanyalar', icon: Megaphone, label: 'Kampanyalar' },
     { path: '/admin/sorular', icon: MessageSquare, label: 'Sorular' },
-    { path: '/admin/canli-destek', icon: MessageSquare, label: 'Canlı Destek' }
+    { path: '/admin/canli-destek', icon: Headphones, label: 'Canlı Destek' }
   ]
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 w-64 bg-gray-900 text-white">
-        <div className="p-6">
+      <div className="fixed inset-y-0 left-0 w-64 bg-gray-900 text-white flex flex-col">
+        <div className="p-6 flex-shrink-0">
           <h1 className="text-2xl font-bold">Admin Panel</h1>
         </div>
 
-        <nav className="mt-6">
+        <nav className="flex-1 overflow-y-auto py-4 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon
             const isActive = location.pathname === item.path
@@ -71,29 +72,29 @@ export default function AdminLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center space-x-3 px-6 py-3 transition ${
+                className={`flex items-center gap-3 px-6 py-3 transition-colors ${
                   isActive
                     ? 'bg-orange-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-800'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                 }`}
               >
-                <Icon className="w-5 h-5" />
-                <span>{item.label}</span>
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm font-medium">{item.label}</span>
               </Link>
             )
           })}
         </nav>
 
-        <div className="absolute bottom-0 w-full p-6">
+        <div className="flex-shrink-0 border-t border-gray-800">
           <button
             onClick={() => {
               signOut()
               navigate('/')
             }}
-            className="flex items-center space-x-3 text-gray-300 hover:text-white transition w-full"
+            className="flex items-center gap-3 px-6 py-4 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full"
           >
-            <LogOut className="w-5 h-5" />
-            <span>Çıkış Yap</span>
+            <LogOut className="w-5 h-5 flex-shrink-0" />
+            <span className="text-sm font-medium">Çıkış Yap</span>
           </button>
         </div>
       </div>
