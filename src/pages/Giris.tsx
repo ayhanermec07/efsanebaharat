@@ -67,8 +67,15 @@ export default function Giris() {
       }
     } catch (err: any) {
       console.error('Giriş hatası:', err)
-      setError(err.message || 'Giriş yapılırken bir hata oluştu')
-      toast.error(err.message || 'Giriş başarısız')
+      
+      // E-posta onaylanmamış hatası
+      if (err.message && err.message.includes('Email not confirmed')) {
+        setError('E-posta adresiniz henüz onaylanmamış. Lütfen e-postanızdaki doğrulama linkine tıklayın veya yönetici ile iletişime geçin.')
+        toast.error('E-posta onayı gerekli')
+      } else {
+        setError(err.message || 'Giriş yapılırken bir hata oluştu')
+        toast.error(err.message || 'Giriş başarısız')
+      }
     } finally {
       setLoading(false)
     }
