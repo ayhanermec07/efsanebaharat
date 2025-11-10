@@ -15,11 +15,23 @@ export default function Header() {
   const [searchLoading, setSearchLoading] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const [kategoriler, setKategoriler] = useState<any[]>([])
+  const [showKategoriDropdown, setShowKategoriDropdown] = useState(false)
+  const [showUserDropdown, setShowUserDropdown] = useState(false)
+  const [kategoriTimeout, setKategoriTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [userTimeout, setUserTimeout] = useState<NodeJS.Timeout | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
     loadKategoriler()
   }, [])
+
+  // Cleanup timeouts
+  useEffect(() => {
+    return () => {
+      if (kategoriTimeout) clearTimeout(kategoriTimeout)
+      if (userTimeout) clearTimeout(userTimeout)
+    }
+  }, [kategoriTimeout, userTimeout])
 
   async function loadKategoriler() {
     const { data } = await supabase
@@ -142,29 +154,43 @@ export default function Header() {
             </Link>
             
             {/* Kategoriler Dropdown */}
-            <div className="relative group">
+            <div 
+              className="relative"
+              onMouseEnter={() => {
+                if (kategoriTimeout) clearTimeout(kategoriTimeout)
+                setShowKategoriDropdown(true)
+              }}
+              onMouseLeave={() => {
+                const timeout = setTimeout(() => setShowKategoriDropdown(false), 200)
+                setKategoriTimeout(timeout)
+              }}
+            >
               <button className="flex items-center space-x-1 text-gray-700 hover:text-orange-600 transition">
                 <span>Kategoriler</span>
                 <ChevronDown className="w-4 h-4" />
               </button>
-              <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg py-2 hidden group-hover:block z-50">
-                <Link 
-                  to="/urunler"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                >
-                  Tüm Ürünler
-                </Link>
-                <div className="border-t my-1"></div>
-                {kategoriler.map((kategori) => (
-                  <Link
-                    key={kategori.id}
-                    to={`/urunler?kategori=${kategori.id}`}
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+              {showKategoriDropdown && (
+                <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <Link 
+                    to="/urunler"
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
+                    onClick={() => setShowKategoriDropdown(false)}
                   >
-                    {kategori.kategori_adi}
+                    Tüm Ürünler
                   </Link>
-                ))}
-              </div>
+                  <div className="border-t my-1"></div>
+                  {kategoriler.map((kategori) => (
+                    <Link
+                      key={kategori.id}
+                      to={`/urunler?kategori=${kategori.id}`}
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
+                      onClick={() => setShowKategoriDropdown(false)}
+                    >
+                      {kategori.kategori_adi}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
             
             <Link to="/en-cok-satan" className="text-gray-700 hover:text-orange-600 transition">
@@ -208,25 +234,48 @@ export default function Header() {
             </Link>
 
             {user ? (
-              <div className="relative group">
-                <button className="flex items-center space-x-2 text-gray-700 hover:text-orange-600">
+              <div 
+                className="relative"
+                onMouseEnter={() => {
+                  if (userTimeout) clearTimeout(userTimeout)
+                  setShowUserDropdown(true)
+                }}
+                onMouseLeave={() => {
+                  const timeout = setTimeout(() => setShowUserDropdown(false), 200)
+                  setUserTimeout(timeout)
+                }}
+              >
+                <button className="flex items-center space-x-2 text-gray-700 hover:text-orange-600 transition">
                   <User className="w-5 h-5" />
                   <span className="hidden md:block">Hesabım</span>
                 </button>
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden group-hover:block">
-                  <Link to="/hesabim" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    Profilim
-                  </Link>
-                  <Link to="/sorularim" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    Sorularım
-                  </Link>
-                  <button
-                    onClick={() => signOut()}
-                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                  >
-                    Çıkış Yap
-                  </button>
-                </div>
+                {showUserDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <Link 
+                      to="/hesabim" 
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
+                      onClick={() => setShowUserDropdown(false)}
+                    >
+                      Profilim
+                    </Link>
+                    <Link 
+                      to="/sorularim" 
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
+                      onClick={() => setShowUserDropdown(false)}
+                    >
+                      Sorularım
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setShowUserDropdown(false)
+                        signOut()
+                      }}
+                      className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
+                    >
+                      Çıkış Yap
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <Link
