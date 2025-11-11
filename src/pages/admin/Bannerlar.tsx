@@ -199,7 +199,7 @@ export default function Bannerlar() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Banner Görseli</label>
                   <ImageUpload
                     maxFiles={1}
-                    bucketName="banner-gorselleri"
+                    bucketName="banners"
                     onUploadComplete={(urls) => setFormData({ ...formData, resim_url: urls[0] || '' })}
                     existingImages={formData.resim_url ? [formData.resim_url] : []}
                     maxSizeMB={5}

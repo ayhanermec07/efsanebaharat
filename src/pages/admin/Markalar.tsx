@@ -198,7 +198,7 @@ export default function Markalar() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Marka Logosu</label>
                   <ImageUpload
                     maxFiles={1}
-                    bucketName="marka-logolari"
+                    bucketName="brands"
                     onUploadComplete={(urls) => setFormData({ ...formData, logo_url: urls[0] || '' })}
                     existingImages={formData.logo_url ? [formData.logo_url] : []}
                     maxSizeMB={2}

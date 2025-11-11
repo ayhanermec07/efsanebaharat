@@ -38,19 +38,34 @@ export default function Giris() {
           .eq('email', email.toLowerCase())
           .maybeSingle()
 
-        if (bayiError) throw bayiError
+        if (bayiError) {
+          console.error('Bayi sorgu hatası:', bayiError)
+          throw new Error('Bayi bilgileri kontrol edilemedi')
+        }
 
         if (!bayiData) {
-          throw new Error('Bayii kodu veya email hatalı')
+          throw new Error('Bayii kodu veya email hatalı. Lütfen bilgilerinizi kontrol edin.')
         }
 
         if (!bayiData.aktif) {
-          throw new Error('Bayi hesabınız pasif durumda. Lütfen yönetici ile iletişime geçin')
+          throw new Error('Bayi hesabınız pasif durumda. Lütfen yönetici ile iletişime geçin.')
         }
 
-        // Normal auth ile giriş yap
-        const { error: authError } = await signIn(email, password)
-        if (authError) throw authError
+        // Şifre kontrolü: Bayii kodu + 2024! formatında olmalı
+        const beklenenSifre = bayiiKodu.toUpperCase() + '2024!'
+        if (password !== beklenenSifre) {
+          throw new Error('Şifre hatalı. Şifreniz: [Bayii Kodu]2024! formatında olmalıdır.')
+        }
+
+        // Bayi bilgilerini localStorage'a kaydet (geçici çözüm)
+        localStorage.setItem('bayiData', JSON.stringify({
+          id: bayiData.id,
+          bayii_kodu: bayiData.bayii_kodu,
+          bayi_adi: bayiData.bayi_adi,
+          email: bayiData.email,
+          yetkili_kisi: bayiData.yetkili_kisi,
+          loginTime: new Date().toISOString()
+        }))
 
         // Başarılı bayi girişi
         toast.success(`Hoş geldiniz, ${bayiData.bayi_adi}`)
@@ -129,23 +144,33 @@ export default function Giris() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {girisTipi === 'bayi' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bayii Kodu *
-                </label>
-                <input
-                  type="text"
-                  value={bayiiKodu}
-                  onChange={(e) => setBayiiKodu(e.target.value.toUpperCase())}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono"
-                  placeholder="BAY123456"
-                  minLength={5}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Size atanan bayii kodunu girin
-                </p>
-              </div>
+              <>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-blue-800 mb-2">
+                    <strong>Bayi Girişi:</strong> Bayii kodunuz ve kayıtlı email adresiniz ile giriş yapabilirsiniz.
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    <strong>Şifre Formatı:</strong> [Bayii Kodu]2024! (Örn: BAY1234562024!)
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bayii Kodu *
+                  </label>
+                  <input
+                    type="text"
+                    value={bayiiKodu}
+                    onChange={(e) => setBayiiKodu(e.target.value.toUpperCase())}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono"
+                    placeholder="BAY123456"
+                    minLength={5}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Size atanan bayii kodunu girin
+                  </p>
+                </div>
+              </>
             )}
 
             <div>

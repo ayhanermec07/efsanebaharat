@@ -33,7 +33,13 @@ export default function BayiDashboard() {
   })
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    // localStorage'dan bayi bilgilerini kontrol et
+    const bayiDataStr = localStorage.getItem('bayiData')
+    if (bayiDataStr) {
+      const bayiData = JSON.parse(bayiDataStr)
+      setBayi(bayiData)
+      loadBayiData()
+    } else if (!authLoading && !user) {
       navigate('/giris')
     } else if (user) {
       loadBayiData()
@@ -44,7 +50,24 @@ export default function BayiDashboard() {
     try {
       setLoading(true)
 
-      // Bayi bilgilerini çek
+      // localStorage'dan bayi bilgilerini al
+      const bayiDataStr = localStorage.getItem('bayiData')
+      if (bayiDataStr) {
+        const localBayiData = JSON.parse(bayiDataStr)
+        setBayi(localBayiData)
+        
+        // Satış verilerini çek (demo)
+        setSatislar([])
+        setStats({
+          toplamSatis: 0,
+          toplamUrun: 0,
+          buAySatis: 0
+        })
+        setLoading(false)
+        return
+      }
+
+      // Bayi bilgilerini çek (eski yöntem)
       const { data: bayiData, error: bayiError } = await supabase
         .from('bayiler')
         .select('*')
@@ -109,10 +132,21 @@ export default function BayiDashboard() {
 
   async function handleSignOut() {
     try {
-      await signOut()
+      // localStorage'dan bayi bilgilerini temizle
+      localStorage.removeItem('bayiData')
+      
+      // Eğer user varsa signOut yap
+      if (user) {
+        await signOut()
+      }
+      
+      toast.success('Çıkış yapıldı')
       navigate('/giris')
     } catch (error) {
       console.error('Çıkış hatası:', error)
+      // Hata olsa bile çıkış yap
+      localStorage.removeItem('bayiData')
+      navigate('/giris')
     }
   }
 

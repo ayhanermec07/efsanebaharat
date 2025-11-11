@@ -15,7 +15,8 @@ import {
   Truck,
   Store,
   BarChart3,
-  Headphones
+  Headphones,
+  Percent
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -49,6 +50,7 @@ export default function AdminLayout() {
     { path: '/admin/bayiler', icon: Store, label: 'Bayiler' },
     { path: '/admin/bayi-satislari', icon: BarChart3, label: 'Bayi Satışları' },
     { path: '/admin/musteriler', icon: Users, label: 'Müşteriler' },
+    { path: '/admin/iskonto', icon: Percent, label: 'İskonto' },
     { path: '/admin/bannerlar', icon: Image, label: 'Banner' },
     { path: '/admin/kampanyalar', icon: Megaphone, label: 'Kampanyalar' },
     { path: '/admin/sorular', icon: MessageSquare, label: 'Sorular' },

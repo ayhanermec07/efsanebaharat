@@ -7,6 +7,7 @@ interface AuthContextType {
   loading: boolean
   isAdmin: boolean
   musteriData: any | null
+  iskontoOrani: number
   signIn: (email: string, password: string) => Promise<any>
   signUp: (email: string, password: string, userData: any) => Promise<any>
   signOut: () => Promise<void>
@@ -19,6 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [musteriData, setMusteriData] = useState<any | null>(null)
+  const [iskontoOrani, setIskontoOrani] = useState(0)
 
   useEffect(() => {
     async function loadUser() {
@@ -59,6 +61,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             setMusteriData(musteri)
           }
+          
+          // İskonto oranını hesapla
+          if (musteri) {
+            await hesaplaIskontoOrani(musteri.id)
+          }
+        } else {
+          setIskontoOrani(0)
         }
       } finally {
         setLoading(false)
@@ -80,6 +89,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  async function hesaplaIskontoOrani(musteriId: string) {
+    try {
+      console.log('🔍 İskonto hesaplanıyor, Müşteri ID:', musteriId)
+      const bugun = new Date().toISOString().split('T')[0] // Sadece tarih kısmı
+      console.log('📅 Bugünün tarihi:', bugun)
+      
+      // Bireysel iskonto kontrolü
+      const { data: bireyselIskonto, error: bireyselError } = await supabase
+        .from('iskontolar')
+        .select('*')
+        .eq('hedef_id', musteriId)
+        .eq('hedef_tipi', 'musteri')
+        .eq('aktif', true)
+        .lte('baslangic_tarihi', bugun)
+        .gte('bitis_tarihi', bugun)
+        .order('iskonto_orani', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      
+      console.log('👤 Bireysel iskonto sorgusu:', { bireyselIskonto, bireyselError })
+      
+      if (bireyselIskonto) {
+        console.log('✅ Bireysel iskonto bulundu:', bireyselIskonto.iskonto_orani)
+        setIskontoOrani(bireyselIskonto.iskonto_orani)
+        return
+      }
+      
+      // Müşteri bilgisini al
+      const { data: musteri } = await supabase
+        .from('musteriler')
+        .select('fiyat_grubu_id')
+        .eq('id', musteriId)
+        .maybeSingle()
+      
+      console.log('👥 Müşteri fiyat grubu:', musteri?.fiyat_grubu_id)
+      
+      if (musteri?.fiyat_grubu_id) {
+        // Grup iskonto kontrolü
+        const { data: grupIskonto, error: grupError } = await supabase
+          .from('iskontolar')
+          .select('*')
+          .eq('hedef_id', musteri.fiyat_grubu_id)
+          .eq('hedef_tipi', 'grup')
+          .eq('aktif', true)
+          .lte('baslangic_tarihi', bugun)
+          .gte('bitis_tarihi', bugun)
+          .order('iskonto_orani', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        
+        console.log('🏷️ Grup iskonto sorgusu:', { grupIskonto, grupError })
+        
+        if (grupIskonto) {
+          console.log('✅ Grup iskonto bulundu:', grupIskonto.iskonto_orani)
+          setIskontoOrani(grupIskonto.iskonto_orani)
+          return
+        }
+      }
+      
+      console.log('❌ İskonto bulunamadı')
+      setIskontoOrani(0)
+    } catch (error) {
+      console.error('❌ İskonto hesaplama hatası:', error)
+      setIskontoOrani(0)
+    }
+  }
 
   async function signIn(email: string, password: string) {
     const result = await supabase.auth.signInWithPassword({ email, password })
@@ -116,6 +192,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setMusteriData({ ...musteri, fiyat_gruplari: fiyatGrubu })
       } else {
         setMusteriData(musteri)
+      }
+      
+      // İskonto oranını hesapla
+      if (musteri) {
+        await hesaplaIskontoOrani(musteri.id)
       }
     }
     
@@ -167,7 +248,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, musteriData, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, musteriData, iskontoOrani, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   )

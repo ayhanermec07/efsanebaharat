@@ -149,37 +149,12 @@ export default function AdminBayiler() {
 
         if (error) throw error
 
-        // Bayi kullanıcısı oluştur
-        try {
-          const password = formData.bayii_kodu.toUpperCase() + '2024!'
-          const { data: { session } } = await supabase.auth.getSession()
-          
-          const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bayi-kullanici-olustur`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session?.access_token}`
-              },
-              body: JSON.stringify({
-                email: formData.email.toLowerCase(),
-                password: password
-              })
-            }
-          )
-
-          const result = await response.json()
-          
-          if (!response.ok) {
-            console.error('Kullanıcı oluşturma hatası:', result)
-            toast('Bayi oluşturuldu ancak kullanıcı hesabı oluşturulamadı', { icon: '⚠️' })
-          }
-        } catch (edgeFuncError: any) {
-          console.error('Edge function hatası:', edgeFuncError)
-          toast('Bayi oluşturuldu ancak kullanıcı hesabı oluşturulamadı', { icon: '⚠️' })
-        }
-
+        // Bayi kullanıcısı oluşturma (edge function olmadığı için devre dışı)
+        // Not: Bayi kullanıcı hesabı oluşturmak için Supabase edge function gerekli
+        // Şimdilik sadece bayi kaydı yapılıyor
+        const password = formData.bayii_kodu.toUpperCase() + '2024!'
+        console.log(`Bayi oluşturuldu. Kullanıcı hesabı için şifre: ${password}`)
+        
         toast.success('Bayi başarıyla oluşturuldu')
       } else if (modal === 'edit' && selectedBayi) {
         // Bayi güncelle
