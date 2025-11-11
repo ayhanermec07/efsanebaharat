@@ -31,6 +31,7 @@ import AdminBannerlar from './pages/admin/Bannerlar'
 import AdminKampanyalar from './pages/admin/Kampanyalar'
 import AdminSorular from './pages/admin/Sorular'
 import AdminCanliDestek from './pages/admin/CanliDestek'
+import AdminIskonto from './pages/admin/Iskonto'
 import './App.css'
 
 function App() {
@@ -73,6 +74,7 @@ function App() {
               <Route path="kampanyalar" element={<AdminKampanyalar />} />
               <Route path="sorular" element={<AdminSorular />} />
               <Route path="canli-destek" element={<AdminCanliDestek />} />
+              <Route path="iskonto" element={<AdminIskonto />} />
             </Route>
           </Routes>
         </Router>

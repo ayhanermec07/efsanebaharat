@@ -4,9 +4,10 @@ import { supabase } from '../lib/supabase'
 import { Search, SlidersHorizontal, Eye, ShoppingCart } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
+import { iskontoUygula } from '../utils/iskonto'
 
 export default function Urunler() {
-  const { user } = useAuth()
+  const { user, iskontoOrani } = useAuth()
   const { sepeteEkle } = useSepet()
   const [searchParams, setSearchParams] = useSearchParams()
   const [urunler, setUrunler] = useState<any[]>([])
@@ -197,6 +198,7 @@ export default function Urunler() {
               {urunler.map((urun) => {
                 const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
                 const ilkStok = urun.urun_stoklari?.[0]
+                const iskontoInfo = ilkStok ? iskontoUygula(ilkStok.fiyat, iskontoOrani) : null
                 
                 return (
                   <div
@@ -220,6 +222,11 @@ export default function Urunler() {
                             </div>
                           </div>
                         )}
+                        {iskontoInfo?.varMi && (
+                          <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-lg text-sm font-bold">
+                            %{iskontoInfo.oran} İndirim
+                          </div>
+                        )}
                       </div>
                     </Link>
                     <div className="p-4">
@@ -231,11 +238,24 @@ export default function Urunler() {
                       <p className="text-sm text-gray-500 mb-2">
                         {urun.markalar?.marka_adi}
                       </p>
-                      {ilkStok && (
+                      {ilkStok && iskontoInfo && (
                         <div className="flex items-center justify-between mb-3">
-                          <span className="text-orange-600 font-bold">
-                            {ilkStok.fiyat.toFixed(2)} ₺
-                          </span>
+                          <div className="flex flex-col">
+                            {iskontoInfo.varMi ? (
+                              <>
+                                <span className="text-orange-600 font-bold">
+                                  {iskontoInfo.yeniFiyat.toFixed(2)} ₺
+                                </span>
+                                <span className="text-gray-400 text-xs line-through">
+                                  {iskontoInfo.eskiFiyat.toFixed(2)} ₺
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-orange-600 font-bold">
+                                {ilkStok.fiyat.toFixed(2)} ₺
+                              </span>
+                            )}
+                          </div>
                           <span className="text-sm text-gray-500">{ilkStok.birim_turu}</span>
                         </div>
                       )}
@@ -243,12 +263,12 @@ export default function Urunler() {
                         // Giriş yapmış kullanıcı - Sepete Ekle butonu
                         <button
                           onClick={() => {
-                            if (ilkStok) {
+                            if (ilkStok && iskontoInfo) {
                               sepeteEkle({
                                 urun_id: urun.id,
                                 urun_adi: urun.urun_adi,
                                 birim_turu: ilkStok.birim_turu,
-                                birim_fiyat: ilkStok.fiyat,
+                                birim_fiyat: iskontoInfo.yeniFiyat,
                                 miktar: ilkStok.min_siparis_miktari || 1,
                                 gorsel_url: ilkGorsel,
                                 min_siparis_miktari: ilkStok.min_siparis_miktari

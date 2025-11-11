@@ -3,8 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { ChevronLeft, ChevronRight, ShoppingBag, TruckIcon, Shield } from 'lucide-react'
 import CanliDestekWidget from '../components/CanliDestekWidget'
+import { useAuth } from '../contexts/AuthContext'
+import { iskontoUygula } from '../utils/iskonto'
 
 export default function AnaSayfa() {
+  const { iskontoOrani } = useAuth()
   const [banners, setBanners] = useState<any[]>([])
   const [oneCikanUrunler, setOneCikanUrunler] = useState<any[]>([])
   const [enCokSatanlar, setEnCokSatanlar] = useState<any[]>([])
@@ -234,6 +237,7 @@ export default function AnaSayfa() {
               {oneCikanUrunler.map((urun) => {
                 const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
                 const ilkStok = urun.urun_stoklari?.[0]
+                const iskontoInfo = ilkStok ? iskontoUygula(ilkStok.fiyat, iskontoOrani) : null
                 
                 return (
                   <Link
@@ -257,16 +261,34 @@ export default function AnaSayfa() {
                           </div>
                         </div>
                       )}
+                      {iskontoInfo?.varMi && (
+                        <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-lg text-sm font-bold">
+                          %{iskontoInfo.oran} İndirim
+                        </div>
+                      )}
                     </div>
                     <div className="p-4">
                       <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
                         {urun.urun_adi}
                       </h3>
-                      {ilkStok && (
+                      {ilkStok && iskontoInfo && (
                         <div className="flex items-center justify-between">
-                          <span className="text-orange-600 font-bold">
-                            {ilkStok.fiyat.toFixed(2)} ₺
-                          </span>
+                          <div className="flex flex-col">
+                            {iskontoInfo.varMi ? (
+                              <>
+                                <span className="text-orange-600 font-bold">
+                                  {iskontoInfo.yeniFiyat.toFixed(2)} ₺
+                                </span>
+                                <span className="text-gray-400 text-xs line-through">
+                                  {iskontoInfo.eskiFiyat.toFixed(2)} ₺
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-orange-600 font-bold">
+                                {ilkStok.fiyat.toFixed(2)} ₺
+                              </span>
+                            )}
+                          </div>
                           <span className="text-sm text-gray-500">{ilkStok.birim_turu}</span>
                         </div>
                       )}
@@ -293,6 +315,7 @@ export default function AnaSayfa() {
               {enCokSatanlar.slice(bestsellerPage * 4, (bestsellerPage + 1) * 4).map((urun) => {
                 const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
                 const ilkStok = urun.urun_stoklari?.[0]
+                const iskontoInfo = ilkStok ? iskontoUygula(ilkStok.fiyat, iskontoOrani) : null
                 
                 return (
                   <Link
@@ -316,16 +339,34 @@ export default function AnaSayfa() {
                           </div>
                         </div>
                       )}
+                      {iskontoInfo?.varMi && (
+                        <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-lg text-sm font-bold">
+                          %{iskontoInfo.oran} İndirim
+                        </div>
+                      )}
                     </div>
                     <div className="p-4">
                       <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
                         {urun.urun_adi}
                       </h3>
-                      {ilkStok && (
+                      {ilkStok && iskontoInfo && (
                         <div className="flex items-center justify-between">
-                          <span className="text-orange-600 font-bold">
-                            {ilkStok.fiyat.toFixed(2)} ₺
-                          </span>
+                          <div className="flex flex-col">
+                            {iskontoInfo.varMi ? (
+                              <>
+                                <span className="text-orange-600 font-bold">
+                                  {iskontoInfo.yeniFiyat.toFixed(2)} ₺
+                                </span>
+                                <span className="text-gray-400 text-xs line-through">
+                                  {iskontoInfo.eskiFiyat.toFixed(2)} ₺
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-orange-600 font-bold">
+                                {ilkStok.fiyat.toFixed(2)} ₺
+                              </span>
+                            )}
+                          </div>
                           <span className="text-sm text-gray-500">{ilkStok.birim_turu}</span>
                         </div>
                       )}
@@ -385,6 +426,7 @@ export default function AnaSayfa() {
               {yeniEklenenler.slice(newProductsPage * 4, (newProductsPage + 1) * 4).map((urun) => {
                 const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
                 const ilkStok = urun.urun_stoklari?.[0]
+                const iskontoInfo = ilkStok ? iskontoUygula(ilkStok.fiyat, iskontoOrani) : null
                 
                 return (
                   <Link
@@ -408,16 +450,34 @@ export default function AnaSayfa() {
                           </div>
                         </div>
                       )}
+                      {iskontoInfo?.varMi && (
+                        <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-lg text-sm font-bold">
+                          %{iskontoInfo.oran} İndirim
+                        </div>
+                      )}
                     </div>
                     <div className="p-4">
                       <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
                         {urun.urun_adi}
                       </h3>
-                      {ilkStok && (
+                      {ilkStok && iskontoInfo && (
                         <div className="flex items-center justify-between">
-                          <span className="text-orange-600 font-bold">
-                            {ilkStok.fiyat.toFixed(2)} ₺
-                          </span>
+                          <div className="flex flex-col">
+                            {iskontoInfo.varMi ? (
+                              <>
+                                <span className="text-orange-600 font-bold">
+                                  {iskontoInfo.yeniFiyat.toFixed(2)} ₺
+                                </span>
+                                <span className="text-gray-400 text-xs line-through">
+                                  {iskontoInfo.eskiFiyat.toFixed(2)} ₺
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-orange-600 font-bold">
+                                {ilkStok.fiyat.toFixed(2)} ₺
+                              </span>
+                            )}
+                          </div>
                           <span className="text-sm text-gray-500">{ilkStok.birim_turu}</span>
                         </div>
                       )}

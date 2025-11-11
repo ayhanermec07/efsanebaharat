@@ -5,20 +5,20 @@ import { useSepet } from '../contexts/SepetContext'
 import { useAuth } from '../contexts/AuthContext'
 import { ShoppingCart, Check } from 'lucide-react'
 import UrunSoruModul from '../components/UrunSoruModul'
+import { iskontoUygula } from '../utils/iskonto'
 
 export default function UrunDetay() {
   const { id } = useParams()
   const { sepeteEkle } = useSepet()
-  const { user, musteriData } = useAuth()
+  const { user, musteriData, iskontoOrani } = useAuth()
   const [urun, setUrun] = useState<any>(null)
   const [secilenStok, setSecilenStok] = useState<any>(null)
   const [miktar, setMiktar] = useState(1)
   const [secilenGorsel, setSecilenGorsel] = useState(0)
   const [eklendi, setEklendi] = useState(false)
 
-  // Bayi indirimi hesapla
-  const bayiIndirim = musteriData?.fiyat_gruplari?.indirim_orani || 0
-  const isBayi = musteriData?.musteri_tipi === 'bayi'
+  // İskonto bilgisi
+  const iskontoInfo = secilenStok ? iskontoUygula(secilenStok.fiyat, iskontoOrani) : null
 
   useEffect(() => {
     if (id) {
@@ -74,7 +74,7 @@ export default function UrunDetay() {
   }
 
   function handleSepeteEkle() {
-    if (!urun || !secilenStok) return
+    if (!urun || !secilenStok || !iskontoInfo) return
 
     const gorsel = urun.urun_gorselleri?.[0]?.gorsel_url
 
@@ -82,7 +82,7 @@ export default function UrunDetay() {
       urun_id: urun.id,
       urun_adi: urun.urun_adi,
       birim_turu: secilenStok.birim_turu,
-      birim_fiyat: secilenStok.fiyat,
+      birim_fiyat: iskontoInfo.yeniFiyat,
       miktar,
       gorsel_url: gorsel
     })
@@ -157,17 +157,17 @@ export default function UrunDetay() {
           )}
 
           <div className="bg-orange-50 p-4 rounded-lg mb-6">
-            {isBayi && bayiIndirim > 0 ? (
+            {iskontoInfo?.varMi ? (
               <div>
                 <p className="text-sm text-gray-600 line-through mb-1">
-                  Normal Fiyat: {secilenStok?.fiyat.toFixed(2)} ₺
+                  Normal Fiyat: {iskontoInfo.eskiFiyat.toFixed(2)} ₺
                 </p>
                 <div className="flex items-center justify-between">
                   <span className="text-3xl font-bold text-orange-600">
-                    {((secilenStok?.fiyat || 0) * (1 - bayiIndirim / 100)).toFixed(2)} ₺
+                    {iskontoInfo.yeniFiyat.toFixed(2)} ₺
                   </span>
-                  <span className="bg-orange-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                    %{bayiIndirim} Bayi İndirimi
+                  <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    %{iskontoInfo.oran} İndirim
                   </span>
                 </div>
               </div>
@@ -185,32 +185,35 @@ export default function UrunDetay() {
                 Birim Seçin
               </label>
               <div className="grid grid-cols-3 gap-2">
-                {urun.urun_stoklari.map((stok: any) => (
-                  <button
-                    key={stok.id}
-                    onClick={() => setSecilenStok(stok)}
-                    className={`p-3 border-2 rounded-lg transition ${
-                      secilenStok?.id === stok.id
-                        ? 'border-orange-600 bg-orange-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="font-semibold">{stok.birim_turu}</div>
-                    <div className="text-sm text-gray-600">
-                      {isBayi && bayiIndirim > 0 ? (
-                        <>
-                          <span className="line-through mr-2">{stok.fiyat.toFixed(2)} ₺</span>
-                          <span className="text-orange-600 font-bold">
-                            {(stok.fiyat * (1 - bayiIndirim / 100)).toFixed(2)} ₺
-                          </span>
-                        </>
-                      ) : (
-                        <span>{stok.fiyat.toFixed(2)} ₺</span>
-                      )}
-                    </div>
-                    <div className="text-xs text-gray-500">Stok: {stok.stok_miktari}</div>
-                  </button>
-                ))}
+                {urun.urun_stoklari.map((stok: any) => {
+                  const stokIskontoInfo = iskontoUygula(stok.fiyat, iskontoOrani)
+                  return (
+                    <button
+                      key={stok.id}
+                      onClick={() => setSecilenStok(stok)}
+                      className={`p-3 border-2 rounded-lg transition ${
+                        secilenStok?.id === stok.id
+                          ? 'border-orange-600 bg-orange-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="font-semibold">{stok.birim_turu}</div>
+                      <div className="text-sm text-gray-600">
+                        {stokIskontoInfo.varMi ? (
+                          <>
+                            <span className="line-through mr-2">{stokIskontoInfo.eskiFiyat.toFixed(2)} ₺</span>
+                            <span className="text-orange-600 font-bold">
+                              {stokIskontoInfo.yeniFiyat.toFixed(2)} ₺
+                            </span>
+                          </>
+                        ) : (
+                          <span>{stok.fiyat.toFixed(2)} ₺</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500">Stok: {stok.stok_miktari}</div>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}

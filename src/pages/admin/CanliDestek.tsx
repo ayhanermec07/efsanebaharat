@@ -76,40 +76,22 @@ export default function CanliDestek() {
 
   async function loadConversations() {
     try {
-      // Demo veriler - gerçek uygulamada Supabase'den çekilecek
-      const demoConversations: Conversation[] = [
-        {
-          id: '1',
-          musteri_adi: 'Ahmet Yılmaz',
-          musteri_email: 'ahmet@example.com',
-          son_mesaj: 'Siparişim ne zaman gelir?',
-          son_mesaj_zamani: new Date().toISOString(),
-          okunmamis_sayisi: 2,
-          durum: 'aktif'
-        },
-        {
-          id: '2',
-          musteri_adi: 'Ayşe Demir',
-          musteri_email: 'ayse@example.com',
-          son_mesaj: 'Ürün hakkında bilgi almak istiyorum',
-          son_mesaj_zamani: new Date(Date.now() - 3600000).toISOString(),
-          okunmamis_sayisi: 0,
-          durum: 'beklemede'
-        },
-        {
-          id: '3',
-          musteri_adi: 'Mehmet Kaya',
-          musteri_email: 'mehmet@example.com',
-          son_mesaj: 'Teşekkürler, sorunum çözüldü',
-          son_mesaj_zamani: new Date(Date.now() - 7200000).toISOString(),
-          okunmamis_sayisi: 0,
-          durum: 'kapali'
-        }
-      ]
-      setConversations(demoConversations)
+      // Supabase'den konuşmaları çek
+      // Not: Canlı destek tabloları henüz oluşturulmadı
+      setConversations([])
+      
+      // Gerçek implementasyon:
+      // const { data, error } = await supabase
+      //   .from('canli_destek_konusmalar')
+      //   .select('*')
+      //   .order('son_mesaj_zamani', { ascending: false })
+      // 
+      // if (error) throw error
+      // setConversations(data || [])
     } catch (error) {
       console.error('Konuşmalar yüklenemedi:', error)
       toast.error('Konuşmalar yüklenemedi')
+      setConversations([])
     } finally {
       setLoading(false)
     }
@@ -117,69 +99,41 @@ export default function CanliDestek() {
 
   async function loadMessages(conversationId: string) {
     try {
-      // Demo mesajlar - gerçek uygulamada Supabase'den çekilecek
-      const demoMessages: Message[] = [
-        {
-          id: '1',
-          konusma_id: conversationId,
-          mesaj: 'Merhaba, size nasıl yardımcı olabilirim?',
-          gonderen: 'admin',
-          olusturma_tarihi: new Date(Date.now() - 3600000).toISOString(),
-          okundu: true
-        },
-        {
-          id: '2',
-          konusma_id: conversationId,
-          mesaj: 'Siparişim ne zaman gelir?',
-          gonderen: 'musteri',
-          olusturma_tarihi: new Date(Date.now() - 1800000).toISOString(),
-          okundu: true
-        },
-        {
-          id: '3',
-          konusma_id: conversationId,
-          mesaj: 'Sipariş numaranızı paylaşabilir misiniz?',
-          gonderen: 'admin',
-          olusturma_tarihi: new Date(Date.now() - 900000).toISOString(),
-          okundu: true
-        }
-      ]
-      setMessages(demoMessages)
+      // Supabase'den mesajları çek
+      setMessages([])
+      
+      // Gerçek implementasyon:
+      // const { data, error } = await supabase
+      //   .from('canli_destek_mesajlar')
+      //   .select('*')
+      //   .eq('konusma_id', conversationId)
+      //   .order('olusturma_tarihi', { ascending: true })
+      // 
+      // if (error) throw error
+      // setMessages(data || [])
     } catch (error) {
       console.error('Mesajlar yüklenemedi:', error)
       toast.error('Mesajlar yüklenemedi')
+      setMessages([])
     }
   }
 
   async function loadOtomatikMesajlar() {
     try {
-      // Demo otomatik mesajlar
-      const demoMesajlar: OtomatikMesaj[] = [
-        {
-          id: '1',
-          baslik: 'Hoş Geldiniz Mesajı',
-          mesaj: 'Merhaba! Efsane Baharat\'a hoş geldiniz. Size nasıl yardımcı olabilirim?',
-          tetikleyici: 'konusma_baslangic',
-          aktif: true
-        },
-        {
-          id: '2',
-          baslik: 'Mesaj Dışı Saatler',
-          mesaj: 'Şu anda çevrimdışıyız. Mesaj bırakabilirsiniz, en kısa sürede dönüş yapacağız.',
-          tetikleyici: 'mesai_disi',
-          aktif: true
-        },
-        {
-          id: '3',
-          baslik: 'Sipariş Takibi',
-          mesaj: 'Siparişinizi takip etmek için sipariş numaranızı paylaşabilir misiniz?',
-          tetikleyici: 'siparis_sorgusu',
-          aktif: true
-        }
-      ]
-      setOtomatikMesajlar(demoMesajlar)
+      // Supabase'den otomatik mesajları çek
+      setOtomatikMesajlar([])
+      
+      // Gerçek implementasyon:
+      // const { data, error } = await supabase
+      //   .from('canli_destek_otomatik_mesajlar')
+      //   .select('*')
+      //   .order('baslik', { ascending: true })
+      // 
+      // if (error) throw error
+      // setOtomatikMesajlar(data || [])
     } catch (error) {
       console.error('Otomatik mesajlar yüklenemedi:', error)
+      setOtomatikMesajlar([])
     }
   }
 
