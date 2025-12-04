@@ -2,14 +2,17 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Eye, Edit, X } from 'lucide-react'
 import toast from 'react-hot-toast'
+import AdminSearchBar from '../../components/AdminSearchBar'
 
 export default function Musteriler() {
   const [musteriler, setMusteriler] = useState<any[]>([])
+  const [filteredMusteriler, setFilteredMusteriler] = useState<any[]>([])
   const [fiyatGruplari, setFiyatGruplari] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [detayModalOpen, setDetayModalOpen] = useState(false)
   const [duzenlemeModalOpen, setDuzenlemeModalOpen] = useState(false)
   const [secilenMusteri, setSecilenMusteri] = useState<any>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const [formData, setFormData] = useState({
     fiyat_grubu_id: '',
     musteri_tipi: 'musteri'
@@ -36,11 +39,45 @@ export default function Musteriler() {
       }))
       
       setMusteriler(musterilerWithFiyat)
+      setFilteredMusteriler(musterilerWithFiyat)
       setFiyatGruplari(fiyatData)
     }
     
     setLoading(false)
   }
+
+  function handleSearch(query: string) {
+    setSearchQuery(query)
+    
+    if (!query.trim()) {
+      setFilteredMusteriler(musteriler)
+      return
+    }
+
+    const lowerQuery = query.toLowerCase()
+    const filtered = musteriler.filter(musteri => {
+      const fullName = `${musteri.ad} ${musteri.soyad}`.toLowerCase()
+      const telefon = (musteri.telefon || '').toLowerCase()
+      const adres = (musteri.adres || '').toLowerCase()
+      const fiyatGrubu = (musteri.fiyat_grubu?.grup_adi || '').toLowerCase()
+      
+      return (
+        fullName.includes(lowerQuery) ||
+        telefon.includes(lowerQuery) ||
+        adres.includes(lowerQuery) ||
+        fiyatGrubu.includes(lowerQuery)
+      )
+    })
+
+    setFilteredMusteriler(filtered)
+  }
+
+  function handleClearSearch() {
+    setSearchQuery('')
+    setFilteredMusteriler(musteriler)
+  }
+
+  const suggestions = musteriler.map(m => `${m.ad} ${m.soyad}`)
 
   async function handleDuzenle(musteri: any) {
     setSecilenMusteri(musteri)
@@ -78,20 +115,33 @@ export default function Musteriler() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Müşteri Yönetimi</h1>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Müşteri Yönetimi</h1>
+        <AdminSearchBar
+          placeholder="Müşteri adı, telefon, adres ile ara..."
+          onSearch={handleSearch}
+          onClear={handleClearSearch}
+          suggestions={suggestions}
+        />
       </div>
 
       {loading ? (
         <div className="text-center py-12">
           <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : musteriler.length === 0 ? (
+      ) : filteredMusteriler.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-          <p className="text-gray-500">Henüz müşteri bulunmuyor</p>
+          <p className="text-gray-500">
+            {searchQuery ? 'Arama sonucu bulunamadı' : 'Henüz müşteri bulunmuyor'}
+          </p>
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="px-6 py-3 bg-gray-50 border-b">
+            <p className="text-sm text-gray-600">
+              {filteredMusteriler.length} müşteri gösteriliyor
+            </p>
+          </div>
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -103,7 +153,7 @@ export default function Musteriler() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {musteriler.map((musteri) => (
+              {filteredMusteriler.map((musteri) => (
                 <tr key={musteri.id}>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
                     {musteri.ad} {musteri.soyad}

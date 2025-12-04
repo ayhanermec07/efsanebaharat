@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { ImageUpload } from '../../components/ImageUpload'
 import { Plus, Edit, Trash2, Package } from 'lucide-react'
 import toast from 'react-hot-toast'
+import AdminSearchBar from '../../components/AdminSearchBar'
 
 interface Urun {
   id: string
@@ -19,9 +20,11 @@ interface Urun {
 
 export default function Urunler() {
   const [urunler, setUrunler] = useState<Urun[]>([])
+  const [filteredUrunler, setFilteredUrunler] = useState<Urun[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingUrun, setEditingUrun] = useState<Urun | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const [formData, setFormData] = useState({
     urun_adi: '',
     aciklama: '',
@@ -61,6 +64,7 @@ export default function Urunler() {
       }))
       
       setUrunler(formattedData)
+      setFilteredUrunler(formattedData)
     } catch (error) {
       console.error('Ürünler yükleme hatası:', error)
       toast.error('Ürünler yüklenirken hata oluştu')
@@ -184,28 +188,79 @@ export default function Urunler() {
     }
   }
 
+  function handleSearch(query: string) {
+    setSearchQuery(query)
+    
+    if (!query.trim()) {
+      setFilteredUrunler(urunler)
+      return
+    }
+
+    const lowerQuery = query.toLowerCase()
+    const filtered = urunler.filter(urun => {
+      const urunAdi = urun.urun_adi.toLowerCase()
+      const aciklama = (urun.aciklama || '').toLowerCase()
+      const fiyat = urun.fiyat.toString()
+      
+      return (
+        urunAdi.includes(lowerQuery) ||
+        aciklama.includes(lowerQuery) ||
+        fiyat.includes(lowerQuery)
+      )
+    })
+
+    setFilteredUrunler(filtered)
+  }
+
+  function handleClearSearch() {
+    setSearchQuery('')
+    setFilteredUrunler(urunler)
+  }
+
+  const suggestions = urunler.map(u => u.urun_adi)
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center space-x-3">
-          <Package className="w-8 h-8 text-orange-600" />
-          <span>Ürünler</span>
-        </h1>
-        <button 
-          onClick={handleNewUrun}
-          className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition flex items-center space-x-2"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Yeni Ürün</span>
-        </button>
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center space-x-3">
+            <Package className="w-8 h-8 text-orange-600" />
+            <span>Ürünler</span>
+          </h1>
+          <button 
+            onClick={handleNewUrun}
+            className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition flex items-center space-x-2"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Yeni Ürün</span>
+          </button>
+        </div>
+        
+        <AdminSearchBar
+          placeholder="Ürün adı, açıklama, fiyat ile ara..."
+          onSearch={handleSearch}
+          onClear={handleClearSearch}
+          suggestions={suggestions}
+        />
       </div>
 
       {loading ? (
         <div className="text-center py-12">
           <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
         </div>
+      ) : filteredUrunler.length === 0 ? (
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+          <p className="text-gray-500">
+            {searchQuery ? 'Arama sonucu bulunamadı' : 'Henüz ürün bulunmuyor'}
+          </p>
+        </div>
       ) : (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="px-6 py-3 bg-gray-50 border-b">
+            <p className="text-sm text-gray-600">
+              {filteredUrunler.length} ürün gösteriliyor
+            </p>
+          </div>
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -217,7 +272,7 @@ export default function Urunler() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {urunler.map((urun) => (
+              {filteredUrunler.map((urun) => (
                 <tr key={urun.id}>
                   <td className="px-6 py-4">
                     {urun.ana_gorsel_url ? (
