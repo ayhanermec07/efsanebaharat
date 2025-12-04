@@ -5,12 +5,12 @@ import { useSepet } from '../contexts/SepetContext'
 import { useAuth } from '../contexts/AuthContext'
 import { ShoppingCart, Check } from 'lucide-react'
 import UrunSoruModul from '../components/UrunSoruModul'
-import { iskontoUygula } from '../utils/iskonto'
+import { kademeliIskontoUygula } from '../utils/iskonto'
 
 export default function UrunDetay() {
   const { id } = useParams()
   const { sepeteEkle } = useSepet()
-  const { user, musteriData, iskontoOrani } = useAuth()
+  const { user, musteriData, grupIskontoOrani, ozelIskontoOrani } = useAuth()
   const [urun, setUrun] = useState<any>(null)
   const [secilenStok, setSecilenStok] = useState<any>(null)
   const [miktar, setMiktar] = useState(1)
@@ -18,7 +18,7 @@ export default function UrunDetay() {
   const [eklendi, setEklendi] = useState(false)
 
   // İskonto bilgisi
-  const iskontoInfo = secilenStok ? iskontoUygula(secilenStok.fiyat, iskontoOrani) : null
+  const iskontoInfo = secilenStok ? kademeliIskontoUygula(secilenStok.fiyat, grupIskontoOrani, ozelIskontoOrani) : null
 
   useEffect(() => {
     if (id) {
@@ -51,6 +51,9 @@ export default function UrunDetay() {
     
     if (data) {
       // Görselleri, stokları, kategori ve markayı ayrı çek
+      // Stok filtreleme: Kullanıcı tipine göre (ziyaretçiler müşteri stokları görür)
+      const musteriTipi = musteriData?.musteri_tipi || 'musteri'
+      
       const [{ data: gorseller }, { data: stoklar }, { data: kategori }, { data: marka }] = await Promise.all([
         supabase.from('urun_gorselleri').select('*').eq('urun_id', data.id).order('sira_no'),
         supabase.from('urun_stoklari').select('*').eq('urun_id', data.id).eq('aktif_durum', true),
@@ -58,17 +61,22 @@ export default function UrunDetay() {
         supabase.from('markalar').select('*').eq('id', data.marka_id).maybeSingle()
       ])
       
+      // Stokları filtrele: stok_grubu 'hepsi' veya kullanıcı tipine uygun olanlar
+      const filtreliStoklar = stoklar?.filter(s => 
+        !s.stok_grubu || s.stok_grubu === 'hepsi' || s.stok_grubu === musteriTipi
+      ) || []
+      
       const urunWithData = {
         ...data,
         urun_gorselleri: gorseller || [],
-        urun_stoklari: stoklar || [],
+        urun_stoklari: filtreliStoklar,
         kategoriler: kategori,
         markalar: marka
       }
       
       setUrun(urunWithData)
-      if (stoklar && stoklar.length > 0) {
-        setSecilenStok(stoklar[0])
+      if (filtreliStoklar && filtreliStoklar.length > 0) {
+        setSecilenStok(filtreliStoklar[0])
       }
     }
   }
@@ -82,9 +90,12 @@ export default function UrunDetay() {
       urun_id: urun.id,
       urun_adi: urun.urun_adi,
       birim_turu: secilenStok.birim_turu,
+      birim_adedi: secilenStok.birim_adedi,
+      birim_adedi_turu: secilenStok.birim_adedi_turu,
       birim_fiyat: iskontoInfo.yeniFiyat,
       miktar,
-      gorsel_url: gorsel
+      gorsel_url: gorsel,
+      min_siparis_miktari: secilenStok.min_siparis_miktari
     })
 
     setEklendi(true)
@@ -186,7 +197,7 @@ export default function UrunDetay() {
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {urun.urun_stoklari.map((stok: any) => {
-                  const stokIskontoInfo = iskontoUygula(stok.fiyat, iskontoOrani)
+                  const stokIskontoInfo = kademeliIskontoUygula(stok.fiyat, grupIskontoOrani, ozelIskontoOrani)
                   return (
                     <button
                       key={stok.id}
@@ -197,7 +208,9 @@ export default function UrunDetay() {
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className="font-semibold">{stok.birim_turu}</div>
+                      <div className="font-semibold">
+                        {stok.birim_adedi || 100} {stok.birim_turu?.toUpperCase() || 'GR'}
+                      </div>
                       <div className="text-sm text-gray-600">
                         {stokIskontoInfo.varMi ? (
                           <>
@@ -210,7 +223,6 @@ export default function UrunDetay() {
                           <span>{stok.fiyat.toFixed(2)} ₺</span>
                         )}
                       </div>
-                      <div className="text-xs text-gray-500">Stok: {stok.stok_miktari}</div>
                     </button>
                   )
                 })}

@@ -18,6 +18,7 @@ import Sorularim from './pages/Sorularim'
 import AdminLayout from './components/admin/AdminLayout'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminUrunler from './pages/admin/UrunlerYonetim'
+import AdminStokAzalan from './pages/admin/StokAzalan'
 import BayiPanel from './pages/BayiPanel'
 import BayiDashboard from './pages/BayiDashboard'
 import AdminKategoriler from './pages/admin/Kategoriler'
@@ -28,10 +29,10 @@ import AdminBayiler from './pages/admin/Bayiler'
 import AdminBayiSatislari from './pages/admin/BayiSatislari'
 import AdminMusteriler from './pages/admin/Musteriler'
 import AdminBannerlar from './pages/admin/Bannerlar'
-import AdminKampanyalar from './pages/admin/Kampanyalar'
+import AdminKampanyalar from './pages/admin/KampanyalarYonetim'
 import AdminSorular from './pages/admin/Sorular'
 import AdminCanliDestek from './pages/admin/CanliDestek'
-import AdminIskonto from './pages/admin/Iskonto'
+import AdminIskontoGruplari from './pages/admin/IskontoGruplari'
 import './App.css'
 
 function App() {
@@ -74,7 +75,8 @@ function App() {
               <Route path="kampanyalar" element={<AdminKampanyalar />} />
               <Route path="sorular" element={<AdminSorular />} />
               <Route path="canli-destek" element={<AdminCanliDestek />} />
-              <Route path="iskonto" element={<AdminIskonto />} />
+              <Route path="iskonto" element={<AdminIskontoGruplari />} />
+              <Route path="stok-azalan" element={<AdminStokAzalan />} />
             </Route>
           </Routes>
         </Router>

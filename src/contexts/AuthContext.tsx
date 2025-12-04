@@ -8,6 +8,8 @@ interface AuthContextType {
   isAdmin: boolean
   musteriData: any | null
   iskontoOrani: number
+  grupIskontoOrani: number
+  ozelIskontoOrani: number
   signIn: (email: string, password: string) => Promise<any>
   signUp: (email: string, password: string, userData: any) => Promise<any>
   signOut: () => Promise<void>
@@ -21,6 +23,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [musteriData, setMusteriData] = useState<any | null>(null)
   const [iskontoOrani, setIskontoOrani] = useState(0)
+  const [grupIskontoOrani, setGrupIskontoOrani] = useState(0)
+  const [ozelIskontoOrani, setOzelIskontoOrani] = useState(0)
 
   useEffect(() => {
     async function loadUser() {
@@ -117,40 +121,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
       
-      // Müşteri bilgisini al
+      // Müşteri bilgisini al (grup ve özel iskonto)
       const { data: musteri } = await supabase
         .from('musteriler')
-        .select('fiyat_grubu_id')
+        .select('fiyat_grubu_id, ozel_iskonto_orani')
         .eq('id', musteriId)
         .maybeSingle()
       
-      console.log('👥 Müşteri fiyat grubu:', musteri?.fiyat_grubu_id)
+      console.log('👥 Müşteri bilgisi:', musteri)
       
-      if (musteri?.fiyat_grubu_id) {
-        // Grup iskonto kontrolü
-        const { data: grupIskonto, error: grupError } = await supabase
-          .from('iskontolar')
-          .select('*')
-          .eq('hedef_id', musteri.fiyat_grubu_id)
-          .eq('hedef_tipi', 'grup')
-          .eq('aktif', true)
-          .lte('baslangic_tarihi', bugun)
-          .gte('bitis_tarihi', bugun)
-          .order('iskonto_orani', { ascending: false })
-          .limit(1)
+      if (!musteri) {
+        console.log('❌ Müşteri bulunamadı')
+        setGrupIskontoOrani(0)
+        setOzelIskontoOrani(0)
+        setIskontoOrani(0)
+        return
+      }
+
+      let grupIskonto = 0
+      let ozelIskonto = musteri.ozel_iskonto_orani || 0
+
+      // Grup iskontosunu al
+      if (musteri.fiyat_grubu_id) {
+        const { data: fiyatGrubu } = await supabase
+          .from('fiyat_gruplari')
+          .select('indirim_orani')
+          .eq('id', musteri.fiyat_grubu_id)
+          .eq('aktif_durum', true)
           .maybeSingle()
         
-        console.log('🏷️ Grup iskonto sorgusu:', { grupIskonto, grupError })
+        console.log('🏷️ Fiyat grubu:', fiyatGrubu)
         
-        if (grupIskonto) {
-          console.log('✅ Grup iskonto bulundu:', grupIskonto.iskonto_orani)
-          setIskontoOrani(grupIskonto.iskonto_orani)
-          return
+        if (fiyatGrubu) {
+          grupIskonto = fiyatGrubu.indirim_orani || 0
+          console.log('✅ Grup iskontosu:', grupIskonto)
         }
       }
+
+      console.log('✅ Özel iskonto:', ozelIskonto)
+
+      // Kademeli iskonto hesapla (önce grup, sonra özel)
+      // Örnek: 100 TL, %10 grup, %5 özel
+      // 1. 100 - (100 * 0.10) = 90 TL
+      // 2. 90 - (90 * 0.05) = 85.5 TL
+      // Toplam indirim: 14.5 TL = %14.5
       
-      console.log('❌ İskonto bulunamadı')
-      setIskontoOrani(0)
+      let toplamIskontoOrani = 0
+      if (grupIskonto > 0 || ozelIskonto > 0) {
+        // Kademeli hesaplama için örnek fiyat kullan
+        const ornekFiyat = 100
+        let mevcutFiyat = ornekFiyat
+        
+        // Grup iskontosunu uygula
+        if (grupIskonto > 0) {
+          mevcutFiyat -= (mevcutFiyat * grupIskonto) / 100
+        }
+        
+        // Özel iskontonu uygula
+        if (ozelIskonto > 0) {
+          mevcutFiyat -= (mevcutFiyat * ozelIskonto) / 100
+        }
+        
+        // Toplam iskonto oranını hesapla
+        toplamIskontoOrani = ((ornekFiyat - mevcutFiyat) / ornekFiyat) * 100
+      }
+      
+      setGrupIskontoOrani(grupIskonto)
+      setOzelIskontoOrani(ozelIskonto)
+      setIskontoOrani(Math.round(toplamIskontoOrani * 100) / 100)
+      
+      console.log('💰 Grup:', grupIskonto, '% | Özel:', ozelIskonto, '% | Toplam:', toplamIskontoOrani.toFixed(2), '%')
     } catch (error) {
       console.error('❌ İskonto hesaplama hatası:', error)
       setIskontoOrani(0)
@@ -248,7 +288,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, musteriData, iskontoOrani, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, musteriData, iskontoOrani, grupIskontoOrani, ozelIskontoOrani, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   )

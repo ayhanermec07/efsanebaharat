@@ -4,10 +4,10 @@ import { supabase } from '../lib/supabase'
 import { ChevronLeft, ChevronRight, ShoppingBag, TruckIcon, Shield } from 'lucide-react'
 import CanliDestekWidget from '../components/CanliDestekWidget'
 import { useAuth } from '../contexts/AuthContext'
-import { iskontoUygula } from '../utils/iskonto'
+import { kademeliIskontoUygula } from '../utils/iskonto'
 
 export default function AnaSayfa() {
-  const { iskontoOrani } = useAuth()
+  const { user, grupIskontoOrani, ozelIskontoOrani } = useAuth()
   const [banners, setBanners] = useState<any[]>([])
   const [oneCikanUrunler, setOneCikanUrunler] = useState<any[]>([])
   const [enCokSatanlar, setEnCokSatanlar] = useState<any[]>([])
@@ -237,7 +237,8 @@ export default function AnaSayfa() {
               {oneCikanUrunler.map((urun) => {
                 const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
                 const ilkStok = urun.urun_stoklari?.[0]
-                const iskontoInfo = ilkStok ? iskontoUygula(ilkStok.fiyat, iskontoOrani) : null
+                // Sadece giriş yapmış kullanıcılara iskonto göster
+                const iskontoInfo = ilkStok && user ? kademeliIskontoUygula(ilkStok.fiyat, grupIskontoOrani, ozelIskontoOrani) : null
                 
                 return (
                   <Link
@@ -315,7 +316,8 @@ export default function AnaSayfa() {
               {enCokSatanlar.slice(bestsellerPage * 4, (bestsellerPage + 1) * 4).map((urun) => {
                 const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
                 const ilkStok = urun.urun_stoklari?.[0]
-                const iskontoInfo = ilkStok ? iskontoUygula(ilkStok.fiyat, iskontoOrani) : null
+                // Sadece giriş yapmış kullanıcılara iskonto göster
+                const iskontoInfo = ilkStok && user ? kademeliIskontoUygula(ilkStok.fiyat, grupIskontoOrani, ozelIskontoOrani) : null
                 
                 return (
                   <Link
@@ -426,7 +428,8 @@ export default function AnaSayfa() {
               {yeniEklenenler.slice(newProductsPage * 4, (newProductsPage + 1) * 4).map((urun) => {
                 const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
                 const ilkStok = urun.urun_stoklari?.[0]
-                const iskontoInfo = ilkStok ? iskontoUygula(ilkStok.fiyat, iskontoOrani) : null
+                // Sadece giriş yapmış kullanıcılara iskonto göster
+                const iskontoInfo = ilkStok && user ? kademeliIskontoUygula(ilkStok.fiyat, grupIskontoOrani, ozelIskontoOrani) : null
                 
                 return (
                   <Link
@@ -603,3 +606,4 @@ export default function AnaSayfa() {
     </div>
   )
 }
+

@@ -394,7 +394,7 @@ export default function Urunler() {
                   bucketName="urun-gorselleri"
                   onUploadComplete={(urls) => setFormData({ ...formData, ana_gorsel_url: urls[0] || '' })}
                   existingImages={formData.ana_gorsel_url ? [formData.ana_gorsel_url] : []}
-                  maxSizeMB={5}
+                  maxSizeMB={8}
                 />
               </div>
 
@@ -407,7 +407,7 @@ export default function Urunler() {
                   bucketName="urun-gorselleri"
                   onUploadComplete={(urls) => setFormData({ ...formData, urun_gorselleri: urls })}
                   existingImages={formData.urun_gorselleri || []}
-                  maxSizeMB={5}
+                  maxSizeMB={8}
                 />
               </div>
 

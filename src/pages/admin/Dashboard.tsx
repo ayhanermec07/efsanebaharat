@@ -197,9 +197,8 @@ export default function Dashboard() {
     { title: 'Kampanyalar', value: stats.aktifKampanyalar, icon: Megaphone, color: 'purple', link: '/admin/kampanyalar' },
     { title: 'Bannerlar', value: stats.bannerSayisi, icon: Image, color: 'pink', link: '/admin/bannerlar' },
     { title: 'Önerilen Ürünler', value: stats.onerilenUrunler, icon: Star, color: 'yellow', link: '/admin/urunler' },
-    { title: 'Sorular', value: stats.bekleyenSorular, icon: MessageSquare, color: 'red', link: '/admin/sorular' },
     { title: 'Bayiler', value: stats.aktifBayiler, icon: Store, color: 'indigo', link: '/admin/bayiler' },
-    { title: 'Bayi Satışları', value: 'Rapor', icon: BarChart3, color: 'teal', link: '/admin/bayi-satislari' }
+    { title: 'Siparişler', value: stats.toplamSiparis, icon: ShoppingCart, color: 'green', link: '/admin/siparisler' }
   ]
 
   const mainStats = [
@@ -231,13 +230,13 @@ export default function Dashboard() {
       link: '/admin/siparisler'
     },
     {
-      title: 'Bekleyen Sorular',
-      value: stats.bekleyenSorular,
-      icon: MessageSquare,
+      title: 'Stoğu Azalan Ürünler',
+      value: '!',
+      icon: TrendingDown,
       color: 'bg-red-500',
-      trend: stats.bekleyenSorular > 0 ? `${stats.bekleyenSorular}` : '0',
+      trend: 'Kritik',
       trendUp: false,
-      link: '/admin/sorular'
+      link: '/admin/stok-azalan'
     }
   ]
 

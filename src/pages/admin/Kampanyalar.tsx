@@ -23,6 +23,14 @@ interface Kampanya {
   banner_gorseli: string | null
   kampanya_tipi: 'indirim' | 'paket' | 'ozel'
   olusturma_tarihi: string
+  iskonto_yuzdesi?: number
+  hedef_grup?: 'musteri' | 'bayi' | 'hepsi'
+  kullanim_tipi?: 'tekli' | 'coklu'
+  min_sepet_tutari?: number
+  max_kullanim_sayisi?: number | null
+  kampanya_kodu?: string | null
+  aktif_durum?: boolean
+  kullanim_sayisi?: number
 }
 
 interface Banner {
@@ -100,7 +108,24 @@ export default function AdminKampanyalar() {
       .order('olusturma_tarihi', { ascending: false })
 
     if (error) throw error
-    setKampanyalar(data || [])
+
+    // Kullanım sayılarını al
+    if (data && data.length > 0) {
+      const kampanyaIds = data.map(k => k.id)
+      const { data: kullanimlar } = await supabase
+        .from('kampanya_kullanimlari')
+        .select('kampanya_id')
+        .in('kampanya_id', kampanyaIds)
+
+      const kampanyalarWithCount = data.map(k => ({
+        ...k,
+        kullanim_sayisi: kullanimlar?.filter(ku => ku.kampanya_id === k.id).length || 0
+      }))
+
+      setKampanyalar(kampanyalarWithCount)
+    } else {
+      setKampanyalar([])
+    }
   }
 
   async function loadBannerlar() {
@@ -758,7 +783,7 @@ function KampanyaModal({ kampanya, onSave, onClose }: any) {
                 bucketName="kampanya-banners"
                 onUploadComplete={(urls) => setFormData({ ...formData, banner_gorseli: urls[0] || '' })}
                 existingImages={formData.banner_gorseli ? [formData.banner_gorseli] : []}
-                maxSizeMB={5}
+                maxSizeMB={8}
               />
             </div>
 
@@ -848,7 +873,7 @@ function BannerModal({ banner, kampanyalar, onSave, onClose }: any) {
                 bucketName="banner-gorselleri"
                 onUploadComplete={(urls) => setFormData({ ...formData, gorsel_url: urls[0] || '' })}
                 existingImages={formData.gorsel_url ? [formData.gorsel_url] : []}
-                maxSizeMB={5}
+                maxSizeMB={8}
               />
             </div>
 

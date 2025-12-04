@@ -87,3 +87,48 @@ export function iskontoUygula(fiyat: number, iskontoOrani: number): IskontoInfo 
     eskiFiyat: fiyat
   }
 }
+
+/**
+ * Kademeli iskonto uygular (önce grup, sonra özel)
+ */
+export function kademeliIskontoUygula(
+  fiyat: number, 
+  grupIskontoOrani: number, 
+  ozelIskontoOrani: number
+): IskontoInfo {
+  if (grupIskontoOrani <= 0 && ozelIskontoOrani <= 0) {
+    return {
+      varMi: false,
+      oran: 0,
+      yeniFiyat: fiyat,
+      eskiFiyat: fiyat
+    }
+  }
+
+  let mevcutFiyat = fiyat
+  let toplamIndirim = 0
+
+  // 1. Grup iskontosunu uygula
+  if (grupIskontoOrani > 0) {
+    const grupIndirim = (mevcutFiyat * grupIskontoOrani) / 100
+    toplamIndirim += grupIndirim
+    mevcutFiyat -= grupIndirim
+  }
+
+  // 2. Özel iskontonu uygula (kalan tutara)
+  if (ozelIskontoOrani > 0) {
+    const ozelIndirim = (mevcutFiyat * ozelIskontoOrani) / 100
+    toplamIndirim += ozelIndirim
+    mevcutFiyat -= ozelIndirim
+  }
+
+  // Toplam iskonto oranını hesapla
+  const toplamIskontoOrani = (toplamIndirim / fiyat) * 100
+
+  return {
+    varMi: true,
+    oran: Math.round(toplamIskontoOrani * 100) / 100,
+    yeniFiyat: Math.round(mevcutFiyat * 100) / 100,
+    eskiFiyat: fiyat
+  }
+}

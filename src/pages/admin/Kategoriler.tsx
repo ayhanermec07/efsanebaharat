@@ -231,7 +231,7 @@ export default function Kategoriler() {
                     bucketName="kategori-gorselleri"
                     onUploadComplete={(urls) => setFormData({ ...formData, gorsel_url: urls[0] || '' })}
                     existingImages={formData.gorsel_url ? [formData.gorsel_url] : []}
-                    maxSizeMB={5}
+                    maxSizeMB={8}
                   />
                 </div>
 

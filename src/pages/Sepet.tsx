@@ -5,6 +5,8 @@ import { Trash2, Plus, Minus, ShoppingBag, CreditCard } from 'lucide-react'
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
+import { akilliBirimGoster } from '../utils/birimDonusturucu'
+import KampanyaUygula from '../components/KampanyaUygula'
 
 export default function Sepet() {
   const { sepetItems, sepettenCikar, miktarGuncelle, toplamTutar, sepetiTemizle } = useSepet()
@@ -13,10 +15,13 @@ export default function Sepet() {
   const [loading, setLoading] = useState(false)
   const [showPaymentIframe, setShowPaymentIframe] = useState(false)
   const [paymentToken, setPaymentToken] = useState('')
+  const [uygulananKampanya, setUygulananKampanya] = useState<any>(null)
+  const [kampanyaIndirimi, setKampanyaIndirimi] = useState(0)
 
   const kdvOrani = 0.20
   const araToplamTutar = toplamTutar / (1 + kdvOrani)
   const kdvTutari = toplamTutar - araToplamTutar
+  const indirimliToplam = toplamTutar - kampanyaIndirimi
 
   async function handleOdemeYap() {
     if (!user || !musteriData) {
@@ -47,7 +52,9 @@ export default function Sepet() {
             telefon: musteriData.telefon,
             adres: musteriData.adres
           },
-          toplamTutar: toplamTutar
+          toplamTutar: indirimliToplam,
+          kampanyaKodu: uygulananKampanya?.kod,
+          kampanyaIndirimi: kampanyaIndirimi
         }
       })
 
@@ -67,7 +74,9 @@ export default function Sepet() {
           .insert({
             siparis_no: siparisNo,
             musteri_id: musteriData.id,
-            toplam_tutar: toplamTutar,
+            toplam_tutar: indirimliToplam,
+            kampanya_kodu: uygulananKampanya?.kod,
+            kampanya_indirimi: kampanyaIndirimi,
             siparis_durumu: 'beklemede',
             odeme_durumu: 'bekliyor',
             adres: musteriData.adres,
@@ -82,11 +91,54 @@ export default function Sepet() {
                 siparis_id: siparis.id,
                 urun_id: item.urun_id,
                 birim_turu: item.birim_turu,
+                birim_adedi: item.birim_adedi,
+                birim_adedi_turu: item.birim_adedi_turu,
                 miktar: item.miktar,
                 birim_fiyat: item.birim_fiyat,
                 toplam_fiyat: item.birim_fiyat * item.miktar
               }))
               await supabase.from('siparis_urunleri').insert(siparisUrunleri)
+              
+              // Stokları düşür ve rezervasyonları kaldır
+              for (const item of sepetItems) {
+                // İlgili stok kaydını bul
+                const { data: stok } = await supabase
+                  .from('urun_stoklari')
+                  .select('*')
+                  .eq('urun_id', item.urun_id)
+                  .eq('birim_turu', item.birim_turu)
+                  .single()
+                
+                if (stok) {
+                  // Satılan toplam miktarı hesapla (birim_adedi * miktar)
+                  const satilanMiktar = (item.birim_adedi || 100) * item.miktar
+                  
+                  // Birim dönüştürme: satılan miktarı stok birimine çevir
+                  let stokDusumu = satilanMiktar
+                  if (item.birim_turu === 'gr' && stok.stok_birimi === 'kg') {
+                    stokDusumu = satilanMiktar / 1000 // gr'ı kg'a çevir
+                  } else if (item.birim_turu === 'kg' && stok.stok_birimi === 'gr') {
+                    stokDusumu = satilanMiktar * 1000 // kg'ı gr'a çevir
+                  }
+                  
+                  // Yeni stok miktarını hesapla
+                  const yeniStok = Math.max(0, (stok.stok_miktari || 0) - stokDusumu)
+                  
+                  // Stoku güncelle
+                  await supabase
+                    .from('urun_stoklari')
+                    .update({ stok_miktari: yeniStok })
+                    .eq('id', stok.id)
+                }
+
+                // Rezervasyonu kaldır
+                await supabase
+                  .from('stok_rezervasyonlari')
+                  .delete()
+                  .eq('musteri_id', musteriData.id)
+                  .eq('urun_id', item.urun_id)
+                  .eq('birim_turu', item.birim_turu)
+              }
             }
           })
 
@@ -172,7 +224,9 @@ export default function Sepet() {
 
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900 mb-1">{item.urun_adi}</h3>
-                    <p className="text-sm text-gray-500 mb-2">{item.birim_turu}</p>
+                    <p className="text-sm text-gray-500 mb-2">
+                      {akilliBirimGoster(item.birim_adedi || 100, item.birim_adedi_turu || item.birim_turu)}
+                    </p>
                     <p className="text-orange-600 font-bold">{item.birim_fiyat.toFixed(2)} ₺</p>
                   </div>
 
@@ -223,10 +277,26 @@ export default function Sepet() {
                   <span>KDV (%{(kdvOrani * 100).toFixed(0)})</span>
                   <span>{kdvTutari.toFixed(2)} ₺</span>
                 </div>
+                {kampanyaIndirimi > 0 && (
+                  <div className="flex justify-between text-green-600 font-semibold">
+                    <span>Kampanya İndirimi</span>
+                    <span>-{kampanyaIndirimi.toFixed(2)} ₺</span>
+                  </div>
+                )}
                 <div className="border-t pt-3 flex justify-between text-lg font-bold text-gray-900">
                   <span>Toplam</span>
-                  <span>{toplamTutar.toFixed(2)} ₺</span>
+                  <span>{indirimliToplam.toFixed(2)} ₺</span>
                 </div>
+              </div>
+
+              <div className="mb-6">
+                <KampanyaUygula
+                  sepetTutari={toplamTutar}
+                  onKampanyaUygula={(kampanya, indirim) => {
+                    setUygulananKampanya(kampanya)
+                    setKampanyaIndirimi(indirim)
+                  }}
+                />
               </div>
 
               {user ? (
