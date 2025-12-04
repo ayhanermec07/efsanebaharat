@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Eye, X } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { akilliBirimGoster } from '../../utils/birimDonusturucu'
 
 export default function Siparisler() {
   const [siparisler, setSiparisler] = useState<any[]>([])
@@ -231,7 +232,9 @@ export default function Siparisler() {
                       {secilenSiparis.siparis_urunleri?.map((su: any, index: number) => (
                         <tr key={index}>
                           <td className="px-4 py-3 text-sm text-gray-900">{su.urun?.urun_adi}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{su.birim_turu}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {akilliBirimGoster(su.birim_adedi || 100, su.birim_adedi_turu || su.birim_turu)}
+                          </td>
                           <td className="px-4 py-3 text-sm text-gray-600">{su.miktar}</td>
                           <td className="px-4 py-3 text-sm text-gray-900">{su.birim_fiyat?.toFixed(2)} ₺</td>
                           <td className="px-4 py-3 text-sm font-semibold text-gray-900">

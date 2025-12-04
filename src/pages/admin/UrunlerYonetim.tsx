@@ -19,7 +19,7 @@ export default function UrunlerYonetim() {
     aktif_durum: true
   })
   const [stoklar, setStoklar] = useState<any[]>([
-    { birim_turu: '100gr', fiyat: 0, stok_miktari: 0, min_siparis_miktari: 1 }
+    { birim_adedi: 100, birim_adedi_turu: 'gr', birim_turu: 'gr', fiyat: 0, stok_miktari: 0, stok_birimi: 'gr', min_siparis_miktari: 1, stok_grubu: 'hepsi' }
   ])
   const [urunGorselleri, setUrunGorselleri] = useState<string[]>([])
 
@@ -140,16 +140,49 @@ export default function UrunlerYonetim() {
     })
     
     // Stokları yükle
-    supabase.from('urun_stoklari').select('*').eq('urun_id', urun.id).then(({ data }) => {
-      if (data && data.length > 0) {
-        setStoklar(data.map(s => ({
-          birim_turu: s.birim_turu,
-          fiyat: s.fiyat,
-          stok_miktari: s.stok_miktari,
-          min_siparis_miktari: s.min_siparis_miktari
-        })))
-      }
-    })
+    supabase.from('urun_stoklari')
+      .select('id, urun_id, birim_turu, birim_adedi, birim_adedi_turu, fiyat, stok_miktari, stok_birimi, min_siparis_miktari, stok_grubu, aktif_durum')
+      .eq('urun_id', urun.id)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setStoklar(data.map(s => {
+            // Stok birimi yoksa birim türüne göre belirle
+            let stokBirimi = s.stok_birimi
+            if (!stokBirimi) {
+              if (s.birim_turu === 'adet') {
+                stokBirimi = 'adet'
+              } else if (s.birim_turu === 'kg') {
+                stokBirimi = 'kg'
+              } else {
+                stokBirimi = 'gr'
+              }
+            }
+            
+            return {
+              birim_adedi: Number(s.birim_adedi) || 100,
+              birim_adedi_turu: s.birim_adedi_turu || s.birim_turu,
+              birim_turu: s.birim_turu,
+              fiyat: Number(s.fiyat) || 0,
+              stok_miktari: Number(s.stok_miktari) || 0,
+              stok_birimi: stokBirimi,
+              min_siparis_miktari: Number(s.min_siparis_miktari) || 1,
+              stok_grubu: s.stok_grubu || 'hepsi'
+            }
+          }))
+        } else {
+          // Stok yoksa default ekle
+          setStoklar([{ 
+            birim_adedi: 100, 
+            birim_adedi_turu: 'gr',
+            birim_turu: 'gr', 
+            fiyat: 0, 
+            stok_miktari: 0, 
+            stok_birimi: 'gr', 
+            min_siparis_miktari: 1, 
+            stok_grubu: 'hepsi' 
+          }])
+        }
+      })
     
     // Görselleri yükle
     supabase.from('urun_gorselleri').select('*').eq('urun_id', urun.id).order('sira_no', { ascending: true }).then(({ data }) => {
@@ -170,13 +203,13 @@ export default function UrunlerYonetim() {
       marka_id: '',
       aktif_durum: true
     })
-    setStoklar([{ birim_turu: '100gr', fiyat: 0, stok_miktari: 0, min_siparis_miktari: 1 }])
+    setStoklar([{ birim_adedi: 100, birim_adedi_turu: 'gr', birim_turu: 'gr', fiyat: 0, stok_miktari: 0, stok_birimi: 'gr', min_siparis_miktari: 1, stok_grubu: 'hepsi' }])
     setUrunGorselleri([])
     setModalOpen(false)
   }
 
   function addStok() {
-    setStoklar([...stoklar, { birim_turu: '', fiyat: 0, stok_miktari: 0, min_siparis_miktari: 1 }])
+    setStoklar([...stoklar, { birim_adedi: 100, birim_adedi_turu: 'gr', birim_turu: 'gr', fiyat: 0, stok_miktari: 0, stok_birimi: 'gr', min_siparis_miktari: 1, stok_grubu: 'hepsi' }])
   }
 
   function removeStok(index: number) {
@@ -185,7 +218,9 @@ export default function UrunlerYonetim() {
 
   function updateStok(index: number, field: string, value: any) {
     const newStoklar = [...stoklar]
-    newStoklar[index] = { ...newStoklar[index], [field]: value }
+    // NaN kontrolü - eğer value NaN ise 0 kullan
+    const safeValue = (typeof value === 'number' && isNaN(value)) ? 0 : value
+    newStoklar[index] = { ...newStoklar[index], [field]: safeValue }
     setStoklar(newStoklar)
   }
 
@@ -348,7 +383,7 @@ export default function UrunlerYonetim() {
                     bucketName="urun-gorselleri"
                     onUploadComplete={(urls) => setUrunGorselleri(urls)}
                     existingImages={urunGorselleri}
-                    maxSizeMB={5}
+                    maxSizeMB={8}
                   />
                   <p className="text-xs text-gray-500 mt-2">İlk görsel ürün kartlarında ana görsel olarak gösterilecektir.</p>
                 </div>
@@ -367,60 +402,156 @@ export default function UrunlerYonetim() {
                   </div>
 
                   {/* Başlıklar */}
-                  <div className="grid grid-cols-5 gap-2 mb-3">
-                    <div className="text-sm font-medium text-gray-700">Birim Türü</div>
+                  <div className="grid grid-cols-8 gap-2 mb-3">
+                    <div className="text-sm font-medium text-gray-700 col-span-2">Birim Adedi</div>
                     <div className="text-sm font-medium text-gray-700">Fiyat (TL)</div>
-                    <div className="text-sm font-medium text-gray-700">Stok Adedi</div>
+                    <div className="text-sm font-medium text-gray-700 col-span-2">Stok</div>
                     <div className="text-sm font-medium text-gray-700">Min. Sipariş</div>
+                    <div className="text-sm font-medium text-gray-700">Müşteri Grubu</div>
                     <div></div>
                   </div>
 
-                  {stoklar.map((stok, index) => (
-                    <div key={index} className="grid grid-cols-5 gap-2 mb-2">
-                      <input
-                        type="text"
-                        placeholder="Örn: 100gr, 250gr, 1kg"
-                        value={stok.birim_turu}
-                        onChange={(e) => updateStok(index, 'birim_turu', e.target.value)}
-                        required
-                        className="px-2 py-1 border rounded text-sm"
-                      />
-                      <input
-                        type="number"
-                        placeholder="0.00"
-                        value={stok.fiyat}
-                        onChange={(e) => updateStok(index, 'fiyat', parseFloat(e.target.value))}
-                        required
-                        step="0.01"
-                        className="px-2 py-1 border rounded text-sm"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Adet sayısı"
-                        value={stok.stok_miktari}
-                        onChange={(e) => updateStok(index, 'stok_miktari', parseFloat(e.target.value))}
-                        required
-                        className="px-2 py-1 border rounded text-sm"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Minimum adet"
-                        value={stok.min_siparis_miktari}
-                        onChange={(e) => updateStok(index, 'min_siparis_miktari', parseFloat(e.target.value))}
-                        required
-                        className="px-2 py-1 border rounded text-sm"
-                      />
-                      {stoklar.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeStok(index)}
-                          className="text-red-600 hover:text-red-700"
+                  {stoklar.map((stok, index) => {
+                    // Birim türüne göre stok birimi seçeneklerini belirle
+                    let stokBirimiSecenekleri
+                    if (stok.birim_turu === 'adet') {
+                      stokBirimiSecenekleri = [{ value: 'adet', label: 'Adet' }]
+                    } else if (stok.birim_turu === 'gr') {
+                      stokBirimiSecenekleri = [
+                        { value: 'gr', label: 'GR' },
+                        { value: 'kg', label: 'KG' }
+                      ]
+                    } else if (stok.birim_turu === 'kg') {
+                      stokBirimiSecenekleri = [{ value: 'kg', label: 'KG' }]
+                    } else {
+                      stokBirimiSecenekleri = [{ value: 'gr', label: 'GR' }]
+                    }
+                    
+                    return (
+                      <div key={index} className="grid grid-cols-8 gap-2 mb-2">
+                        <input
+                          type="number"
+                          placeholder="100"
+                          value={stok.birim_adedi || ''}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? 0 : parseFloat(e.target.value)
+                            updateStok(index, 'birim_adedi', isNaN(val) ? 0 : val)
+                          }}
+                          required
+                          step="0.01"
+                          min="0"
+                          className="px-2 py-1 border rounded text-sm"
+                        />
+                        <select
+                          value={stok.birim_turu || 'gr'}
+                          onChange={(e) => {
+                            const yeniBirim = e.target.value
+                            const newStoklar = [...stoklar]
+                            newStoklar[index] = { ...newStoklar[index], birim_turu: yeniBirim }
+                            
+                            // Birim türü değiştiğinde stok birimini otomatik ayarla
+                            if (yeniBirim === 'adet') {
+                              newStoklar[index].stok_birimi = 'adet'
+                            } else if (yeniBirim === 'kg') {
+                              newStoklar[index].stok_birimi = 'kg'
+                            } else if (yeniBirim === 'gr') {
+                              // GR seçildiğinde, eğer stok birimi adet ise gr yap
+                              if (newStoklar[index].stok_birimi === 'adet') {
+                                newStoklar[index].stok_birimi = 'gr'
+                              }
+                              // Aksi halde mevcut değeri koru (gr veya kg)
+                            }
+                            
+                            setStoklar(newStoklar)
+                          }}
+                          required
+                          className="px-2 py-1 border rounded text-sm"
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                          <option value="adet">Adet</option>
+                          <option value="gr">GR</option>
+                          <option value="kg">KG</option>
+                        </select>
+                        <input
+                          type="number"
+                          placeholder="0.00"
+                          value={stok.fiyat || ''}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? 0 : parseFloat(e.target.value)
+                            updateStok(index, 'fiyat', isNaN(val) ? 0 : val)
+                          }}
+                          required
+                          step="0.01"
+                          min="0"
+                          className="px-2 py-1 border rounded text-sm"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Miktar"
+                          value={stok.stok_miktari || ''}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? 0 : parseFloat(e.target.value)
+                            const yeniMiktar = isNaN(val) ? 0 : val
+                            // Birim adedi ve stok birimi aynı ise minimum kontrolü
+                            if (stok.birim_turu === stok.stok_birimi) {
+                              if (yeniMiktar < (stok.birim_adedi || 0)) {
+                                toast.error(`Stok miktarı ${stok.birim_adedi} ${stok.birim_turu?.toUpperCase()}'den küçük olamaz!`)
+                                return
+                              }
+                            }
+                            updateStok(index, 'stok_miktari', yeniMiktar)
+                          }}
+                          required
+                          step="0.01"
+                          min={stok.birim_turu === stok.stok_birimi ? (stok.birim_adedi || 0) : 0}
+                          className="px-2 py-1 border rounded text-sm"
+                        />
+                        <select
+                          value={stok.stok_birimi || stok.birim_turu || 'gr'}
+                          onChange={(e) => updateStok(index, 'stok_birimi', e.target.value)}
+                          required
+                          className="px-2 py-1 border rounded text-sm"
+                        >
+                          {stokBirimiSecenekleri.map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="number"
+                          placeholder="Min"
+                          value={stok.min_siparis_miktari || ''}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? 1 : parseFloat(e.target.value)
+                            updateStok(index, 'min_siparis_miktari', isNaN(val) ? 1 : val)
+                          }}
+                          required
+                          min="1"
+                          step="1"
+                          className="px-2 py-1 border rounded text-sm"
+                        />
+                        <select
+                          value={stok.stok_grubu || 'hepsi'}
+                          onChange={(e) => updateStok(index, 'stok_grubu', e.target.value)}
+                          required
+                          className="px-2 py-1 border rounded text-sm"
+                        >
+                          <option value="hepsi">Hepsi</option>
+                          <option value="musteri">Müşteri</option>
+                          <option value="bayi">Bayi</option>
+                        </select>
+                        {stoklar.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeStok(index)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
 
                 <div className="flex space-x-4 pt-4">

@@ -18,7 +18,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   onUploadComplete,
   existingImages = [],
   accept = 'image/*',
-  maxSizeMB = 5
+  maxSizeMB = 8
 }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>(existingImages);

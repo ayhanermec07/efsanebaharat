@@ -4,10 +4,10 @@ import { supabase } from '../lib/supabase'
 import { Search, SlidersHorizontal, Eye, ShoppingCart } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
-import { iskontoUygula } from '../utils/iskonto'
+import { kademeliIskontoUygula } from '../utils/iskonto'
 
 export default function Urunler() {
-  const { user, iskontoOrani } = useAuth()
+  const { user, musteriData, grupIskontoOrani, ozelIskontoOrani } = useAuth()
   const { sepeteEkle } = useSepet()
   const [searchParams, setSearchParams] = useSearchParams()
   const [urunler, setUrunler] = useState<any[]>([])
@@ -86,13 +86,23 @@ export default function Urunler() {
       ])
       
       // Ürünlere ilişkili verileri ekle
-      const urunlerWithData = data.map(urun => ({
-        ...urun,
-        urun_gorselleri: gorseller?.filter(g => g.urun_id === urun.id) || [],
-        urun_stoklari: stoklar?.filter(s => s.urun_id === urun.id) || [],
-        kategoriler: kategorilerData?.find(k => k.id === urun.kategori_id),
-        markalar: markalarData?.find(m => m.id === urun.marka_id)
-      }))
+      // Kullanıcı tipine göre stok filtreleme (ziyaretçiler müşteri stokları görür)
+      const musteriTipi = musteriData?.musteri_tipi || 'musteri'
+      
+      const urunlerWithData = data.map(urun => {
+        const urunStoklari = stoklar?.filter(s => s.urun_id === urun.id) || []
+        const filtreliStoklar = urunStoklari.filter(s => 
+          !s.stok_grubu || s.stok_grubu === 'hepsi' || s.stok_grubu === musteriTipi
+        )
+        
+        return {
+          ...urun,
+          urun_gorselleri: gorseller?.filter(g => g.urun_id === urun.id) || [],
+          urun_stoklari: filtreliStoklar,
+          kategoriler: kategorilerData?.find(k => k.id === urun.kategori_id),
+          markalar: markalarData?.find(m => m.id === urun.marka_id)
+        }
+      })
       
       setUrunler(urunlerWithData)
     } else {
@@ -198,7 +208,8 @@ export default function Urunler() {
               {urunler.map((urun) => {
                 const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
                 const ilkStok = urun.urun_stoklari?.[0]
-                const iskontoInfo = ilkStok ? iskontoUygula(ilkStok.fiyat, iskontoOrani) : null
+                // Sadece giriş yapmış kullanıcılara iskonto göster
+                const iskontoInfo = ilkStok && user ? kademeliIskontoUygula(ilkStok.fiyat, grupIskontoOrani, ozelIskontoOrani) : null
                 
                 return (
                   <div
@@ -256,7 +267,9 @@ export default function Urunler() {
                               </span>
                             )}
                           </div>
-                          <span className="text-sm text-gray-500">{ilkStok.birim_turu}</span>
+                          <span className="text-sm text-gray-500">
+                            {ilkStok.birim_adedi || 100} {ilkStok.birim_turu?.toUpperCase() || 'GR'}
+                          </span>
                         </div>
                       )}
                       {user ? (
@@ -268,6 +281,8 @@ export default function Urunler() {
                                 urun_id: urun.id,
                                 urun_adi: urun.urun_adi,
                                 birim_turu: ilkStok.birim_turu,
+                                birim_adedi: ilkStok.birim_adedi,
+                                birim_adedi_turu: ilkStok.birim_adedi_turu || ilkStok.birim_turu,
                                 birim_fiyat: iskontoInfo.yeniFiyat,
                                 miktar: ilkStok.min_siparis_miktari || 1,
                                 gorsel_url: ilkGorsel,

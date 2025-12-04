@@ -70,7 +70,10 @@ export default function Hesabim() {
   }, [user, authLoading, musteriData])
 
   async function loadSiparisler() {
-    if (!musteriData) return
+    if (!musteriData?.id) {
+      console.log('Müşteri ID bulunamadı:', musteriData)
+      return
+    }
 
     setLoading(true)
     
@@ -79,7 +82,7 @@ export default function Hesabim() {
       const { data: siparisData, error: siparisError } = await supabase
         .from('siparisler')
         .select('*')
-        .eq('musteri_id', musteriData.kullanici_id)
+        .eq('musteri_id', musteriData.id)
         .order('olusturma_tarihi', { ascending: false })
       
       if (siparisError) throw siparisError

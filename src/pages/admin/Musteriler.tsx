@@ -15,7 +15,8 @@ export default function Musteriler() {
   const [searchQuery, setSearchQuery] = useState('')
   const [formData, setFormData] = useState({
     fiyat_grubu_id: '',
-    musteri_tipi: 'musteri'
+    musteri_tipi: 'musteri',
+    ozel_iskonto_orani: 0
   })
 
   useEffect(() => {
@@ -83,7 +84,8 @@ export default function Musteriler() {
     setSecilenMusteri(musteri)
     setFormData({
       fiyat_grubu_id: musteri.fiyat_grubu_id || '',
-      musteri_tipi: musteri.musteri_tipi || 'musteri'
+      musteri_tipi: musteri.musteri_tipi || 'musteri',
+      ozel_iskonto_orani: musteri.ozel_iskonto_orani || 0
     })
     setDuzenlemeModalOpen(true)
   }
@@ -276,7 +278,7 @@ export default function Musteriler() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Fiyat Grubu</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">İskonto Grubu</label>
                   <select
                     value={formData.fiyat_grubu_id}
                     onChange={(e) => setFormData({ ...formData, fiyat_grubu_id: e.target.value })}
@@ -290,6 +292,65 @@ export default function Musteriler() {
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">Müşterinin iskonto grubu</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Kişiye Özel Ek İskonto (%)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.ozel_iskonto_orani}
+                    onChange={(e) => setFormData({ ...formData, ozel_iskonto_orani: parseFloat(e.target.value) || 0 })}
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Grup iskontosuna ek olarak uygulanır (0 = ek iskonto yok)
+                  </p>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 font-medium mb-2">Kademeli İskonto Hesaplama:</p>
+                  <div className="text-xs text-blue-700 space-y-1">
+                    {(() => {
+                      const grupIskonto = fiyatGruplari.find(fg => fg.id === formData.fiyat_grubu_id)?.indirim_orani || 0
+                      const ozelIskonto = formData.ozel_iskonto_orani || 0
+                      
+                      // Örnek hesaplama: 100 TL üzerinden
+                      const ornekFiyat = 100
+                      let mevcutFiyat = ornekFiyat
+                      
+                      // 1. Grup iskontosunu uygula
+                      const grupIndirim = (mevcutFiyat * grupIskonto) / 100
+                      mevcutFiyat -= grupIndirim
+                      
+                      // 2. Özel iskontonu uygula
+                      const ozelIndirim = (mevcutFiyat * ozelIskonto) / 100
+                      mevcutFiyat -= ozelIndirim
+                      
+                      const toplamIndirim = ornekFiyat - mevcutFiyat
+                      const toplamIskontoOrani = (toplamIndirim / ornekFiyat) * 100
+                      
+                      return (
+                        <>
+                          <p>1. Grup İskontosu: %{grupIskonto} → {grupIndirim.toFixed(2)} TL indirim</p>
+                          {ozelIskonto > 0 && (
+                            <p>2. Özel İskonto: %{ozelIskonto} → {ozelIndirim.toFixed(2)} TL ek indirim</p>
+                          )}
+                          <p className="text-sm text-blue-900 font-bold mt-2 pt-2 border-t border-blue-300">
+                            Toplam İskonto: %{toplamIskontoOrani.toFixed(2)} ({toplamIndirim.toFixed(2)} TL / 100 TL)
+                          </p>
+                          <p className="text-xs text-blue-600 mt-1">
+                            Örnek: 100 TL → {mevcutFiyat.toFixed(2)} TL
+                          </p>
+                        </>
+                      )
+                    })()}
+                  </div>
                 </div>
 
                 <div className="flex space-x-4 pt-4">

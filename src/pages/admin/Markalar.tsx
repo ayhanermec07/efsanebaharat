@@ -198,12 +198,12 @@ export default function Markalar() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Marka Logosu</label>
                   <ImageUpload
                     maxFiles={1}
-                    bucketName="urun-gorselleri"
+                    bucketName="marka-logolari"
                     onUploadComplete={(urls) => setFormData({ ...formData, logo_url: urls[0] || '' })}
                     existingImages={formData.logo_url ? [formData.logo_url] : []}
-                    maxSizeMB={2}
+                    maxSizeMB={8}
                   />
-                  <p className="text-xs text-gray-500 mt-1">Marka logosu için görsel yükleyin (Maksimum 2MB)</p>
+                  <p className="text-xs text-gray-500 mt-1">Marka logosu için görsel yükleyin (Maksimum 8MB)</p>
                 </div>
 
                 <div className="flex items-center">

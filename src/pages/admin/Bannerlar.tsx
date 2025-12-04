@@ -202,9 +202,9 @@ export default function Bannerlar() {
                     bucketName="banners"
                     onUploadComplete={(urls) => setFormData({ ...formData, resim_url: urls[0] || '' })}
                     existingImages={formData.resim_url ? [formData.resim_url] : []}
-                    maxSizeMB={5}
+                    maxSizeMB={8}
                   />
-                  <p className="text-xs text-gray-500 mt-2">Banner görseli yükleyin (maksimum 5MB)</p>
+                  <p className="text-xs text-gray-500 mt-2">Banner görseli yükleyin (maksimum 8MB)</p>
                 </div>
 
                 <div>
