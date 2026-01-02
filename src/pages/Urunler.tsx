@@ -5,6 +5,7 @@ import { Search, SlidersHorizontal, Eye, ShoppingCart } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
 import { kademeliIskontoUygula } from '../utils/iskonto'
+import UrunKart from '../components/UrunKart'
 
 export default function Urunler() {
   const { user, musteriData, grupIskontoOrani, ozelIskontoOrani } = useAuth()
@@ -213,107 +214,9 @@ export default function Urunler() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
               {urunler.map((urun) => {
                 const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
-                const ilkStok = urun.urun_stoklari?.[0]
-                // Sadece giriş yapmış kullanıcılara iskonto göster
-                const iskontoInfo = ilkStok && user ? kademeliIskontoUygula(ilkStok.fiyat, grupIskontoOrani, ozelIskontoOrani) : null
-
                 return (
-                  <div
-                    key={urun.id}
-                    className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden"
-                  >
-                    <Link to={`/urun/${urun.id}`}>
-                      <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                        {ilkGorsel ? (
-                          <img
-                            src={ilkGorsel}
-                            alt={urun.urun_adi}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
-                              <span className="text-white text-4xl font-bold">
-                                {urun.urun_adi.charAt(0)}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        {iskontoInfo?.varMi && (
-                          <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-lg text-sm font-bold">
-                            %{iskontoInfo.oran} İndirim
-                          </div>
-                        )}
-                      </div>
-                    </Link>
-                    <div className="p-4">
-                      <Link to={`/urun/${urun.id}`}>
-                        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-orange-600 transition">
-                          {urun.urun_adi}
-                        </h3>
-                      </Link>
-                      <p className="text-sm text-gray-500 mb-2">
-                        {urun.markalar?.marka_adi}
-                      </p>
-                      {ilkStok && (
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex flex-col">
-                            {iskontoInfo?.varMi ? (
-                              <>
-                                <span className="text-orange-600 font-bold">
-                                  {iskontoInfo.yeniFiyat.toFixed(2)} ₺
-                                </span>
-                                <span className="text-gray-400 text-xs line-through">
-                                  {iskontoInfo.eskiFiyat.toFixed(2)} ₺
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-orange-600 font-bold">
-                                {ilkStok.fiyat.toFixed(2)} ₺
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-sm text-gray-500">
-                            {ilkStok.birim_adedi || 100} {ilkStok.birim_turu?.toUpperCase() || 'GR'}
-                          </span>
-                        </div>
-                      )}
-                      {user ? (
-                        // Giriş yapmış kullanıcı - Sepete Ekle butonu
-                        <button
-                          onClick={() => {
-                            if (ilkStok) {
-                              const fiyat = iskontoInfo?.varMi ? iskontoInfo.yeniFiyat : ilkStok.fiyat
-                              sepeteEkle({
-                                urun_id: urun.id,
-                                urun_adi: urun.urun_adi,
-                                birim_turu: ilkStok.birim_turu,
-                                birim_adedi: ilkStok.birim_adedi,
-                                birim_adedi_turu: ilkStok.birim_adedi_turu || ilkStok.birim_turu,
-                                birim_fiyat: fiyat,
-                                miktar: ilkStok.min_siparis_miktari || 1,
-                                gorsel_url: ilkGorsel,
-                                min_siparis_miktari: ilkStok.min_siparis_miktari
-                              })
-                            }
-                          }}
-                          disabled={!ilkStok}
-                          className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          <span>Sepete Ekle</span>
-                        </button>
-                      ) : (
-                        // Giriş yapmamış kullanıcı - Ürünü İncele butonu
-                        <button
-                          onClick={() => navigate(`/urun/${urun.id}`)}
-                          className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm"
-                        >
-                          <Eye className="w-4 h-4" />
-                          <span>Ürünü İncele</span>
-                        </button>
-                      )}
-                    </div>
+                  <div key={urun.id} className="h-full">
+                    <UrunKart urun={urun} />
                   </div>
                 )
               })}
