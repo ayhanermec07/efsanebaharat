@@ -255,7 +255,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           telefon: userData.telefon,
           musteri_tipi: userData.musteri_tipi,
           vergi_dairesi: userData.vergi_dairesi,
-          vergi_no: userData.vergi_no
+          vergi_no: userData.vergi_no,
+          bayi_unvani: userData.bayi_unvani
         }
       }
     })
@@ -278,6 +279,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         musteri_tipi: userData.musteri_tipi || 'musteri',
         vergi_dairesi: userData.vergi_dairesi,
         vergi_no: userData.vergi_no,
+        bayi_unvani: userData.bayi_unvani,
         bayi_no: userData.musteri_tipi === 'bayi' ? `BAYI-${Math.floor(100000 + Math.random() * 900000)}` : null,
         aktif_durum: true
       })
