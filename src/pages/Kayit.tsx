@@ -13,7 +13,8 @@ export default function Kayit() {
     adres: '',
     musteri_tipi: 'musteri',
     vergi_dairesi: '',
-    vergi_no: ''
+    vergi_no: '',
+    bayi_unvani: ''
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -172,13 +173,14 @@ export default function Kayit() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Adres
+                Adres {formData.musteri_tipi === 'bayi' && <span className="text-red-500">*</span>}
               </label>
               <textarea
                 name="adres"
                 value={formData.adres}
                 onChange={handleChange}
                 rows={3}
+                required={formData.musteri_tipi === 'bayi'}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
@@ -201,8 +203,23 @@ export default function Kayit() {
             {formData.musteri_tipi === 'bayi' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <div className="md:col-span-2 text-sm font-medium text-gray-900 border-b pb-2 mb-2">
-                  Vergi Bilgileri (Zorunlu)
+                  Bayi Bilgileri (Zorunlu)
                 </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bayi Ünvanı
+                  </label>
+                  <input
+                    type="text"
+                    name="bayi_unvani"
+                    value={formData.bayi_unvani}
+                    onChange={handleChange}
+                    required={formData.musteri_tipi === 'bayi'}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Vergi Dairesi
