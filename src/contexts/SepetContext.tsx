@@ -124,16 +124,30 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
     if (!musteriData) return { success: false, message: 'Giriş yapmalısınız' }
 
     try {
-      // Toplam stok miktarını al
-      const { data: stokData, error: stokError } = await supabase
+      // İlgili ürün ve birim türüne ait tüm stokları çek
+      const { data: stoklar, error: stokError } = await supabase
         .from('urun_stoklari')
-        .select('stok_miktari, aktif_durum')
+        .select('stok_miktari, aktif_durum, stok_grubu')
         .eq('urun_id', urun_id)
         .eq('birim_turu', birim_turu)
-        .maybeSingle()
 
-      if (stokError || !stokData) {
+      if (stokError || !stoklar || stoklar.length === 0) {
         return { success: false, message: 'Stok bilgisi alınamadı' }
+      }
+
+      // Kullanıcının tipine uygun stoku bul
+      const musteriTipi = musteriData.musteri_tipi || 'musteri'
+
+      // Öncelik sırası:
+      // 1. Tam eşleşen stok grubu (örn: 'bayi' ise 'bayi')
+      // 2. 'hepsi' olan stok grubu
+      // 3. Stok grubu belirtilmemiş olanlar (null/boş)
+      const stokData = stoklar.find(s => s.stok_grubu === musteriTipi) ||
+        stoklar.find(s => s.stok_grubu === 'hepsi') ||
+        stoklar.find(s => !s.stok_grubu)
+
+      if (!stokData) {
+        return { success: false, message: 'Size uygun stok bulunamadı' }
       }
 
       // Aktif olmayan stoktan sipariş verilemez
