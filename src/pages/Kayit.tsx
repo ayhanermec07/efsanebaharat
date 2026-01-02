@@ -11,7 +11,9 @@ export default function Kayit() {
     soyad: '',
     telefon: '',
     adres: '',
-    musteri_tipi: 'musteri'
+    musteri_tipi: 'musteri',
+    vergi_dairesi: '',
+    vergi_no: ''
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -25,15 +27,15 @@ export default function Kayit() {
 
     try {
       const result = await signUp(formData.email, formData.password, formData)
-      
+
       console.log('SignUp result:', result) // Debug için
-      
+
       // Hata kontrolü
       if (result.error) {
         // E-posta zaten kayıtlı hatası
-        if (result.error.message.includes('already registered') || 
-            result.error.message.includes('User already registered') ||
-            result.error.message.includes('already been registered')) {
+        if (result.error.message.includes('already registered') ||
+          result.error.message.includes('User already registered') ||
+          result.error.message.includes('already been registered')) {
           throw new Error('Bu e-posta adresi zaten kayıtlı. Lütfen giriş yapın veya farklı bir e-posta kullanın.')
         }
         throw result.error
@@ -46,11 +48,11 @@ export default function Kayit() {
         if (!result.data.user.identities || result.data.user.identities.length === 0) {
           throw new Error('Bu e-posta adresi zaten kayıtlı. Lütfen giriş yapın veya farklı bir e-posta kullanın.')
         }
-        
+
         // Yeni kullanıcı başarıyla oluşturuldu
-        alert('✅ Kayıt başarılı!\n\n' + 
-              'Hesabınız oluşturuldu. E-posta adresinize bir doğrulama linki gönderildi.\n\n' +
-              'E-postanızı doğrulamadan da giriş yapabilirsiniz.')
+        alert('✅ Kayıt başarılı!\n\n' +
+          'Hesabınız oluşturuldu. E-posta adresinize bir doğrulama linki gönderildi.\n\n' +
+          'E-postanızı doğrulamadan da giriş yapabilirsiniz.')
         navigate('/giris')
       } else {
         throw new Error('Kayıt işlemi tamamlanamadı. Lütfen tekrar deneyin.')
@@ -84,7 +86,7 @@ export default function Kayit() {
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <p className="text-sm text-blue-800">
-              ℹ️ <strong>Bilgi:</strong> Kayıt olduktan sonra e-posta adresinize bir doğrulama linki gönderilecektir. 
+              ℹ️ <strong>Bilgi:</strong> Kayıt olduktan sonra e-posta adresinize bir doğrulama linki gönderilecektir.
               E-postanızı doğrulamadan da giriş yapabilir ve alışveriş yapabilirsiniz.
             </p>
           </div>
@@ -195,6 +197,41 @@ export default function Kayit() {
                 <option value="bayi">Bayi</option>
               </select>
             </div>
+
+            {formData.musteri_tipi === 'bayi' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="md:col-span-2 text-sm font-medium text-gray-900 border-b pb-2 mb-2">
+                  Vergi Bilgileri (Zorunlu)
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Vergi Dairesi
+                  </label>
+                  <input
+                    type="text"
+                    name="vergi_dairesi"
+                    value={formData.vergi_dairesi}
+                    onChange={handleChange}
+                    required={formData.musteri_tipi === 'bayi'}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Vergi Numarası
+                  </label>
+                  <input
+                    type="text"
+                    name="vergi_no"
+                    value={formData.vergi_no}
+                    onChange={handleChange}
+                    required={formData.musteri_tipi === 'bayi'}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            )}
 
             <button
               type="submit"
