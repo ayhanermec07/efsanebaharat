@@ -100,9 +100,9 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
           await loadCart()
         }
       } else {
-        // Misafir kullanıcı - localStorage'dan yükle
-        const saved = localStorage.getItem('sepet_guest')
-        setSepetItems(saved ? JSON.parse(saved) : [])
+        // Misafir kullanıcı - sepet boş olmalı
+        setSepetItems([])
+        localStorage.removeItem('sepet_guest')
       }
     } catch (error) {
       console.error('Sepet yükleme hatası:', error)
@@ -279,23 +279,8 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
         toast.error('Sepete eklenemedi')
       }
     } else {
-      // Misafir kullanıcı - localStorage'a ekle
-      setSepetItems(prev => {
-        const existing = prev.find(
-          i => i.urun_id === item.urun_id && i.birim_turu === item.birim_turu
-        )
-
-        if (existing) {
-          return prev.map(i =>
-            i.urun_id === item.urun_id && i.birim_turu === item.birim_turu
-              ? { ...i, miktar: i.miktar + item.miktar }
-              : i
-          )
-        }
-
-        return [...prev, item]
-      })
-      toast.success('Ürün sepete eklendi')
+      // Misafir kullanıcı - sepet işlemi yapamaz
+      toast.error('Sepete eklemek için giriş yapmalısınız')
     }
   }
 
@@ -320,10 +305,8 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
         toast.error('Ürün çıkarılamadı')
       }
     } else {
-      // Misafir kullanıcı - localStorage'dan sil
-      setSepetItems(prev =>
-        prev.filter(i => !(i.urun_id === urun_id && i.birim_turu === birim_turu))
-      )
+      // Misafir kullanıcı - işlem yok
+      setSepetItems([])
     }
   }
 
@@ -357,14 +340,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
         toast.error('Miktar güncellenemedi')
       }
     } else {
-      // Misafir kullanıcı - localStorage'da güncelle
-      setSepetItems(prev =>
-        prev.map(i =>
-          i.urun_id === urun_id && i.birim_turu === birim_turu
-            ? { ...i, miktar }
-            : i
-        )
-      )
+      // Misafir kullanıcı - işlem yok
     }
   }
 
@@ -390,7 +366,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
         toast.error('Sepet temizlenemedi')
       }
     } else {
-      // Misafir kullanıcı - localStorage'dan temizle
+      // Misafir kullanıcı - işlem yok
       setSepetItems([])
       localStorage.removeItem('sepet_guest')
     }

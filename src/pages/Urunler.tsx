@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Search, SlidersHorizontal, Eye, ShoppingCart } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -9,6 +9,7 @@ import { kademeliIskontoUygula } from '../utils/iskonto'
 export default function Urunler() {
   const { user, musteriData, grupIskontoOrani, ozelIskontoOrani } = useAuth()
   const { sepeteEkle } = useSepet()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [urunler, setUrunler] = useState<any[]>([])
   const [kategoriler, setKategoriler] = useState<any[]>([])
@@ -305,7 +306,7 @@ export default function Urunler() {
                       ) : (
                         // Giriş yapmamış kullanıcı - Ürünü İncele butonu
                         <button
-                          onClick={() => window.open(`/urun/${urun.id}`, '_blank')}
+                          onClick={() => navigate(`/urun/${urun.id}`)}
                           className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm"
                         >
                           <Eye className="w-4 h-4" />
