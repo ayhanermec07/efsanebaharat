@@ -19,11 +19,14 @@ export default function UrunKart({ urun }: UrunKartProps) {
     const [secilenStok, setSecilenStok] = useState<any>(null)
     const [eklendi, setEklendi] = useState(false)
 
+    const [imgError, setImgError] = useState(false)
+
     // İlk renderda veya ürün değiştiğinde varsayılan stoku seç
     useEffect(() => {
         if (urun.urun_stoklari && urun.urun_stoklari.length > 0) {
             setSecilenStok(urun.urun_stoklari[0])
         }
+        setImgError(false)
     }, [urun])
 
     const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
@@ -47,7 +50,7 @@ export default function UrunKart({ urun }: UrunKartProps) {
                 urun_adi: urun.urun_adi,
                 birim_turu: secilenStok.birim_turu,
                 birim_adedi: secilenStok.birim_adedi,
-                birim_adedi_turu: secilenStok.birim_adedi_turu || secilenStok.birim_turu,
+                birim_adedi_turu: secilenStok.birim_turu,
                 birim_fiyat: fiyat,
                 miktar: secilenStok.min_siparis_miktari || 1,
                 gorsel_url: ilkGorsel,
@@ -65,11 +68,12 @@ export default function UrunKart({ urun }: UrunKartProps) {
         <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden h-full flex flex-col">
             <Link to={`/urun/${urun.id}`} className="block relative">
                 <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                    {ilkGorsel ? (
+                    {ilkGorsel && !imgError ? (
                         <img
                             src={ilkGorsel}
                             alt={urun.urun_adi}
                             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            onError={() => setImgError(true)}
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center">
@@ -108,8 +112,8 @@ export default function UrunKart({ urun }: UrunKartProps) {
                                 key={stok.id}
                                 onClick={() => setSecilenStok(stok)}
                                 className={`flex-1 min-w-[60px] text-xs py-1.5 px-2 rounded border transition text-center ${secilenStok?.id === stok.id
-                                        ? 'border-orange-600 bg-orange-50 text-orange-700 font-medium'
-                                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                                    ? 'border-orange-600 bg-orange-50 text-orange-700 font-medium'
+                                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
                                     }`}
                             >
                                 {stok.birim_adedi || 100} {stok.birim_turu?.toUpperCase() || 'GR'}
@@ -146,8 +150,8 @@ export default function UrunKart({ urun }: UrunKartProps) {
                         onClick={handleSepeteEkle}
                         disabled={!secilenStok}
                         className={`w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition text-sm disabled:bg-gray-300 disabled:cursor-not-allowed ${eklendi
-                                ? 'bg-green-600 text-white'
-                                : 'bg-orange-600 text-white hover:bg-orange-700'
+                            ? 'bg-green-600 text-white'
+                            : 'bg-orange-600 text-white hover:bg-orange-700'
                             }`}
                     >
                         {eklendi ? (
