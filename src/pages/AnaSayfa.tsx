@@ -30,26 +30,26 @@ export default function AnaSayfa() {
         .select('*')
         .in('id', urunIds)
         .eq('aktif_durum', true)
-      
+
       if (urunData && urunData.length > 0) {
         const { data: gorseller } = await supabase
           .from('urun_gorselleri')
           .select('*')
           .in('urun_id', urunIds)
           .order('sira_no')
-        
+
         const { data: stoklar } = await supabase
           .from('urun_stoklari')
           .select('*')
           .in('urun_id', urunIds)
           .eq('aktif_durum', true)
-        
+
         const urunlerWithData = urunData.map(urun => ({
           ...urun,
           urun_gorselleri: gorseller?.filter(g => g.urun_id === urun.id) || [],
           urun_stoklari: stoklar?.filter(s => s.urun_id === urun.id) || []
         }))
-        
+
         setter(urunlerWithData)
       }
     }
@@ -64,7 +64,7 @@ export default function AnaSayfa() {
           .select('*')
           .eq('aktif_durum', true)
           .order('sira_no')
-        
+
         if (bannerError) console.error('Banner yükleme hatası:', bannerError)
         if (bannerData) setBanners(bannerData)
 
@@ -74,7 +74,7 @@ export default function AnaSayfa() {
           .eq('manuel_secim', true)
           .order('goruntuleme_sirasi')
           .limit(4)
-        
+
         if (onerilenData && onerilenData.length > 0) {
           const urunIds = onerilenData.map(o => o.urun_id)
           await loadUrunlerByIds(urunIds, setOneCikanUrunler)
@@ -84,7 +84,7 @@ export default function AnaSayfa() {
             .select('id')
             .eq('aktif_durum', true)
             .limit(4)
-          
+
           if (fallbackData && fallbackData.length > 0) {
             const urunIds = fallbackData.map(u => u.id)
             await loadUrunlerByIds(urunIds, setOneCikanUrunler)
@@ -97,7 +97,7 @@ export default function AnaSayfa() {
           .eq('aktif_durum', true)
           .order('created_at', { ascending: false })
           .limit(12)
-        
+
         if (bestsellerData && bestsellerData.length > 0) {
           const urunIds = bestsellerData.map(u => u.id)
           await loadUrunlerByIds(urunIds, setEnCokSatanlar)
@@ -109,7 +109,7 @@ export default function AnaSayfa() {
           .eq('aktif_durum', true)
           .order('created_at', { ascending: false })
           .limit(16)
-        
+
         if (yeniData && yeniData.length > 0) {
           const urunIds = yeniData.map(u => u.id)
           await loadUrunlerByIds(urunIds, setYeniEklenenler)
@@ -120,9 +120,9 @@ export default function AnaSayfa() {
           .select('*')
           .eq('aktif_durum', true)
           .order('marka_adi')
-        
+
         if (markaData) setMarkalar(markaData)
-        
+
         hasLoadedRef.current = true
       } catch (err) {
         console.error('Veri yükleme hatası:', err)
@@ -185,7 +185,7 @@ export default function AnaSayfa() {
           >
             <div className="absolute inset-0 bg-black bg-opacity-40" />
           </div>
-          
+
           <div className="relative container mx-auto px-4 h-full flex flex-col justify-center">
             <div className="text-white max-w-2xl">
               <h1 className="text-4xl md:text-6xl font-bold mb-4">
@@ -239,7 +239,7 @@ export default function AnaSayfa() {
                 const ilkStok = urun.urun_stoklari?.[0]
                 // Sadece giriş yapmış kullanıcılara iskonto göster
                 const iskontoInfo = ilkStok && user ? kademeliIskontoUygula(ilkStok.fiyat, grupIskontoOrani, ozelIskontoOrani) : null
-                
+
                 return (
                   <Link
                     key={urun.id}
@@ -272,10 +272,10 @@ export default function AnaSayfa() {
                       <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
                         {urun.urun_adi}
                       </h3>
-                      {ilkStok && iskontoInfo && (
+                      {ilkStok && (
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">
-                            {iskontoInfo.varMi ? (
+                            {iskontoInfo?.varMi ? (
                               <>
                                 <span className="text-orange-600 font-bold">
                                   {iskontoInfo.yeniFiyat.toFixed(2)} ₺
@@ -318,7 +318,7 @@ export default function AnaSayfa() {
                 const ilkStok = urun.urun_stoklari?.[0]
                 // Sadece giriş yapmış kullanıcılara iskonto göster
                 const iskontoInfo = ilkStok && user ? kademeliIskontoUygula(ilkStok.fiyat, grupIskontoOrani, ozelIskontoOrani) : null
-                
+
                 return (
                   <Link
                     key={urun.id}
@@ -351,10 +351,10 @@ export default function AnaSayfa() {
                       <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
                         {urun.urun_adi}
                       </h3>
-                      {ilkStok && iskontoInfo && (
+                      {ilkStok && (
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">
-                            {iskontoInfo.varMi ? (
+                            {iskontoInfo?.varMi ? (
                               <>
                                 <span className="text-orange-600 font-bold">
                                   {iskontoInfo.yeniFiyat.toFixed(2)} ₺
@@ -377,7 +377,7 @@ export default function AnaSayfa() {
                 )
               })}
             </div>
-            
+
             {/* Pagination */}
             {enCokSatanlar.length > 4 && (
               <div className="flex justify-center items-center space-x-2">
@@ -392,11 +392,10 @@ export default function AnaSayfa() {
                   <button
                     key={i}
                     onClick={() => setBestsellerPage(i)}
-                    className={`w-8 h-8 rounded-lg transition ${
-                      bestsellerPage === i
-                        ? 'bg-orange-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                    className={`w-8 h-8 rounded-lg transition ${bestsellerPage === i
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
                   >
                     {i + 1}
                   </button>
@@ -430,7 +429,7 @@ export default function AnaSayfa() {
                 const ilkStok = urun.urun_stoklari?.[0]
                 // Sadece giriş yapmış kullanıcılara iskonto göster
                 const iskontoInfo = ilkStok && user ? kademeliIskontoUygula(ilkStok.fiyat, grupIskontoOrani, ozelIskontoOrani) : null
-                
+
                 return (
                   <Link
                     key={urun.id}
@@ -463,10 +462,10 @@ export default function AnaSayfa() {
                       <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
                         {urun.urun_adi}
                       </h3>
-                      {ilkStok && iskontoInfo && (
+                      {ilkStok && (
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">
-                            {iskontoInfo.varMi ? (
+                            {iskontoInfo?.varMi ? (
                               <>
                                 <span className="text-orange-600 font-bold">
                                   {iskontoInfo.yeniFiyat.toFixed(2)} ₺
@@ -489,7 +488,7 @@ export default function AnaSayfa() {
                 )
               })}
             </div>
-            
+
             {/* Pagination */}
             {yeniEklenenler.length > 4 && (
               <div className="flex justify-center items-center space-x-2">
@@ -504,11 +503,10 @@ export default function AnaSayfa() {
                   <button
                     key={i}
                     onClick={() => setNewProductsPage(i)}
-                    className={`w-8 h-8 rounded-lg transition ${
-                      newProductsPage === i
-                        ? 'bg-orange-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                    className={`w-8 h-8 rounded-lg transition ${newProductsPage === i
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
                   >
                     {i + 1}
                   </button>
