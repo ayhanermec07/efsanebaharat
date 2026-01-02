@@ -66,7 +66,7 @@ export default function Sepet() {
       if (functionData?.success && functionData?.token) {
         setPaymentToken(functionData.token)
         setShowPaymentIframe(true)
-        
+
         // Sipariş kaydını oluştur (ödeme öncesi)
         const siparisNo = functionData.merchant_oid
         await supabase
@@ -98,7 +98,7 @@ export default function Sepet() {
                 toplam_fiyat: item.birim_fiyat * item.miktar
               }))
               await supabase.from('siparis_urunleri').insert(siparisUrunleri)
-              
+
               // Stokları düşür ve rezervasyonları kaldır
               for (const item of sepetItems) {
                 // İlgili stok kaydını bul
@@ -108,11 +108,11 @@ export default function Sepet() {
                   .eq('urun_id', item.urun_id)
                   .eq('birim_turu', item.birim_turu)
                   .single()
-                
+
                 if (stok) {
                   // Satılan toplam miktarı hesapla (birim_adedi * miktar)
                   const satilanMiktar = (item.birim_adedi || 100) * item.miktar
-                  
+
                   // Birim dönüştürme: satılan miktarı stok birimine çevir
                   let stokDusumu = satilanMiktar
                   if (item.birim_turu === 'gr' && stok.stok_birimi === 'kg') {
@@ -120,10 +120,10 @@ export default function Sepet() {
                   } else if (item.birim_turu === 'kg' && stok.stok_birimi === 'gr') {
                     stokDusumu = satilanMiktar * 1000 // kg'ı gr'a çevir
                   }
-                  
+
                   // Yeni stok miktarını hesapla
                   const yeniStok = Math.max(0, (stok.stok_miktari || 0) - stokDusumu)
-                  
+
                   // Stoku güncelle
                   await supabase
                     .from('urun_stoklari')
@@ -163,7 +163,7 @@ export default function Sepet() {
               Güvenli ödeme sayfasına yönlendiriliyorsunuz...
             </p>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <iframe
               src={`https://www.paytr.com/odeme/guvenli/${paymentToken}`}
@@ -238,7 +238,19 @@ export default function Sepet() {
                     >
                       <Minus className="w-4 h-4" />
                     </button>
-                    <span className="w-12 text-center font-semibold">{item.miktar}</span>
+                    <input
+                      type="number"
+                      min={item.min_siparis_miktari}
+                      value={item.miktar}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value)
+                        if (!isNaN(val) && val >= item.min_siparis_miktari) {
+                          miktarGuncelle(item.urun_id, item.birim_turu, val)
+                        }
+                      }}
+                      onFocus={(e) => e.target.select()}
+                      className="w-16 text-center font-semibold border border-gray-300 rounded-md py-1 mx-1 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    />
                     <button
                       onClick={() => miktarGuncelle(item.urun_id, item.birim_turu, item.miktar + 1)}
                       className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50"
