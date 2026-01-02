@@ -258,70 +258,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           vergi_no: userData.vergi_no
         }
       }
+    })
+
+    if (result.data.user) {
+      // Müşteri kaydı oluştur
+      const { data: defaultFiyatGrubu } = await supabase
+        .from('fiyat_gruplari')
+        .select('id')
+        .eq('grup_adi', 'Bireysel Müşteri')
+        .maybeSingle()
+
+      await supabase.from('musteriler').insert({
+        user_id: result.data.user.id,
+        ad: userData.ad,
+        soyad: userData.soyad,
+        telefon: userData.telefon || '',
+        adres: userData.adres || '',
+        fiyat_grubu_id: defaultFiyatGrubu?.id,
+        musteri_tipi: userData.musteri_tipi || 'musteri',
+        vergi_dairesi: userData.vergi_dairesi,
+        vergi_no: userData.vergi_no,
+        bayi_no: userData.musteri_tipi === 'bayi' ? `BAYI-${Math.floor(100000 + Math.random() * 900000)}` : null,
+        aktif_durum: true
+      })
     }
-    })
 
-  if (result.data.user) {
-    // Müşteri kaydı oluştur
-    const { data: defaultFiyatGrubu } = await supabase
-      .from('fiyat_gruplari')
-      .select('id')
-      .eq('grup_adi', 'Bireysel Müşteri')
-      .maybeSingle()
-
-    await supabase.from('musteriler').insert({
-      user_id: result.data.user.id,
-      ad: userData.ad,
-      soyad: userData.soyad,
-      telefon: userData.telefon || '',
-      adres: userData.adres || '',
-      fiyat_grubu_id: defaultFiyatGrubu?.id,
-      musteri_tipi: userData.musteri_tipi || 'musteri',
-      vergi_dairesi: userData.vergi_dairesi,
-      vergi_no: userData.vergi_no,
-      bayi_no: userData.musteri_tipi === 'bayi' ? `BAYI-${Math.floor(100000 + Math.random() * 900000)}` : null,
-      aktif_durum: true
-    })
+    return result
   }
 
-  return result
-}
+  async function signOut() {
+    await supabase.auth.signOut()
+    setIsAdmin(false)
+    setMusteriData(null)
+    // İskonto oranlarını sıfırla
+    setIskontoOrani(0)
+    setGrupIskontoOrani(0)
+    setOzelIskontoOrani(0)
+  }
 
-async function signOut() {
-  await supabase.auth.signOut()
-  setIsAdmin(false)
-  setMusteriData(null)
-  // İskonto oranlarını sıfırla
-  setIskontoOrani(0)
-  setGrupIskontoOrani(0)
-  setOzelIskontoOrani(0)
-}
+  async function updateUser(data: { ad?: string; soyad?: string; telefon?: string; adres?: string }) {
+    if (!user || !musteriData) throw new Error('Kullanıcı bulunamadı')
 
-async function updateUser(data: { ad?: string; soyad?: string; telefon?: string; adres?: string }) {
-  if (!user || !musteriData) throw new Error('Kullanıcı bulunamadı')
+    const updates: any = { ...data }
 
-  const updates: any = { ...data }
+    const { data: updatedData, error } = await supabase
+      .from('musteriler')
+      .update(updates)
+      .eq('id', musteriData.id)
+      .select()
+      .single()
 
-  const { data: updatedData, error } = await supabase
-    .from('musteriler')
-    .update(updates)
-    .eq('id', musteriData.id)
-    .select()
-    .single()
+    if (error) throw error
 
-  if (error) throw error
+    // Local state'i güncelle - fiyat_gruplari verisini koru
+    setMusteriData({ ...musteriData, ...updatedData })
 
-  // Local state'i güncelle - fiyat_gruplari verisini koru
-  setMusteriData({ ...musteriData, ...updatedData })
+    return updatedData
+  }
 
-  return updatedData
-}
-
-return (
-  <AuthContext.Provider value={{ user, loading, isAdmin, musteriData, iskontoOrani, grupIskontoOrani, ozelIskontoOrani, signIn, signUp, signOut, updateUser }}>
-    {children}
-  </AuthContext.Provider>
-)
+  return (
+    <AuthContext.Provider value={{ user, loading, isAdmin, musteriData, iskontoOrani, grupIskontoOrani, ozelIskontoOrani, signIn, signUp, signOut, updateUser }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
