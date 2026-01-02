@@ -13,6 +13,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<any>
   signUp: (email: string, password: string, userData: any) => Promise<any>
   signOut: () => Promise<void>
+  updateUser: (data: { ad?: string; soyad?: string; telefon?: string; adres?: string }) => Promise<any>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -291,8 +292,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setOzelIskontoOrani(0)
   }
 
+  async function updateUser(data: { ad?: string; soyad?: string; telefon?: string; adres?: string }) {
+    if (!user || !musteriData) throw new Error('Kullanıcı bulunamadı')
+
+    const updates: any = { ...data }
+
+    const { data: updatedData, error } = await supabase
+      .from('musteriler')
+      .update(updates)
+      .eq('id', musteriData.id)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    // Local state'i güncelle - fiyat_gruplari verisini koru
+    setMusteriData({ ...musteriData, ...updatedData })
+
+    return updatedData
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, musteriData, iskontoOrani, grupIskontoOrani, ozelIskontoOrani, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, musteriData, iskontoOrani, grupIskontoOrani, ozelIskontoOrani, signIn, signUp, signOut, updateUser }}>
       {children}
     </AuthContext.Provider>
   )
