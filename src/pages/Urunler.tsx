@@ -21,13 +21,18 @@ export default function Urunler() {
   useEffect(() => {
     loadKategoriler()
     loadMarkalar()
-    
-    // URL'den arama parametresini al
+  }, [])
+
+  // URL parametrelerini dinle ve state'i güncelle
+  useEffect(() => {
+    const kategoriParam = searchParams.get('kategori')
     const qParam = searchParams.get('q')
+    
+    setSecilenKategori(kategoriParam || '')
     if (qParam) {
       setAramaText(qParam)
     }
-  }, [])
+  }, [searchParams])
 
   useEffect(() => {
     loadUrunler()

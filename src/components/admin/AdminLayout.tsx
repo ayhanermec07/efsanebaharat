@@ -16,7 +16,8 @@ import {
   Store,
   BarChart3,
   Headphones,
-  Percent
+  Percent,
+  ExternalLink
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -69,22 +70,34 @@ export default function AdminLayout() {
           {menuItems.map((item) => {
             const Icon = item.icon
             const isActive = location.pathname === item.path
-            
+
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-6 py-3 transition-colors ${
-                  isActive
-                    ? 'bg-orange-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                }`}
+                className={`flex items-center gap-3 px-6 py-3 transition-colors ${isActive
+                  ? 'bg-orange-600 text-white'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  }`}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
                 <span className="text-sm font-medium">{item.label}</span>
               </Link>
             )
           })}
+
+          {/* Ana Sayfa - Yeni sekmede açılır */}
+          <div className="border-t border-gray-800 mt-2 pt-2">
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 px-6 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+            >
+              <ExternalLink className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm font-medium">Ana Sayfa</span>
+            </a>
+          </div>
         </nav>
 
         <div className="flex-shrink-0 border-t border-gray-800">
