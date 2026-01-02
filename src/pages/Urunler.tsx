@@ -27,7 +27,7 @@ export default function Urunler() {
   useEffect(() => {
     const kategoriParam = searchParams.get('kategori')
     const qParam = searchParams.get('q')
-    
+
     setSecilenKategori(kategoriParam || '')
     if (qParam) {
       setAramaText(qParam)
@@ -44,7 +44,7 @@ export default function Urunler() {
       .select('*')
       .eq('aktif_durum', true)
       .order('kategori_adi')
-    
+
     if (data) setKategoriler(data)
   }
 
@@ -54,7 +54,7 @@ export default function Urunler() {
       .select('*')
       .eq('aktif_durum', true)
       .order('marka_adi')
-    
+
     if (data) setMarkalar(data)
   }
 
@@ -78,28 +78,28 @@ export default function Urunler() {
     }
 
     const { data } = await query
-    
+
     if (data && data.length > 0) {
       // Ürün görselleri ve stokları ayrı çek
       const urunIds = data.map(u => u.id)
-      
+
       const [{ data: gorseller }, { data: stoklar }, { data: kategorilerData }, { data: markalarData }] = await Promise.all([
         supabase.from('urun_gorselleri').select('*').in('urun_id', urunIds).order('sira_no'),
         supabase.from('urun_stoklari').select('*').in('urun_id', urunIds).eq('aktif_durum', true),
         supabase.from('kategoriler').select('id, kategori_adi').in('id', [...new Set(data.map(u => u.kategori_id))]),
         supabase.from('markalar').select('id, marka_adi').in('id', [...new Set(data.map(u => u.marka_id))])
       ])
-      
+
       // Ürünlere ilişkili verileri ekle
       // Kullanıcı tipine göre stok filtreleme (ziyaretçiler müşteri stokları görür)
       const musteriTipi = musteriData?.musteri_tipi || 'musteri'
-      
+
       const urunlerWithData = data.map(urun => {
         const urunStoklari = stoklar?.filter(s => s.urun_id === urun.id) || []
-        const filtreliStoklar = urunStoklari.filter(s => 
+        const filtreliStoklar = urunStoklari.filter(s =>
           !s.stok_grubu || s.stok_grubu === 'hepsi' || s.stok_grubu === musteriTipi
         )
-        
+
         return {
           ...urun,
           urun_gorselleri: gorseller?.filter(g => g.urun_id === urun.id) || [],
@@ -108,12 +108,12 @@ export default function Urunler() {
           markalar: markalarData?.find(m => m.id === urun.marka_id)
         }
       })
-      
+
       setUrunler(urunlerWithData)
     } else {
       setUrunler([])
     }
-    
+
     setLoading(false)
   }
 
@@ -215,7 +215,7 @@ export default function Urunler() {
                 const ilkStok = urun.urun_stoklari?.[0]
                 // Sadece giriş yapmış kullanıcılara iskonto göster
                 const iskontoInfo = ilkStok && user ? kademeliIskontoUygula(ilkStok.fiyat, grupIskontoOrani, ozelIskontoOrani) : null
-                
+
                 return (
                   <div
                     key={urun.id}
@@ -254,10 +254,10 @@ export default function Urunler() {
                       <p className="text-sm text-gray-500 mb-2">
                         {urun.markalar?.marka_adi}
                       </p>
-                      {ilkStok && iskontoInfo && (
+                      {ilkStok && (
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex flex-col">
-                            {iskontoInfo.varMi ? (
+                            {iskontoInfo?.varMi ? (
                               <>
                                 <span className="text-orange-600 font-bold">
                                   {iskontoInfo.yeniFiyat.toFixed(2)} ₺
@@ -281,14 +281,15 @@ export default function Urunler() {
                         // Giriş yapmış kullanıcı - Sepete Ekle butonu
                         <button
                           onClick={() => {
-                            if (ilkStok && iskontoInfo) {
+                            if (ilkStok) {
+                              const fiyat = iskontoInfo?.varMi ? iskontoInfo.yeniFiyat : ilkStok.fiyat
                               sepeteEkle({
                                 urun_id: urun.id,
                                 urun_adi: urun.urun_adi,
                                 birim_turu: ilkStok.birim_turu,
                                 birim_adedi: ilkStok.birim_adedi,
                                 birim_adedi_turu: ilkStok.birim_adedi_turu || ilkStok.birim_turu,
-                                birim_fiyat: iskontoInfo.yeniFiyat,
+                                birim_fiyat: fiyat,
                                 miktar: ilkStok.min_siparis_miktari || 1,
                                 gorsel_url: ilkGorsel,
                                 min_siparis_miktari: ilkStok.min_siparis_miktari
