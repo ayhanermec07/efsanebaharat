@@ -2,46 +2,56 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Package, User as UserIcon, Truck, Copy, Check, ExternalLink } from 'lucide-react'
+import { Package, User as UserIcon, Truck, Copy, Check, ExternalLink, Pencil, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function Hesabim() {
-  const { user, musteriData, loading: authLoading } = useAuth()
+  const { user, musteriData, loading: authLoading, updateUser } = useAuth()
   const navigate = useNavigate()
   const [siparisler, setSiparisler] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
+  // Profil düzenleme state'leri
+  const [isEditing, setIsEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [formData, setFormData] = useState({
+    ad: '',
+    soyad: '',
+    telefon: '',
+    adres: ''
+  })
+
   const kargoFirmalari: { [key: string]: { label: string; url: string } } = {
-    'aras': { 
+    'aras': {
       label: 'Aras Kargo',
       url: 'https://kargotakip.araskargo.com.tr/mainpage.aspx?code='
     },
-    'yurtici': { 
+    'yurtici': {
       label: 'Yurtiçi Kargo',
       url: 'https://www.yurticikargo.com/tr/online-servisler/gonderi-sorgula?code='
     },
-    'ptt': { 
+    'ptt': {
       label: 'PTT Kargo',
       url: 'https://gonderitakip.ptt.gov.tr/Track/Verify?q='
     },
-    'ups': { 
+    'ups': {
       label: 'UPS',
       url: 'https://www.ups.com/track?loc=tr_TR&tracknum='
     },
-    'dhl': { 
+    'dhl': {
       label: 'DHL',
       url: 'https://www.dhl.com/tr-tr/home/tracking.html?tracking-id='
     },
-    'mng': { 
+    'mng': {
       label: 'MNG Kargo',
       url: 'https://www.mngkargo.com.tr/track/'
     },
-    'kargo_turkiye': { 
+    'kargo_turkiye': {
       label: 'Kargo Türkiye',
       url: 'https://www.kargoturkiye.net/kargo-sorgulama/'
     },
-    'hepsijet': { 
+    'hepsijet': {
       label: 'HepsiJet',
       url: 'https://hepsijet.com/kargo-takip?code='
     }
@@ -76,7 +86,7 @@ export default function Hesabim() {
     }
 
     setLoading(true)
-    
+
     try {
       // Siparişleri çek
       const { data: siparisData, error: siparisError } = await supabase
@@ -84,9 +94,9 @@ export default function Hesabim() {
         .select('*')
         .eq('musteri_id', musteriData.id)
         .order('olusturma_tarihi', { ascending: false })
-      
+
       if (siparisError) throw siparisError
-      
+
       if (siparisData && siparisData.length > 0) {
         // Her sipariş için ürünleri manuel olarak çek
         const siparislerWithUrunler = await Promise.all(
@@ -95,7 +105,7 @@ export default function Hesabim() {
               .from('siparis_urunleri')
               .select('*')
               .eq('siparis_id', siparis.id)
-            
+
             if (siparisUrunleri && siparisUrunleri.length > 0) {
               // Ürün bilgilerini çek
               const urunIds = [...new Set(siparisUrunleri.map(su => su.urun_id))]
@@ -103,26 +113,26 @@ export default function Hesabim() {
                 .from('urunler')
                 .select('id, urun_adi')
                 .in('id', urunIds)
-              
+
               // Sipariş ürünlerine ürün adlarını ekle
               const detayliUrunler = siparisUrunleri.map(su => ({
                 ...su,
                 urun_adi: urunler?.find(u => u.id === su.urun_id)?.urun_adi || 'Ürün'
               }))
-              
+
               return {
                 ...siparis,
                 siparis_urunleri: detayliUrunler
               }
             }
-            
+
             return {
               ...siparis,
               siparis_urunleri: []
             }
           })
         )
-        
+
         setSiparisler(siparislerWithUrunler)
       } else {
         setSiparisler([])
@@ -162,38 +172,144 @@ export default function Hesabim() {
         {/* Profil Bilgileri */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center space-x-4 mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
-                <UserIcon className="w-8 h-8 text-white" />
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
+                  <UserIcon className="w-8 h-8 text-white" />
+                </div>
+                {!isEditing && (
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      {musteriData?.ad_soyad || `${musteriData?.ad} ${musteriData?.soyad}`}
+                    </h2>
+                    <p className="text-gray-600">{user?.email}</p>
+                  </div>
+                )}
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  {musteriData?.ad_soyad}
-                </h2>
-                <p className="text-gray-600">{user?.email}</p>
-              </div>
+              {!isEditing ? (
+                <button
+                  onClick={() => {
+                    setFormData({
+                      ad: musteriData?.ad || '',
+                      soyad: musteriData?.soyad || '',
+                      telefon: musteriData?.telefon || '',
+                      adres: musteriData?.adres || ''
+                    })
+                    setIsEditing(true)
+                  }}
+                  className="text-gray-400 hover:text-orange-600 transition"
+                  title="Profili Düzenle"
+                >
+                  <Pencil className="w-5 h-5" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="text-gray-400 hover:text-red-600 transition"
+                  title="İptal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm text-gray-600">Müşteri Tipi</label>
-                <p className="font-medium">
-                  {musteriData?.musteri_tipi === 'bayi' ? 'Bayi' : 'Bireysel Müşteri'}
-                </p>
+            {isEditing ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ad</label>
+                    <input
+                      type="text"
+                      value={formData.ad}
+                      onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Soyad</label>
+                    <input
+                      type="text"
+                      value={formData.soyad}
+                      onChange={(e) => setFormData({ ...formData, soyad: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                  <input
+                    type="tel"
+                    value={formData.telefon}
+                    onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Adres</label>
+                  <textarea
+                    rows={3}
+                    value={formData.adres}
+                    onChange={(e) => setFormData({ ...formData, adres: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                  />
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={async () => {
+                      if (!formData.ad || !formData.soyad) {
+                        toast.error('Ad ve soyad zorunludur')
+                        return
+                      }
+
+                      setSaving(true)
+                      try {
+                        await updateUser(formData)
+                        setIsEditing(false)
+                        toast.success('Profil güncellendi')
+                      } catch (error) {
+                        console.error(error)
+                        toast.error('Güncelleme başarısız oldu')
+                      } finally {
+                        setSaving(false)
+                      }
+                    }}
+                    disabled={saving}
+                    className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {saving ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
+                    Kaydet
+                  </button>
+                </div>
               </div>
-              {musteriData?.telefon && (
+            ) : (
+              <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-gray-600">Telefon</label>
-                  <p className="font-medium">{musteriData.telefon}</p>
+                  <label className="text-sm text-gray-600">Müşteri Tipi</label>
+                  <p className="font-medium">
+                    {musteriData?.musteri_tipi === 'bayi' ? 'Bayi' : 'Bireysel Müşteri'}
+                  </p>
                 </div>
-              )}
-              {musteriData?.adres && (
-                <div>
-                  <label className="text-sm text-gray-600">Adres</label>
-                  <p className="font-medium">{musteriData.adres}</p>
-                </div>
-              )}
-            </div>
+                {musteriData?.telefon && (
+                  <div>
+                    <label className="text-sm text-gray-600">Telefon</label>
+                    <p className="font-medium">{musteriData.telefon}</p>
+                  </div>
+                )}
+                {musteriData?.adres && (
+                  <div>
+                    <label className="text-sm text-gray-600">Adres</label>
+                    <p className="font-medium">{musteriData.adres}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
