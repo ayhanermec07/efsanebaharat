@@ -22,7 +22,7 @@ interface Kampanya {
 
 interface KampanyaUygulaProps {
   sepetTutari: number;
-  onKampanyaUygula: (kampanya: Kampanya | null, indirimTutari: number) => void;
+  onKampanyaUygula: (kampanya: Kampanya | null, indirimTutari: number, tekKullanimlikKodId?: string | null) => void;
 }
 
 export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: KampanyaUygulaProps) {
@@ -44,9 +44,9 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
   const aktifKampanyalariYukle = async () => {
     try {
       setKampanyalarYukleniyor(true);
-      
+
       const simdi = new Date().toISOString();
-      
+
       let query = supabase
         .from('kampanyalar')
         .select('*')
@@ -69,7 +69,7 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
 
       if (!error && data) {
         // Kullanım limiti kontrolü
-        const uygunKampanyalar = data.filter(k => 
+        const uygunKampanyalar = data.filter(k =>
           !k.kullanim_limiti || k.kullanim_sayisi < k.kullanim_limiti
         );
         setAktifKampanyalar(uygunKampanyalar);
@@ -86,37 +86,65 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
       setYukleniyor(true);
       setHata('');
 
-      // Kampanyayı getir
-      const { data: kampanya, error } = await supabase
-        .from('kampanyalar')
-        .select('*')
-        .eq('kod', kod.toUpperCase())
-        .eq('aktif', true)
-        .single();
+      // Kampanya kodu kontrolü (önce tek kullanımlık kodları kontrol et)
+      const { data: kodData, error: kodError } = await supabase
+        .rpc('validate_campaign_code', { p_kod: kod });
 
-      if (error || !kampanya) {
-        setHata('Geçersiz kampanya kodu');
+      if (kodError) throw kodError;
+
+      let kampanya = null;
+      let tekKullanimlikKodId = null;
+
+      if (kodData && kodData.length > 0) {
+        // Tek kullanımlık kod bulundu
+        const kodBilgisi = kodData[0];
+        if (kodBilgisi.kullanildi) {
+          setHata('Bu kampanya kodu daha önce kullanılmış');
+          setYukleniyor(false);
+          return;
+        }
+        kampanya = kodBilgisi.kampanya_data;
+        tekKullanimlikKodId = kodBilgisi.kod; // Kodun kendisini saklıyoruz
+      } else {
+        // Normal kampanya kodu kontrolü
+        const { data: normalKampanya, error: kampanyaError } = await supabase
+          .from('kampanyalar')
+          .select('*')
+          .eq('kod', kod.toUpperCase())
+          .eq('aktif', true)
+          .single();
+
+        if (kampanyaError) {
+          if (kampanyaError.code === 'PGRST116') {
+            setHata('Geçersiz kampanya kodu');
+          } else {
+            console.error('Kampanya sorgulama hatası:', kampanyaError);
+            setHata('Kampanya kontrol edilirken hata oluştu');
+          }
+          setYukleniyor(false);
+          return;
+        }
+        kampanya = normalKampanya;
+      }
+
+      if (!kampanya) {
+        setHata('Kampanya bulunamadı');
+        setYukleniyor(false);
         return;
       }
 
       // Tarih kontrolü
       const simdi = new Date();
-      const baslangic = new Date(kampanya.baslangic_tarihi);
-      const bitis = new Date(kampanya.bitis_tarihi);
-
-      if (simdi < baslangic) {
-        setHata('Bu kampanya henüz başlamadı');
-        return;
-      }
-
-      if (simdi > bitis) {
-        setHata('Bu kampanya süresi dolmuş');
+      if (new Date(kampanya.baslangic_tarihi) > simdi || new Date(kampanya.bitis_tarihi) < simdi) {
+        setHata('Bu kampanyanın süresi dolmuş veya henüz başlamamış');
+        setYukleniyor(false);
         return;
       }
 
       // Kullanım limiti kontrolü
       if (kampanya.kullanim_limiti && kampanya.kullanim_sayisi >= kampanya.kullanim_limiti) {
         setHata('Bu kampanya kullanım limitine ulaşmış');
+        setYukleniyor(false);
         return;
       }
 
@@ -124,16 +152,19 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
       if (kampanya.hedef_grup !== 'hepsi') {
         if (!musteriData) {
           setHata('Bu kampanyayı kullanmak için giriş yapmalısınız');
+          setYukleniyor(false);
           return;
         }
 
         if (kampanya.hedef_grup === 'bayi' && musteriData.musteri_tipi !== 'bayi') {
           setHata('Bu kampanya sadece bayiler için geçerlidir');
+          setYukleniyor(false);
           return;
         }
 
         if (kampanya.hedef_grup === 'musteri' && musteriData.musteri_tipi !== 'musteri') {
           setHata('Bu kampanya sadece müşteriler için geçerlidir');
+          setYukleniyor(false);
           return;
         }
       }
@@ -141,6 +172,7 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
       // Minimum sepet tutarı kontrolü
       if (sepetTutari < kampanya.min_sepet_tutari) {
         setHata(`Bu kampanya için minimum sepet tutarı ${kampanya.min_sepet_tutari} TL olmalıdır`);
+        setYukleniyor(false);
         return;
       }
 
@@ -148,15 +180,16 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
       let indirim = 0;
       if (kampanya.indirim_tipi === 'yuzde') {
         indirim = (sepetTutari * kampanya.indirim_degeri) / 100;
+        if (kampanya.max_indirim_tutari && indirim > kampanya.max_indirim_tutari) {
+          indirim = kampanya.max_indirim_tutari;
+        }
       } else {
         indirim = kampanya.indirim_degeri;
       }
 
-      // NOT: Maksimum indirim kontrolü kaldırıldı - sınırsız indirim
-
       setUygulananKampanya(kampanya);
       setIndirimTutari(indirim);
-      onKampanyaUygula(kampanya, indirim);
+      onKampanyaUygula(kampanya, indirim, tekKullanimlikKodId);
 
     } catch (error) {
       console.error('Kampanya kontrol hatası:', error);
@@ -192,11 +225,12 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
     let indirim = 0;
     if (kampanya.indirim_tipi === 'yuzde') {
       indirim = (sepetTutari * kampanya.indirim_degeri) / 100;
+      if (kampanya.max_indirim_tutari && indirim > kampanya.max_indirim_tutari) {
+        indirim = kampanya.max_indirim_tutari;
+      }
     } else {
       indirim = kampanya.indirim_degeri;
     }
-
-    // NOT: Maksimum indirim kontrolü kaldırıldı - sınırsız indirim
 
     setUygulananKampanya(kampanya);
     setIndirimTutari(indirim);
@@ -208,12 +242,12 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
     let indirim = 0;
     if (kampanya.indirim_tipi === 'yuzde') {
       indirim = (sepetTutari * kampanya.indirim_degeri) / 100;
+      if (kampanya.max_indirim_tutari && indirim > kampanya.max_indirim_tutari) {
+        indirim = kampanya.max_indirim_tutari;
+      }
     } else {
       indirim = kampanya.indirim_degeri;
     }
-
-    // NOT: Maksimum indirim kontrolü kaldırıldı - sınırsız indirim
-
     return indirim;
   };
 
@@ -228,21 +262,19 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
           <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setGosterimModu('liste')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
-                gosterimModu === 'liste'
+              className={`px-3 py-1 text-sm rounded transition-colors ${gosterimModu === 'liste'
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
-              }`}
+                }`}
             >
               Kampanyalar
             </button>
             <button
               onClick={() => setGosterimModu('kod')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
-                gosterimModu === 'kod'
+              className={`px-3 py-1 text-sm rounded transition-colors ${gosterimModu === 'kod'
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
-              }`}
+                }`}
             >
               Kod Gir
             </button>
@@ -290,48 +322,47 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
                 </p>
               </div>
               {aktifKampanyalar.map((kampanya) => {
-              const uygunMu = sepetTutari >= kampanya.min_sepet_tutari;
-              const indirim = indirimHesapla(kampanya);
-              
-              return (
-                <div
-                  key={kampanya.id}
-                  className={`p-3 border rounded-lg transition-all ${
-                    uygunMu
-                      ? 'border-green-200 bg-green-50 hover:bg-green-100 cursor-pointer'
-                      : 'border-gray-200 bg-gray-50 opacity-60'
-                  }`}
-                  onClick={() => uygunMu && kampanyaSecVeUygula(kampanya)}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-gray-900">{kampanya.kod}</span>
-                        <span className="text-xs px-2 py-0.5 bg-green-600 text-white rounded-full">
-                          {kampanya.indirim_tipi === 'yuzde'
-                            ? `%${kampanya.indirim_degeri}`
-                            : `${kampanya.indirim_degeri} TL`}
-                        </span>
+                const uygunMu = sepetTutari >= kampanya.min_sepet_tutari;
+                const indirim = indirimHesapla(kampanya);
+
+                return (
+                  <div
+                    key={kampanya.id}
+                    className={`p-3 border rounded-lg transition-all ${uygunMu
+                        ? 'border-green-200 bg-green-50 hover:bg-green-100 cursor-pointer'
+                        : 'border-gray-200 bg-gray-50 opacity-60'
+                      }`}
+                    onClick={() => uygunMu && kampanyaSecVeUygula(kampanya)}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-gray-900">{kampanya.kod}</span>
+                          <span className="text-xs px-2 py-0.5 bg-green-600 text-white rounded-full">
+                            {kampanya.indirim_tipi === 'yuzde'
+                              ? `%${kampanya.indirim_degeri}`
+                              : `${kampanya.indirim_degeri} TL`}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-700 mb-1">{kampanya.ad}</p>
+                        <p className="text-xs text-gray-600">{kampanya.aciklama}</p>
                       </div>
-                      <p className="text-sm text-gray-700 mb-1">{kampanya.ad}</p>
-                      <p className="text-xs text-gray-600">{kampanya.aciklama}</p>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-gray-600 mt-2 pt-2 border-t border-gray-200">
+                      <span>Min. Sepet: {kampanya.min_sepet_tutari} TL</span>
+                      {uygunMu ? (
+                        <span className="text-green-700 font-semibold">
+                          İndirim: -{indirim.toFixed(2)} TL
+                        </span>
+                      ) : (
+                        <span className="text-orange-600">
+                          {(kampanya.min_sepet_tutari - sepetTutari).toFixed(2)} TL daha ekleyin
+                        </span>
+                      )}
                     </div>
                   </div>
-                  
-                  <div className="flex items-center justify-between text-xs text-gray-600 mt-2 pt-2 border-t border-gray-200">
-                    <span>Min. Sepet: {kampanya.min_sepet_tutari} TL</span>
-                    {uygunMu ? (
-                      <span className="text-green-700 font-semibold">
-                        İndirim: -{indirim.toFixed(2)} TL
-                      </span>
-                    ) : (
-                      <span className="text-orange-600">
-                        {(kampanya.min_sepet_tutari - sepetTutari).toFixed(2)} TL daha ekleyin
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
+                );
               })}
             </>
           )}
