@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, ShoppingBag, TruckIcon, Shield } from 'lucid
 import CanliDestekWidget from '../components/CanliDestekWidget'
 import { useAuth } from '../contexts/AuthContext'
 import { kademeliIskontoUygula } from '../utils/iskonto'
+import UrunKart from '../components/UrunKart'
 
 export default function AnaSayfa() {
   const { user, grupIskontoOrani, ozelIskontoOrani } = useAuth()
@@ -235,66 +236,10 @@ export default function AnaSayfa() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {oneCikanUrunler.map((urun) => {
-                const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
-                const ilkStok = urun.urun_stoklari?.[0]
-                // Sadece giriş yapmış kullanıcılara iskonto göster
-                const iskontoInfo = ilkStok && user ? kademeliIskontoUygula(ilkStok.fiyat, grupIskontoOrani, ozelIskontoOrani) : null
-
                 return (
-                  <Link
-                    key={urun.id}
-                    to={`/urun/${urun.id}`}
-                    className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden"
-                  >
-                    <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                      {ilkGorsel ? (
-                        <img
-                          src={ilkGorsel}
-                          alt={urun.urun_adi}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
-                            <span className="text-white text-4xl font-bold">
-                              {urun.urun_adi.charAt(0)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      {iskontoInfo?.varMi && (
-                        <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-lg text-sm font-bold">
-                          %{iskontoInfo.oran} İndirim
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                        {urun.urun_adi}
-                      </h3>
-                      {ilkStok && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex flex-col">
-                            {iskontoInfo?.varMi ? (
-                              <>
-                                <span className="text-orange-600 font-bold">
-                                  {iskontoInfo.yeniFiyat.toFixed(2)} ₺
-                                </span>
-                                <span className="text-gray-400 text-xs line-through">
-                                  {iskontoInfo.eskiFiyat.toFixed(2)} ₺
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-orange-600 font-bold">
-                                {ilkStok.fiyat.toFixed(2)} ₺
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-sm text-gray-500">{ilkStok.birim_turu}</span>
-                        </div>
-                      )}
-                    </div>
-                  </Link>
+                  <div key={urun.id} className="h-full">
+                    <UrunKart urun={urun} />
+                  </div>
                 )
               })}
             </div>
@@ -314,66 +259,10 @@ export default function AnaSayfa() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
               {enCokSatanlar.slice(bestsellerPage * 4, (bestsellerPage + 1) * 4).map((urun) => {
-                const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
-                const ilkStok = urun.urun_stoklari?.[0]
-                // Sadece giriş yapmış kullanıcılara iskonto göster
-                const iskontoInfo = ilkStok && user ? kademeliIskontoUygula(ilkStok.fiyat, grupIskontoOrani, ozelIskontoOrani) : null
-
                 return (
-                  <Link
-                    key={urun.id}
-                    to={`/urun/${urun.id}`}
-                    className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden"
-                  >
-                    <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                      {ilkGorsel ? (
-                        <img
-                          src={ilkGorsel}
-                          alt={urun.urun_adi}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
-                            <span className="text-white text-4xl font-bold">
-                              {urun.urun_adi.charAt(0)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      {iskontoInfo?.varMi && (
-                        <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-lg text-sm font-bold">
-                          %{iskontoInfo.oran} İndirim
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                        {urun.urun_adi}
-                      </h3>
-                      {ilkStok && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex flex-col">
-                            {iskontoInfo?.varMi ? (
-                              <>
-                                <span className="text-orange-600 font-bold">
-                                  {iskontoInfo.yeniFiyat.toFixed(2)} ₺
-                                </span>
-                                <span className="text-gray-400 text-xs line-through">
-                                  {iskontoInfo.eskiFiyat.toFixed(2)} ₺
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-orange-600 font-bold">
-                                {ilkStok.fiyat.toFixed(2)} ₺
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-sm text-gray-500">{ilkStok.birim_turu}</span>
-                        </div>
-                      )}
-                    </div>
-                  </Link>
+                  <div key={urun.id} className="h-full">
+                    <UrunKart urun={urun} />
+                  </div>
                 )
               })}
             </div>
@@ -425,66 +314,10 @@ export default function AnaSayfa() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
               {yeniEklenenler.slice(newProductsPage * 4, (newProductsPage + 1) * 4).map((urun) => {
-                const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
-                const ilkStok = urun.urun_stoklari?.[0]
-                // Sadece giriş yapmış kullanıcılara iskonto göster
-                const iskontoInfo = ilkStok && user ? kademeliIskontoUygula(ilkStok.fiyat, grupIskontoOrani, ozelIskontoOrani) : null
-
                 return (
-                  <Link
-                    key={urun.id}
-                    to={`/urun/${urun.id}`}
-                    className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden"
-                  >
-                    <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                      {ilkGorsel ? (
-                        <img
-                          src={ilkGorsel}
-                          alt={urun.urun_adi}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
-                            <span className="text-white text-4xl font-bold">
-                              {urun.urun_adi.charAt(0)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      {iskontoInfo?.varMi && (
-                        <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-lg text-sm font-bold">
-                          %{iskontoInfo.oran} İndirim
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                        {urun.urun_adi}
-                      </h3>
-                      {ilkStok && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex flex-col">
-                            {iskontoInfo?.varMi ? (
-                              <>
-                                <span className="text-orange-600 font-bold">
-                                  {iskontoInfo.yeniFiyat.toFixed(2)} ₺
-                                </span>
-                                <span className="text-gray-400 text-xs line-through">
-                                  {iskontoInfo.eskiFiyat.toFixed(2)} ₺
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-orange-600 font-bold">
-                                {ilkStok.fiyat.toFixed(2)} ₺
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-sm text-gray-500">{ilkStok.birim_turu}</span>
-                        </div>
-                      )}
-                    </div>
-                  </Link>
+                  <div key={urun.id} className="h-full">
+                    <UrunKart urun={urun} />
+                  </div>
                 )
               })}
             </div>
