@@ -232,7 +232,7 @@ export default function Sepet() {
 
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => miktarGuncelle(item.urun_id, item.birim_turu, Math.max(item.min_siparis_miktari, item.miktar - 1))}
+                      onClick={() => miktarGuncelle(item.urun_id, item.birim_turu, Math.max(item.min_siparis_miktari, item.miktar - 1), item.birim_adedi)}
                       disabled={item.miktar <= item.min_siparis_miktari}
                       className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -245,14 +245,14 @@ export default function Sepet() {
                       onChange={(e) => {
                         const val = parseInt(e.target.value)
                         if (!isNaN(val) && val >= item.min_siparis_miktari) {
-                          miktarGuncelle(item.urun_id, item.birim_turu, val)
+                          miktarGuncelle(item.urun_id, item.birim_turu, val, item.birim_adedi)
                         }
                       }}
                       onFocus={(e) => e.target.select()}
                       className="w-16 text-center font-semibold border border-gray-300 rounded-md py-1 mx-1 focus:outline-none focus:ring-1 focus:ring-orange-500"
                     />
                     <button
-                      onClick={() => miktarGuncelle(item.urun_id, item.birim_turu, item.miktar + 1)}
+                      onClick={() => miktarGuncelle(item.urun_id, item.birim_turu, item.miktar + 1, item.birim_adedi)}
                       className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50"
                     >
                       <Plus className="w-4 h-4" />
@@ -264,7 +264,7 @@ export default function Sepet() {
                       {(item.birim_fiyat * item.miktar).toFixed(2)} ₺
                     </p>
                     <button
-                      onClick={() => sepettenCikar(item.urun_id, item.birim_turu)}
+                      onClick={() => sepettenCikar(item.urun_id, item.birim_turu, item.birim_adedi)}
                       className="text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="w-5 h-5" />

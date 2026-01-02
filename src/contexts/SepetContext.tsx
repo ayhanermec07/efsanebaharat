@@ -18,8 +18,8 @@ interface SepetItem {
 interface SepetContextType {
   sepetItems: SepetItem[]
   sepeteEkle: (item: SepetItem) => void
-  sepettenCikar: (urun_id: string, birim_turu: string) => void
-  miktarGuncelle: (urun_id: string, birim_turu: string, miktar: number) => void
+  sepettenCikar: (urun_id: string, birim_turu: string, birim_adedi?: number) => void
+  miktarGuncelle: (urun_id: string, birim_turu: string, miktar: number, birim_adedi?: number) => void
   sepetiTemizle: () => void
   toplamTutar: number
   toplamAdet: number
@@ -254,6 +254,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
         .eq('musteri_id', musteriData.id)
         .eq('urun_id', item.urun_id)
         .eq('birim_turu', item.birim_turu)
+        .eq('birim_adedi', item.birim_adedi || 100) // Default to 100 if null/undefined
         .maybeSingle()
 
       if (existing) {
@@ -298,22 +299,26 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const sepettenCikar = async (urun_id: string, birim_turu: string) => {
+  const sepettenCikar = async (urun_id: string, birim_turu: string, birim_adedi?: number) => {
     if (user && musteriData) {
       // Giriş yapmış kullanıcı - veritabanından sil
       try {
         // Rezervasyonu kaldır
         await rezervasyonKaldir(urun_id, birim_turu)
 
-        // Sepetten çıkar
-        await supabase
+        // Let's rewrite the query construction properly
+        let query = supabase
           .from('sepet_items')
           .delete()
           .eq('musteri_id', musteriData.id)
           .eq('urun_id', urun_id)
           .eq('birim_turu', birim_turu)
 
-        await loadCart()
+        if (birim_adedi) {
+          query = query.eq('birim_adedi', birim_adedi)
+        }
+
+        await query
       } catch (error) {
         console.error('Sepetten çıkarma hatası:', error)
         toast.error('Ürün çıkarılamadı')
@@ -324,9 +329,9 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const miktarGuncelle = async (urun_id: string, birim_turu: string, miktar: number) => {
+  const miktarGuncelle = async (urun_id: string, birim_turu: string, miktar: number, birim_adedi?: number) => {
     if (miktar <= 0) {
-      await sepettenCikar(urun_id, birim_turu)
+      await sepettenCikar(urun_id, birim_turu, birim_adedi)
       return
     }
 
@@ -341,12 +346,18 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
           return
         }
 
-        await supabase
+        let query = supabase
           .from('sepet_items')
           .update({ miktar })
           .eq('musteri_id', musteriData.id)
           .eq('urun_id', urun_id)
           .eq('birim_turu', birim_turu)
+
+        if (birim_adedi) {
+          query = query.eq('birim_adedi', birim_adedi)
+        }
+
+        await query
 
         await loadCart()
       } catch (error) {
