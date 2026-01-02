@@ -43,7 +43,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
   // Kullanıcı değiştiğinde (giriş/çıkış) kontrol et
   useEffect(() => {
     const currentUserId = user?.id || null
-    
+
     // Kullanıcı değişti mi?
     if (prevUserId !== currentUserId) {
       if (prevUserId && !currentUserId) {
@@ -130,7 +130,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
         .select('stok_miktari, aktif_durum')
         .eq('urun_id', urun_id)
         .eq('birim_turu', birim_turu)
-        .single()
+        .maybeSingle()
 
       if (stokError || !stokData) {
         return { success: false, message: 'Stok bilgisi alınamadı' }
@@ -165,9 +165,9 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
       const eklenecekMiktar = miktar - mevcutMiktar
 
       if (musaitMiktar < eklenecekMiktar) {
-        return { 
-          success: false, 
-          message: `Yeterli stok yok! Müsait: ${musaitMiktar}` 
+        return {
+          success: false,
+          message: `Yeterli stok yok! Müsait: ${musaitMiktar}`
         }
       }
 
@@ -176,7 +176,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
         // Mevcut rezervasyonu güncelle
         await supabase
           .from('stok_rezervasyonlari')
-          .update({ 
+          .update({
             miktar: miktar,
             rezervasyon_tarihi: new Date().toISOString() // Süreyi yenile
           })
@@ -225,8 +225,8 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
     try {
       // Önce stok kontrolü ve rezervasyon yap
       const rezervasyonSonuc = await stokKontrolVeRezerve(
-        item.urun_id, 
-        item.birim_turu, 
+        item.urun_id,
+        item.birim_turu,
         item.miktar
       )
 
@@ -284,7 +284,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
         const existing = prev.find(
           i => i.urun_id === item.urun_id && i.birim_turu === item.birim_turu
         )
-        
+
         if (existing) {
           return prev.map(i =>
             i.urun_id === item.urun_id && i.birim_turu === item.birim_turu
@@ -292,7 +292,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
               : i
           )
         }
-        
+
         return [...prev, item]
       })
       toast.success('Ürün sepete eklendi')
@@ -305,7 +305,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
       try {
         // Rezervasyonu kaldır
         await rezervasyonKaldir(urun_id, birim_turu)
-        
+
         // Sepetten çıkar
         await supabase
           .from('sepet_items')
@@ -313,7 +313,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
           .eq('musteri_id', musteriData.id)
           .eq('urun_id', urun_id)
           .eq('birim_turu', birim_turu)
-        
+
         await loadCart()
       } catch (error) {
         console.error('Sepetten çıkarma hatası:', error)
@@ -338,7 +338,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
       try {
         // Önce stok kontrolü ve rezervasyon güncelle
         const rezervasyonSonuc = await stokKontrolVeRezerve(urun_id, birim_turu, miktar)
-        
+
         if (!rezervasyonSonuc.success) {
           toast.error(rezervasyonSonuc.message)
           return
@@ -350,7 +350,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
           .eq('musteri_id', musteriData.id)
           .eq('urun_id', urun_id)
           .eq('birim_turu', birim_turu)
-        
+
         await loadCart()
       } catch (error) {
         console.error('Miktar güncelleme hatası:', error)
@@ -383,7 +383,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
           .from('sepet_items')
           .delete()
           .eq('musteri_id', musteriData.id)
-        
+
         setSepetItems([])
       } catch (error) {
         console.error('Sepet temizleme hatası:', error)

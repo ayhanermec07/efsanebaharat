@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
-        
+
         if (user) {
           // Admin kontrolü
           const { data: adminData } = await supabase
@@ -39,20 +39,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .select('*')
             .eq('user_id', user.id)
             .maybeSingle()
-          
+
           setIsAdmin(!!adminData)
-          
+
           // Müşteri bilgilerini al
           const { data: musteri, error: musteriError } = await supabase
             .from('musteriler')
             .select('*')
             .eq('user_id', user.id)
             .maybeSingle()
-          
+
           if (musteriError) {
             console.error('Müşteri bilgisi yükleme hatası:', musteriError)
           }
-          
+
           // Fiyat grubu bilgisini ayrı çek
           if (musteri && musteri.fiyat_grubu_id) {
             const { data: fiyatGrubu } = await supabase
@@ -60,12 +60,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .select('*')
               .eq('id', musteri.fiyat_grubu_id)
               .maybeSingle()
-            
+
             setMusteriData({ ...musteri, fiyat_gruplari: fiyatGrubu })
           } else {
             setMusteriData(musteri)
           }
-          
+
           // İskonto oranını hesapla
           if (musteri) {
             await hesaplaIskontoOrani(musteri.id)
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
       }
     }
-    
+
     loadUser()
 
     // Auth state değişikliklerini dinle
@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🔍 İskonto hesaplanıyor, Müşteri ID:', musteriId)
       const bugun = new Date().toISOString().split('T')[0] // Sadece tarih kısmı
       console.log('📅 Bugünün tarihi:', bugun)
-      
+
       // Bireysel iskonto kontrolü
       const { data: bireyselIskonto, error: bireyselError } = await supabase
         .from('iskontolar')
@@ -112,24 +112,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .order('iskonto_orani', { ascending: false })
         .limit(1)
         .maybeSingle()
-      
+
       console.log('👤 Bireysel iskonto sorgusu:', { bireyselIskonto, bireyselError })
-      
+
       if (bireyselIskonto) {
         console.log('✅ Bireysel iskonto bulundu:', bireyselIskonto.iskonto_orani)
         setIskontoOrani(bireyselIskonto.iskonto_orani)
         return
       }
-      
+
       // Müşteri bilgisini al (grup ve özel iskonto)
       const { data: musteri } = await supabase
         .from('musteriler')
         .select('fiyat_grubu_id, ozel_iskonto_orani')
         .eq('id', musteriId)
         .maybeSingle()
-      
+
       console.log('👥 Müşteri bilgisi:', musteri)
-      
+
       if (!musteri) {
         console.log('❌ Müşteri bulunamadı')
         setGrupIskontoOrani(0)
@@ -149,9 +149,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .eq('id', musteri.fiyat_grubu_id)
           .eq('aktif_durum', true)
           .maybeSingle()
-        
+
         console.log('🏷️ Fiyat grubu:', fiyatGrubu)
-        
+
         if (fiyatGrubu) {
           grupIskonto = fiyatGrubu.indirim_orani || 0
           console.log('✅ Grup iskontosu:', grupIskonto)
@@ -165,31 +165,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 1. 100 - (100 * 0.10) = 90 TL
       // 2. 90 - (90 * 0.05) = 85.5 TL
       // Toplam indirim: 14.5 TL = %14.5
-      
+
       let toplamIskontoOrani = 0
       if (grupIskonto > 0 || ozelIskonto > 0) {
         // Kademeli hesaplama için örnek fiyat kullan
         const ornekFiyat = 100
         let mevcutFiyat = ornekFiyat
-        
+
         // Grup iskontosunu uygula
         if (grupIskonto > 0) {
           mevcutFiyat -= (mevcutFiyat * grupIskonto) / 100
         }
-        
+
         // Özel iskontonu uygula
         if (ozelIskonto > 0) {
           mevcutFiyat -= (mevcutFiyat * ozelIskonto) / 100
         }
-        
+
         // Toplam iskonto oranını hesapla
         toplamIskontoOrani = ((ornekFiyat - mevcutFiyat) / ornekFiyat) * 100
       }
-      
+
       setGrupIskontoOrani(grupIskonto)
       setOzelIskontoOrani(ozelIskonto)
       setIskontoOrani(Math.round(toplamIskontoOrani * 100) / 100)
-      
+
       console.log('💰 Grup:', grupIskonto, '% | Özel:', ozelIskonto, '% | Toplam:', toplamIskontoOrani.toFixed(2), '%')
     } catch (error) {
       console.error('❌ İskonto hesaplama hatası:', error)
@@ -199,7 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function signIn(email: string, password: string) {
     const result = await supabase.auth.signInWithPassword({ email, password })
-    
+
     if (result.data.user) {
       // Admin kontrolü
       const { data: adminData } = await supabase
@@ -207,20 +207,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('*')
         .eq('user_id', result.data.user.id)
         .maybeSingle()
-      
+
       setIsAdmin(!!adminData)
-      
+
       // Müşteri bilgilerini al
       const { data: musteri, error: musteriError } = await supabase
         .from('musteriler')
         .select('*')
         .eq('user_id', result.data.user.id)
         .maybeSingle()
-      
+
       if (musteriError) {
         console.error('Müşteri bilgisi yükleme hatası:', musteriError)
       }
-      
+
       // Fiyat grubu bilgisini ayrı çek
       if (musteri && musteri.fiyat_grubu_id) {
         const { data: fiyatGrubu } = await supabase
@@ -228,24 +228,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .select('*')
           .eq('id', musteri.fiyat_grubu_id)
           .maybeSingle()
-        
+
         setMusteriData({ ...musteri, fiyat_gruplari: fiyatGrubu })
       } else {
         setMusteriData(musteri)
       }
-      
+
       // İskonto oranını hesapla
       if (musteri) {
         await hesaplaIskontoOrani(musteri.id)
       }
     }
-    
+
     return result
   }
 
   async function signUp(email: string, password: string, userData: any) {
-    const result = await supabase.auth.signUp({ 
-      email, 
+    const result = await supabase.auth.signUp({
+      email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/`,
@@ -257,7 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     })
-    
+
     if (result.data.user) {
       // Müşteri kaydı oluştur
       const { data: defaultFiyatGrubu } = await supabase
@@ -265,7 +265,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('id')
         .eq('grup_adi', 'Bireysel Müşteri')
         .maybeSingle()
-      
+
       await supabase.from('musteriler').insert({
         user_id: result.data.user.id,
         ad: userData.ad,
@@ -277,7 +277,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         aktif_durum: true
       })
     }
-    
+
     return result
   }
 
@@ -285,6 +285,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut()
     setIsAdmin(false)
     setMusteriData(null)
+    // İskonto oranlarını sıfırla
+    setIskontoOrani(0)
+    setGrupIskontoOrani(0)
+    setOzelIskontoOrani(0)
   }
 
   return (
