@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase'
 
 export default function Header() {
   const { user, isAdmin, musteriData, signOut } = useAuth()
-  const { toplamAdet } = useSepet()
+  const { sepetItems } = useSepet()
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -40,7 +40,7 @@ export default function Header() {
       .eq('aktif_durum', true)
       .is('ust_kategori_id', null)
       .order('sira_no')
-    
+
     if (data) setKategoriler(data)
   }
 
@@ -152,9 +152,9 @@ export default function Header() {
             <Link to="/urunler" className="text-gray-700 hover:text-orange-600 transition">
               Ürünler
             </Link>
-            
+
             {/* Kategoriler Dropdown */}
-            <div 
+            <div
               className="relative"
               onMouseEnter={() => {
                 if (kategoriTimeout) clearTimeout(kategoriTimeout)
@@ -171,7 +171,7 @@ export default function Header() {
               </button>
               {showKategoriDropdown && (
                 <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <Link 
+                  <Link
                     to="/urunler"
                     className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
                     onClick={() => setShowKategoriDropdown(false)}
@@ -192,7 +192,7 @@ export default function Header() {
                 </div>
               )}
             </div>
-            
+
             <Link to="/en-cok-satan" className="text-gray-700 hover:text-orange-600 transition">
               En Çok Satan Ürünler
             </Link>
@@ -216,25 +216,25 @@ export default function Header() {
 
           {/* Right side actions */}
           <div className="flex items-center space-x-4">
-            <button 
+            <button
               onClick={() => setSearchOpen(!searchOpen)}
               className="hidden md:block text-gray-600 hover:text-orange-600 transition"
               title="Arama"
             >
               <Search className="w-5 h-5" />
             </button>
-            
+
             <Link to="/sepet" className="relative text-gray-600 hover:text-orange-600 transition">
               <ShoppingCart className="w-5 h-5" />
-              {toplamAdet > 0 && (
+              {sepetItems.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {toplamAdet}
+                  {sepetItems.length}
                 </span>
               )}
             </Link>
 
             {user ? (
-              <div 
+              <div
                 className="relative"
                 onMouseEnter={() => {
                   if (userTimeout) clearTimeout(userTimeout)
@@ -251,15 +251,15 @@ export default function Header() {
                 </button>
                 {showUserDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <Link 
-                      to="/hesabim" 
+                    <Link
+                      to="/hesabim"
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
                       onClick={() => setShowUserDropdown(false)}
                     >
                       Profilim
                     </Link>
-                    <Link 
-                      to="/sorularim" 
+                    <Link
+                      to="/sorularim"
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
                       onClick={() => setShowUserDropdown(false)}
                     >
@@ -308,7 +308,7 @@ export default function Header() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   autoFocus
                 />
-                
+
                 {/* Arama Sonuçları Dropdown */}
                 {showDropdown && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
@@ -357,7 +357,7 @@ export default function Header() {
                             </div>
                           </div>
                         ))}
-                        
+
                         {/* Tüm sonuçları gör linki */}
                         {searchQuery.trim().length >= 2 && (
                           <div className="border-t border-gray-100">
@@ -386,7 +386,7 @@ export default function Header() {
                   </div>
                 )}
               </div>
-              
+
               <button
                 type="submit"
                 className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center gap-2"
@@ -407,11 +407,11 @@ export default function Header() {
                 <X className="w-5 h-5" />
               </button>
             </form>
-            
+
             {/* Dropdown dışına tıklandığında kapatmak için overlay */}
             {showDropdown && (
-              <div 
-                className="fixed inset-0 z-40" 
+              <div
+                className="fixed inset-0 z-40"
                 onClick={closeDropdown}
               />
             )}
@@ -432,7 +432,7 @@ export default function Header() {
                     placeholder="Ürün ara..."
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
-                  
+
                   {/* Mobile Arama Sonuçları Dropdown */}
                   {showDropdown && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
@@ -481,7 +481,7 @@ export default function Header() {
                               </div>
                             </div>
                           ))}
-                          
+
                           {/* Tüm sonuçları gör linki */}
                           {searchQuery.trim().length >= 2 && (
                             <div className="border-t border-gray-100">
@@ -511,7 +511,7 @@ export default function Header() {
                     </div>
                   )}
                 </div>
-                
+
                 <button
                   type="submit"
                   className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
@@ -519,11 +519,11 @@ export default function Header() {
                   <Search className="w-5 h-5" />
                 </button>
               </form>
-              
+
               {/* Dropdown dışına tıklandığında kapatmak için overlay */}
               {showDropdown && (
-                <div 
-                  className="fixed inset-0 z-40" 
+                <div
+                  className="fixed inset-0 z-40"
                   onClick={closeDropdown}
                 />
               )}
@@ -543,7 +543,7 @@ export default function Header() {
             >
               Ürünler
             </Link>
-            
+
             {/* Kategoriler - Mobile */}
             <div className="py-2">
               <div className="font-semibold text-gray-900 mb-2">Kategoriler</div>
@@ -567,7 +567,7 @@ export default function Header() {
                 ))}
               </div>
             </div>
-            
+
             <Link
               to="/en-cok-satan"
               className="block py-2 text-gray-700 hover:text-orange-600"
