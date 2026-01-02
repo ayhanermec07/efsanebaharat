@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useSepet } from '../contexts/SepetContext'
 import { useAuth } from '../contexts/AuthContext'
@@ -9,6 +9,7 @@ import { kademeliIskontoUygula } from '../utils/iskonto'
 
 export default function UrunDetay() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { sepeteEkle } = useSepet()
   const { user, musteriData, grupIskontoOrani, ozelIskontoOrani } = useAuth()
   const [urun, setUrun] = useState<any>(null)
@@ -48,24 +49,24 @@ export default function UrunDetay() {
       .select('*')
       .eq('id', id)
       .maybeSingle()
-    
+
     if (data) {
       // Görselleri, stokları, kategori ve markayı ayrı çek
       // Stok filtreleme: Kullanıcı tipine göre (ziyaretçiler müşteri stokları görür)
       const musteriTipi = musteriData?.musteri_tipi || 'musteri'
-      
+
       const [{ data: gorseller }, { data: stoklar }, { data: kategori }, { data: marka }] = await Promise.all([
         supabase.from('urun_gorselleri').select('*').eq('urun_id', data.id).order('sira_no'),
         supabase.from('urun_stoklari').select('*').eq('urun_id', data.id).eq('aktif_durum', true),
         supabase.from('kategoriler').select('*').eq('id', data.kategori_id).maybeSingle(),
         supabase.from('markalar').select('*').eq('id', data.marka_id).maybeSingle()
       ])
-      
+
       // Stokları filtrele: stok_grubu 'hepsi' veya kullanıcı tipine uygun olanlar
-      const filtreliStoklar = stoklar?.filter(s => 
+      const filtreliStoklar = stoklar?.filter(s =>
         !s.stok_grubu || s.stok_grubu === 'hepsi' || s.stok_grubu === musteriTipi
       ) || []
-      
+
       const urunWithData = {
         ...data,
         urun_gorselleri: gorseller || [],
@@ -73,7 +74,7 @@ export default function UrunDetay() {
         kategoriler: kategori,
         markalar: marka
       }
-      
+
       setUrun(urunWithData)
       if (filtreliStoklar && filtreliStoklar.length > 0) {
         setSecilenStok(filtreliStoklar[0])
@@ -82,9 +83,16 @@ export default function UrunDetay() {
   }
 
   function handleSepeteEkle() {
-    if (!urun || !secilenStok || !iskontoInfo) return
+    // Giriş yapmamış kullanıcıyı giriş sayfasına yönlendir
+    if (!user) {
+      navigate('/giris')
+      return
+    }
+
+    if (!urun || !secilenStok) return
 
     const gorsel = urun.urun_gorselleri?.[0]?.gorsel_url
+    const fiyat = iskontoInfo?.varMi ? iskontoInfo.yeniFiyat : secilenStok.fiyat
 
     sepeteEkle({
       urun_id: urun.id,
@@ -92,7 +100,7 @@ export default function UrunDetay() {
       birim_turu: secilenStok.birim_turu,
       birim_adedi: secilenStok.birim_adedi,
       birim_adedi_turu: secilenStok.birim_adedi_turu,
-      birim_fiyat: iskontoInfo.yeniFiyat,
+      birim_fiyat: fiyat,
       miktar,
       gorsel_url: gorsel,
       min_siparis_miktari: secilenStok.min_siparis_miktari
@@ -141,9 +149,8 @@ export default function UrunDetay() {
                 <button
                   key={gorsel.id}
                   onClick={() => setSecilenGorsel(index)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 ${
-                    index === secilenGorsel ? 'border-orange-600' : 'border-transparent'
-                  }`}
+                  className={`aspect-square rounded-lg overflow-hidden border-2 ${index === secilenGorsel ? 'border-orange-600' : 'border-transparent'
+                    }`}
                 >
                   <img
                     src={gorsel.gorsel_url}
@@ -202,11 +209,10 @@ export default function UrunDetay() {
                     <button
                       key={stok.id}
                       onClick={() => setSecilenStok(stok)}
-                      className={`p-3 border-2 rounded-lg transition ${
-                        secilenStok?.id === stok.id
-                          ? 'border-orange-600 bg-orange-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      className={`p-3 border-2 rounded-lg transition ${secilenStok?.id === stok.id
+                        ? 'border-orange-600 bg-orange-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                        }`}
                     >
                       <div className="font-semibold">
                         {stok.birim_adedi || 100} {stok.birim_turu?.toUpperCase() || 'GR'}
@@ -262,11 +268,10 @@ export default function UrunDetay() {
           <button
             onClick={handleSepeteEkle}
             disabled={!secilenStok}
-            className={`w-full py-4 rounded-lg font-semibold transition flex items-center justify-center space-x-2 ${
-              eklendi
-                ? 'bg-green-600 text-white'
-                : 'bg-orange-600 text-white hover:bg-orange-700'
-            }`}
+            className={`w-full py-4 rounded-lg font-semibold transition flex items-center justify-center space-x-2 ${eklendi
+              ? 'bg-green-600 text-white'
+              : 'bg-orange-600 text-white hover:bg-orange-700'
+              }`}
           >
             {eklendi ? (
               <>
