@@ -17,7 +17,9 @@ import {
   BarChart3,
   Headphones,
   Percent,
-  ExternalLink
+  ExternalLink,
+  LifeBuoy,
+  Settings
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -52,6 +54,7 @@ export default function AdminLayout() {
     { path: '/admin/bayi-satislari', icon: BarChart3, label: 'Bayi Satışları' },
     { path: '/admin/musteriler', icon: Users, label: 'Müşteriler' },
     { path: '/admin/iskonto', icon: Percent, label: 'İskonto Grupları' },
+    { path: '/admin/ayarlar', icon: Settings, label: 'Ayarlar' },
     { path: '/admin/bannerlar', icon: Image, label: 'Banner' },
     { path: '/admin/kampanyalar', icon: Megaphone, label: 'Kampanyalar' },
     { path: '/admin/sorular', icon: MessageSquare, label: 'Sorular' },
