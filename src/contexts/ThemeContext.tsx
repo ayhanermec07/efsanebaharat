@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 interface ThemeSettings {
     primaryColor: string
     secondaryColor: string
+    backgroundColor: string
 }
 
 interface LogoSettings {
@@ -22,6 +23,7 @@ interface ThemeContextType {
 const defaultTheme: ThemeSettings = {
     primaryColor: '#ea580c', // orange-600
     secondaryColor: '#dc2626', // red-600
+    backgroundColor: '#f9fafb', // gray-50
 }
 
 const defaultLogo: LogoSettings = {
@@ -52,6 +54,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
         root.style.setProperty('--color-primary', theme.primaryColor)
         root.style.setProperty('--color-secondary', theme.secondaryColor)
+        root.style.setProperty('--color-background', theme.backgroundColor || '#f9fafb')
+        document.body.style.backgroundColor = theme.backgroundColor || '#f9fafb'
 
     }, [theme])
 

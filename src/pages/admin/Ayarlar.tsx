@@ -20,6 +20,7 @@ export default function Ayarlar() {
     // Tasarım form state
     const [primaryColor, setPrimaryColor] = useState(theme.primaryColor)
     const [secondaryColor, setSecondaryColor] = useState(theme.secondaryColor)
+    const [backgroundColor, setBackgroundColor] = useState(theme.backgroundColor || '#f9fafb')
     const [logoWidth, setLogoWidth] = useState(logo.width)
     const [loading, setLoading] = useState(false)
 
@@ -41,7 +42,8 @@ export default function Ayarlar() {
         try {
             await updateTheme({
                 primaryColor,
-                secondaryColor
+                secondaryColor,
+                backgroundColor
             })
             toast.success('Tema ayarları kaydedildi')
         } catch (error) {
@@ -224,7 +226,7 @@ export default function Ayarlar() {
                         <div className="max-w-xl space-y-8">
                             <div>
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">Renk Teması</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Ana Renk (Primary)
@@ -238,7 +240,7 @@ export default function Ayarlar() {
                                             />
                                             <span className="text-sm text-gray-500 font-mono">{primaryColor}</span>
                                         </div>
-                                        <p className="mt-1 text-xs text-gray-500">Butonlar, linkler ve vurgulamalar için.</p>
+                                        <p className="mt-1 text-xs text-gray-500">Butonlar ve linkler.</p>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -253,7 +255,22 @@ export default function Ayarlar() {
                                             />
                                             <span className="text-sm text-gray-500 font-mono">{secondaryColor}</span>
                                         </div>
-                                        <p className="mt-1 text-xs text-gray-500">Uyarılar ve ikincil eylemler için.</p>
+                                        <p className="mt-1 text-xs text-gray-500">Uyarılar ve ikincil öğeler.</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Arka Plan Rengi
+                                        </label>
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="color"
+                                                value={backgroundColor}
+                                                onChange={(e) => setBackgroundColor(e.target.value)}
+                                                className="h-10 w-20 rounded border border-gray-300 cursor-pointer"
+                                            />
+                                            <span className="text-sm text-gray-500 font-mono">{backgroundColor}</span>
+                                        </div>
+                                        <p className="mt-1 text-xs text-gray-500">Sayfa arka planı.</p>
                                     </div>
                                 </div>
                                 <div className="mt-4">
