@@ -2,9 +2,14 @@ import { useState, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import { supabase } from '../../lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { uploadImage } from '../../utils/imageUpload'
 import toast from 'react-hot-toast'
 import { Save, RefreshCw, Upload, Shield, Palette, UserPlus } from 'lucide-react'
+
+// Supabase config for temporary client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://uvagzvevktzzfrzkvtsd.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2YWd6dmV2a3R6emZyemt2dHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyNzA1NDMsImV4cCI6MjA3Nzg0NjU0M30.ENrSW4rJmbwEWi6eSynCuXv8CdC9JroK-fpiIiVYwP0'
 
 export default function Ayarlar() {
     const { theme, logo, updateTheme, updateLogo } = useTheme()
@@ -18,9 +23,16 @@ export default function Ayarlar() {
     const [logoWidth, setLogoWidth] = useState(logo.width)
     const [loading, setLoading] = useState(false)
 
-    // Yönetici form state
+    // Yönetici form state (Mevcut kullanıcı)
     const [adminEmail, setAdminEmail] = useState('')
     const [adminLoading, setAdminLoading] = useState(false)
+
+    // Yeni Admin Oluşturma State
+    const [newItemEmail, setNewItemEmail] = useState('')
+    const [newItemPassword, setNewItemPassword] = useState('')
+    const [newItemName, setNewItemName] = useState('')
+    const [newItemSurname, setNewItemSurname] = useState('')
+    const [newAdminLoading, setNewAdminLoading] = useState(false)
 
     const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -82,53 +94,6 @@ export default function Ayarlar() {
 
         setAdminLoading(true)
         try {
-            // 1. Kullanıcı ID'sini bul (Supabase Admin API olmadan client side'da email ile user id bulmak zordur
-            // Ancak burada 'musteriler' tablosunda user_id ve email eşleşmesi olduğunu varsayabiliriz 
-            // Veya daha güvenli yöntem: Bir RPC fonksiyonu kullanmak.
-            // Şimdilik 'musteriler' tablosunu veya 'auth.users' muadili bir view'i sorgulayacağız.
-
-            // Not: auth.users tablosuna doğrudan erişim güvenlik nedeniyle kısıtlı olabilir.
-            // Bu yüzden musteriler tablosunu kullanacağız.
-
-            const { data: musteri, error: musteriError } = await supabase
-                .from('musteriler')
-                .select('user_id')
-                .eq('user_id', adminEmail) // Email sütunu olmadığı için bu kısım sorunlu olabilir.
-                // Bu nedenle admin panelinde kullanıcı listesinden seçtirmek daha mantıklı olurdu
-                // Ancak istek üzerine email ile ekleme deniyoruz.
-                // Client-side'da email -> user_id dönüşümü için ya bir Edge Function ya da RPC gerekir.
-
-                // Alternatif: Admin, kullanıcının ID'sini manuel girebilir veya listeden seçebilir.
-                // Basitlik için: RPC fonksiyonu olmadığını varsayarak, kullanıcıdan email yerine 
-                // Kullanıcı seçmesini isteyebiliriz. Ancak şimdilik email ile yapmaya çalışalım.
-                // Eğer backend fonksiyonu yoksa, client-side kısıtlamaları nedeniyle doğrudan user_id girmesi gerekebilir.
-
-                // Kullanıcı beklentisi "email" olduğu için, Supabase'in `getUserByEmail` gibi bir client methodu yok.
-                // Bu yüzden "Musteriler" tablosunda email saklıyor muyuz? Hayır, auth tablosunda.
-                // Çözüm: E-posta ile admin ekleme işini, 'Müşteriler' sayfasındaki listeden 'Admin Yap' butonu ile yapmak daha kolay.
-
-                // Ancak bu sayfada yapmak istiyorsak, 'Admin Yapılacak Kullanıcı ID'si' isteyebiliriz veya
-                // Bir RPC fonksiyonu yazmamız gerekir.
-
-                // Kestirme çözüm: Kullanıcıya e-posta değil, mevcut müşteri listesinden seçim yaptıralım.
-                // Ama form basitliği için şimdilik ID girişi veya RPC varsayımı yapacağım.
-                // RPC yoksa hata verecektir.
-
-                // ŞİMDİLİK: Sadece admin_users tablosuna insert deniyoruz.
-                // Kullanıcıya User ID girmesini söyleyeceğiz (email yerine) çünkü client-side email->uid zordur.
-
-                // DÜZELTME: Kullanıcı deneyimi için bir "Kullanıcı Ara" butonu koyabiliriz.
-                // Ama en kolayı, veritabanına bir fonksiyon eklemek.
-
-                // Şimdilik basit tutalım: Kullanıcı ID'si ile ekleme yapalım.
-                // Veya task.md planında "Mevcut kullanıcıların e-posta adresi ile aranıp" demişim.
-                // Bunun için RPC: `get_user_id_by_email` lazım.
-                // Eğer yoksa, admin panelindeki "Musteriler" sayfasından ID kopyalamasını bekleyeceğiz.
-
-                // Plan değişikliği: Buraya "Kullanıcı ID" inputu koyuyorum.
-                .limit(0) // placeholder
-
-            // Hata vermemesi için basit insert
             const { error } = await supabase
                 .from('admin_users')
                 .insert({ user_id: adminEmail, role: 'admin' }) // adminEmail burada ID olarak kullanılacak
@@ -145,6 +110,85 @@ export default function Ayarlar() {
         }
     }
 
+    const handleCreateNewAdmin = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!newItemEmail || !newItemPassword || !newItemName) {
+            toast.error('Lütfen tüm alanları doldurun')
+            return
+        }
+
+        setNewAdminLoading(true)
+        try {
+            // Geçici bir client oluştur (Mevcut oturumu bozmamak için)
+            // persistSession: false önemli!
+            const tempSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+                auth: {
+                    persistSession: false,
+                    autoRefreshToken: false,
+                    detectSessionInUrl: false
+                }
+            })
+
+            // 1. Yeni kullanıcıyı oluştur
+            const { data: authData, error: authError } = await tempSupabase.auth.signUp({
+                email: newItemEmail,
+                password: newItemPassword,
+                options: {
+                    data: {
+                        ad: newItemName,
+                        soyad: newItemSurname || '',
+                        musteri_tipi: 'admin' // İsteğe bağlı
+                    }
+                }
+            })
+
+            if (authError) throw authError
+            if (!authData.user) throw new Error('Kullanıcı oluşturulamadı')
+
+            const newUserId = authData.user.id
+
+            // 2. Müşteri kaydını oluştur (Normalde trigger yapabilir ama biz manuel garanti edelim)
+            // Bunu ANA client ile yapıyoruz çünkü admin yetkisi gerekebilir veya trigger çalıştıysa hata verebilir (conflict)
+            // Eğer trigger varsa conflict te nothing yaparız.
+            const { error: customerError } = await supabase
+                .from('musteriler')
+                .insert({
+                    user_id: newUserId,
+                    ad: newItemName,
+                    soyad: newItemSurname || '',
+                    musteri_tipi: 'admin', // Admin tipi yoksa musteri olabilir
+                    aktif_durum: true
+                })
+                .select() // Varsa
+
+            // Eğer müşteri tablosunda user_id unique ise ve trigger zaten eklediyse hata verebilir.
+            // Bu yüzden try-catch içinde veya ignore ederek geçebiliriz.
+            // Ancak en önemlisi admin_users tablosu.
+
+            // 3. Admin yetkisi ver
+            const { error: adminError } = await supabase
+                .from('admin_users')
+                .insert({
+                    user_id: newUserId,
+                    role: 'admin'
+                })
+
+            if (adminError) throw adminError
+
+            toast.success('Yeni admin kullanıcısı oluşturuldu!')
+            setNewItemEmail('')
+            setNewItemPassword('')
+            setNewItemName('')
+            setNewItemSurname('')
+
+        } catch (error: any) {
+            console.error('Yeni admin oluşturma hatası:', error)
+            toast.error('Hata: ' + (error.message || 'Bilinmeyen hata'))
+        } finally {
+            setNewAdminLoading(false)
+        }
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -156,8 +200,8 @@ export default function Ayarlar() {
                     <button
                         onClick={() => setActiveTab('tasarim')}
                         className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition ${activeTab === 'tasarim'
-                                ? 'border-b-2 border-orange-500 text-orange-600 bg-orange-50'
-                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                            ? 'border-b-2 border-orange-500 text-orange-600 bg-orange-50'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                             }`}
                     >
                         <Palette className="w-4 h-4" />
@@ -166,8 +210,8 @@ export default function Ayarlar() {
                     <button
                         onClick={() => setActiveTab('yoneticiler')}
                         className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition ${activeTab === 'yoneticiler'
-                                ? 'border-b-2 border-orange-500 text-orange-600 bg-orange-50'
-                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                            ? 'border-b-2 border-orange-500 text-orange-600 bg-orange-50'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                             }`}
                     >
                         <Shield className="w-4 h-4" />
@@ -295,45 +339,114 @@ export default function Ayarlar() {
                     )}
 
                     {activeTab === 'yoneticiler' && (
-                        <div className="max-w-xl space-y-8">
-                            <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
-                                <div className="flex">
-                                    <div className="flex-shrink-0">
-                                        <Shield className="h-5 w-5 text-blue-400" />
+                        <div className="max-w-2xl space-y-12">
+                            {/* Bölüm 1: Yeni Admin Kullanıcısı Oluşturma */}
+                            <div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-4 border-b pb-2">Yeni Admin Kullanıcısı Oluştur</h3>
+                                <p className="text-sm text-gray-500 mb-6">
+                                    Bu bölümden siteye giriş yapmamış, tamamen yeni bir kullanıcı hesabı oluşturup doğrudan admin yetkisi verebilirsiniz.
+                                </p>
+
+                                <form onSubmit={handleCreateNewAdmin} className="space-y-4 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Ad <span className="text-red-500">*</span></label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={newItemName}
+                                                onChange={e => setNewItemName(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Soyad</label>
+                                            <input
+                                                type="text"
+                                                value={newItemSurname}
+                                                onChange={e => setNewItemSurname(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="ml-3">
-                                        <p className="text-sm text-blue-700">
-                                            Buradan mevcut kullanıcılara yönetici yetkisi verebilirsiniz.
-                                            <br />
-                                            <strong>Dikkat:</strong> Kullanıcının benzersiz ID'sini (UUID) girmeniz gerekmektedir. Kullanıcı ID'sini "Müşteriler" sayfasından bulabilirsiniz.
-                                        </p>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">E-posta <span className="text-red-500">*</span></label>
+                                        <input
+                                            type="email"
+                                            required
+                                            value={newItemEmail}
+                                            onChange={e => setNewItemEmail(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                                        />
                                     </div>
-                                </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Şifre <span className="text-red-500">*</span></label>
+                                        <input
+                                            type="password"
+                                            required
+                                            minLength={6}
+                                            value={newItemPassword}
+                                            onChange={e => setNewItemPassword(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                                            placeholder="En az 6 karakter"
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={newAdminLoading}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                                    >
+                                        <UserPlus className="w-4 h-4" />
+                                        {newAdminLoading ? 'Oluşturuluyor...' : 'Yeni Admin Kullanıcısı Oluştur'}
+                                    </button>
+                                </form>
                             </div>
 
-                            <form onSubmit={handleAddAdmin} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Kullanıcı ID (UUID)
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="Örn: a0eebc99-9c0b..."
-                                        value={adminEmail}
-                                        onChange={(e) => setAdminEmail(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                    />
+                            {/* Bölüm 2: Mevcut Kullanıcıyı Admin Yapma */}
+                            <div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-4 border-b pb-2">Mevcut Kullanıcıya Yetki Ver</h3>
+                                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                                    <div className="flex">
+                                        <div className="flex-shrink-0">
+                                            <Shield className="h-5 w-5 text-blue-400" />
+                                        </div>
+                                        <div className="ml-3">
+                                            <p className="text-sm text-blue-700">
+                                                Buradan sisteme zaten kayıtlı olan bir kullanıcıya yönetici yetkisi verebilirsiniz.
+                                                <br />
+                                                <strong>Gereksinim:</strong> Kullanıcının benzersiz ID'sini (UUID) girmeniz gerekir.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <button
-                                    type="submit"
-                                    disabled={adminLoading}
-                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50 w-full"
-                                >
-                                    <UserPlus className="w-4 h-4" />
-                                    {adminLoading ? 'İşleniyor...' : 'Admin Yetkisi Ver'}
-                                </button>
-                            </form>
+
+                                <form onSubmit={handleAddAdmin} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Kullanıcı ID (UUID)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Örn: a0eebc99-9c0b..."
+                                            value={adminEmail}
+                                            onChange={(e) => setAdminEmail(e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={adminLoading}
+                                        className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50 w-full"
+                                    >
+                                        <UserPlus className="w-4 h-4" />
+                                        {adminLoading ? 'İşleniyor...' : 'Mevcut Kullanıcıyı Admin Yap'}
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     )}
                 </div>
