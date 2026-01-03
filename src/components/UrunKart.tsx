@@ -4,6 +4,7 @@ import { Eye, ShoppingCart, Check } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
 import { kademeliIskontoUygula } from '../utils/iskonto'
+import { getImageUrl } from '../utils/imageUtils'
 
 interface UrunKartProps {
     urun: any
@@ -29,7 +30,7 @@ export default function UrunKart({ urun }: UrunKartProps) {
         setImgError(false)
     }, [urun])
 
-    const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
+    const ilkGorsel = getImageUrl(urun.urun_gorselleri?.[0]?.gorsel_url)
 
     // İskonto hesapla
     const iskontoInfo = secilenStok && user

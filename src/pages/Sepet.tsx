@@ -211,18 +211,28 @@ export default function Sepet() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm">
               {sepetItems.map((item) => (
-                <div key={`${item.urun_id}-${item.birim_turu}`} className="flex items-center gap-4 p-6 border-b last:border-b-0">
-                  <div className="w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
-                    {item.gorsel_url ? (
-                      <img src={item.gorsel_url} alt={item.urun_adi} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-2xl font-bold text-gray-400">{item.urun_adi.charAt(0)}</span>
-                      </div>
-                    )}
+                <div key={`${item.urun_id}-${item.birim_turu}`} className="flex flex-col md:flex-row items-start md:items-center gap-4 p-6 border-b last:border-b-0">
+                  <div className="flex items-center gap-4 w-full md:w-auto">
+                    <div className="w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
+                      {item.gorsel_url ? (
+                        <img src={item.gorsel_url} alt={item.urun_adi} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-2xl font-bold text-gray-400">{item.urun_adi.charAt(0)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 md:hidden">
+                      <h3 className="font-semibold text-gray-900 mb-1">{item.urun_adi}</h3>
+                      <p className="text-sm text-gray-500 mb-2">
+                        {akilliBirimGoster(item.birim_adedi || 100, item.birim_adedi_turu || item.birim_turu)}
+                      </p>
+                      <p className="text-orange-600 font-bold">{item.birim_fiyat.toFixed(2)} ₺</p>
+                    </div>
                   </div>
 
-                  <div className="flex-1">
+                  <div className="flex-1 hidden md:block">
                     <h3 className="font-semibold text-gray-900 mb-1">{item.urun_adi}</h3>
                     <p className="text-sm text-gray-500 mb-2">
                       {akilliBirimGoster(item.birim_adedi || 100, item.birim_adedi_turu || item.birim_turu)}
@@ -230,45 +240,47 @@ export default function Sepet() {
                     <p className="text-orange-600 font-bold">{item.birim_fiyat.toFixed(2)} ₺</p>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => miktarGuncelle(item.urun_id, item.birim_turu, Math.max(item.min_siparis_miktari, item.miktar - 1), item.birim_adedi)}
-                      disabled={item.miktar <= item.min_siparis_miktari}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <input
-                      type="number"
-                      min={item.min_siparis_miktari}
-                      value={item.miktar}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value)
-                        if (!isNaN(val) && val >= item.min_siparis_miktari) {
-                          miktarGuncelle(item.urun_id, item.birim_turu, val, item.birim_adedi)
-                        }
-                      }}
-                      onFocus={(e) => e.target.select()}
-                      className="w-16 text-center font-semibold border border-gray-300 rounded-md py-1 mx-1 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                    />
-                    <button
-                      onClick={() => miktarGuncelle(item.urun_id, item.birim_turu, item.miktar + 1, item.birim_adedi)}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <div className="flex items-center justify-between w-full md:w-auto mt-4 md:mt-0">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => miktarGuncelle(item.urun_id, item.birim_turu, Math.max(item.min_siparis_miktari, item.miktar - 1), item.birim_adedi)}
+                        disabled={item.miktar <= item.min_siparis_miktari}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <input
+                        type="number"
+                        min={item.min_siparis_miktari}
+                        value={item.miktar}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value)
+                          if (!isNaN(val) && val >= item.min_siparis_miktari) {
+                            miktarGuncelle(item.urun_id, item.birim_turu, val, item.birim_adedi)
+                          }
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        className="w-16 text-center font-semibold border border-gray-300 rounded-md py-1 mx-1 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      />
+                      <button
+                        onClick={() => miktarGuncelle(item.urun_id, item.birim_turu, item.miktar + 1, item.birim_adedi)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
 
-                  <div className="text-right">
-                    <p className="font-bold text-gray-900 mb-2">
-                      {(item.birim_fiyat * item.miktar).toFixed(2)} ₺
-                    </p>
-                    <button
-                      onClick={() => sepettenCikar(item.urun_id, item.birim_turu, item.birim_adedi)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                    <div className="text-right md:ml-4 flex items-center gap-4 md:block">
+                      <p className="font-bold text-gray-900 md:mb-2">
+                        {(item.birim_fiyat * item.miktar).toFixed(2)} ₺
+                      </p>
+                      <button
+                        onClick={() => sepettenCikar(item.urun_id, item.birim_turu, item.birim_adedi)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

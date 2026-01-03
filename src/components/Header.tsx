@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { getImageUrl } from '../utils/imageUtils'
 
 export default function Header() {
   const { user, isAdmin, musteriData, signOut } = useAuth()
@@ -452,7 +453,7 @@ export default function Header() {
                               <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                                 {urun.ilkGorsel ? (
                                   <img
-                                    src={urun.ilkGorsel}
+                                    src={getImageUrl(urun.ilkGorsel)}
                                     alt={urun.urun_adi}
                                     className="w-full h-full object-cover"
                                   />

@@ -27,6 +27,8 @@ interface SepetContextType {
 
 const SepetContext = createContext<SepetContextType | undefined>(undefined)
 
+import { getImageUrl } from '../utils/imageUtils'
+
 export function SepetProvider({ children }: { children: React.ReactNode }) {
   const { user, musteriData } = useAuth()
   const [sepetItems, setSepetItems] = useState<SepetItem[]>([])
@@ -82,7 +84,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
           birim_adedi_turu: item.birim_adedi_turu,
           birim_fiyat: Number(item.birim_fiyat),
           miktar: Number(item.miktar),
-          gorsel_url: item.urunler?.ana_gorsel_url,
+          gorsel_url: getImageUrl(item.urunler?.ana_gorsel_url),
           min_siparis_miktari: 1
         }))
 
