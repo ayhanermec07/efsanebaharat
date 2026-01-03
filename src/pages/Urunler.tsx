@@ -19,6 +19,8 @@ export default function Urunler() {
   const [aramaText, setAramaText] = useState('')
   const [secilenKategori, setSecilenKategori] = useState(searchParams.get('kategori') || '')
   const [secilenMarka, setSecilenMarka] = useState('')
+  const [secilenKampanya, setSecilenKampanya] = useState(searchParams.get('kampanya') || '')
+
 
   useEffect(() => {
     loadKategoriler()
@@ -34,11 +36,14 @@ export default function Urunler() {
     if (qParam) {
       setAramaText(qParam)
     }
+    const kampanyaParam = searchParams.get('kampanya')
+    setSecilenKampanya(kampanyaParam || '')
+
   }, [searchParams])
 
   useEffect(() => {
     loadUrunler()
-  }, [secilenKategori, secilenMarka, aramaText])
+  }, [secilenKategori, secilenMarka, aramaText, secilenKampanya])
 
   async function loadKategoriler() {
     const { data } = await supabase
@@ -77,6 +82,24 @@ export default function Urunler() {
 
     if (aramaText) {
       query = query.ilike('urun_adi', `%${aramaText}%`)
+    }
+
+    if (secilenKampanya) {
+      const { data: camp } = await supabase.from('kampanyalar').select('*').eq('id', secilenKampanya).single();
+      if (camp) {
+        if (camp.kapsam === 'secili_urunler') {
+          const { data: pids } = await supabase.from('kampanya_urunler').select('urun_id').eq('kampanya_id', secilenKampanya);
+          if (pids) {
+            const ids = pids.map(p => p.urun_id);
+            if (ids.length > 0) query = query.in('id', ids);
+            else query = query.eq('id', '00000000-0000-0000-0000-000000000000'); // No products
+          }
+        } else if (camp.kapsam === 'kategori' && camp.kategori_id) {
+          query = query.eq('kategori_id', camp.kategori_id);
+        } else if (camp.kapsam === 'marka' && camp.marka_id) {
+          query = query.eq('marka_id', camp.marka_id);
+        }
+      }
     }
 
     const { data } = await query
