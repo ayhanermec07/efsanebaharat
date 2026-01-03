@@ -232,7 +232,7 @@ export default function KampanyalarYonetim() {
       {activeTab === 'istatistikler' ? (
         <KampanyaIstatistikleri />
       ) : activeTab === 'bannerlar' ? (
-        <BannerlarYonetim />
+        <BannerlarYonetim kampanyalar={kampanyalar} />
       ) : activeTab === 'kodlar' ? (
         <KampanyaKodlari kampanyalar={kampanyalar} />
       ) : (
@@ -763,11 +763,12 @@ function KampanyaKodlari({ kampanyalar }: { kampanyalar: Kampanya[] }) {
   );
 }
 
-function BannerlarYonetim() {
+function BannerlarYonetim({ kampanyalar }: { kampanyalar: Kampanya[] }) {
   const [bannerlar, setBannerlar] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [secilenKampanya, setSecilenKampanya] = useState<string>('')
   const [formData, setFormData] = useState({
     banner_baslik: '',
     resim_url: '',
@@ -848,11 +849,28 @@ function BannerlarYonetim() {
       sira_no: banner.sira_no || 0,
       aktif_durum: banner.aktif_durum
     })
+    // Link URL'den kampanya ID'sini çıkarmaya çalışmıyoruz çünkü %100 eşleşmeyebilir.
+    // Sadece manuel seçim bırakıyoruz.
+    setSecilenKampanya('')
     setModalOpen(true)
+  }
+
+  function handleKampanyaChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const kampanyaId = e.target.value
+    setSecilenKampanya(kampanyaId)
+
+    if (kampanyaId) {
+      // Kampanya seçildiğinde linki otomatik oluştur
+      setFormData(prev => ({
+        ...prev,
+        link_url: '/kampanyalar' // Kampanya detay sayfası olmadığı için listeye yönlendiriyoruz
+      }))
+    }
   }
 
   function resetForm() {
     setEditingId(null)
+    setSecilenKampanya('')
     setFormData({
       banner_baslik: '',
       resim_url: '',
@@ -966,12 +984,27 @@ function BannerlarYonetim() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Link URL (Opsiyonel)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Kampanya Bağla (Opsiyonel)</label>
+                  <select
+                    value={secilenKampanya}
+                    onChange={handleKampanyaChange}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                  >
+                    <option value="">Kampanya Seçiniz...</option>
+                    {kampanyalar.map(k => (
+                      <option key={k.id} value={k.id}>{k.ad} ({k.indirim_tipi === 'yuzde' ? '%' + k.indirim_degeri : k.indirim_degeri + ' TL'} İndirim)</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Kampanya seçildiğinde Link URL otomatik ayarlanır.</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Link URL</label>
                   <input
-                    type="url"
+                    type="text"
                     value={formData.link_url}
                     onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
-                    placeholder="https://..."
+                    placeholder="https://... veya /kampanyalar"
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
