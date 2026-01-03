@@ -20,6 +20,7 @@ export default function Urunler() {
   const [secilenKategori, setSecilenKategori] = useState(searchParams.get('kategori') || '')
   const [secilenMarka, setSecilenMarka] = useState('')
   const [secilenKampanya, setSecilenKampanya] = useState(searchParams.get('kampanya') || '')
+  const [activeCampaign, setActiveCampaign] = useState<any>(null)
 
 
   useEffect(() => {
@@ -87,6 +88,7 @@ export default function Urunler() {
     if (secilenKampanya) {
       const { data: camp } = await supabase.from('kampanyalar').select('*').eq('id', secilenKampanya).single();
       if (camp) {
+        setActiveCampaign(camp);
         if (camp.kapsam === 'secili_urunler') {
           const { data: pids } = await supabase.from('kampanya_urunler').select('urun_id').eq('kampanya_id', secilenKampanya);
           if (pids) {
@@ -100,6 +102,8 @@ export default function Urunler() {
           query = query.eq('marka_id', camp.marka_id);
         }
       }
+    } else {
+      setActiveCampaign(null);
     }
 
     const { data } = await query
@@ -246,10 +250,9 @@ export default function Urunler() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
               {urunler.map((urun) => {
-                const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url
                 return (
                   <div key={urun.id} className="h-full">
-                    <UrunKart urun={urun} />
+                    <UrunKart urun={urun} kampanya={activeCampaign} />
                   </div>
                 )
               })}

@@ -171,7 +171,6 @@ export default function KampanyalarYonetim() {
       const kampanyaData = {
         baslik: formData.ad, // baslik alanı gerekli
         ...formData,
-        ...formData,
         kod: formData.kod.toUpperCase(),
         kategori_id: formData.kapsam === 'kategori' ? formData.kategori_id : null,
         marka_id: formData.kapsam === 'marka' ? formData.marka_id : null
@@ -934,13 +933,16 @@ function BannerlarYonetim({ kampanyalar }: { kampanyalar: Kampanya[] }) {
 
       if (selectedCamp) {
         if (selectedCamp.kapsam === 'kategori' && selectedCamp.kategori_id) {
-          newLinkUrl = `/urunler?kategori=${selectedCamp.kategori_id}`;
+          newLinkUrl = `/urunler?kategori=${selectedCamp.kategori_id}&kampanya=${selectedCamp.id}`;
         } else if (selectedCamp.kapsam === 'marka' && selectedCamp.marka_id) {
-          newLinkUrl = `/urunler?marka=${selectedCamp.marka_id}`;
+          newLinkUrl = `/urunler?marka=${selectedCamp.marka_id}&kampanya=${selectedCamp.id}`;
         } else if (selectedCamp.kapsam === 'secili_urunler') {
           newLinkUrl = `/urunler?kampanya=${selectedCamp.id}`;
         }
-        // 'tum_urunler' için veya varsayılan olarak /kampanyalar kalabilir veya /urunler olabilir.
+        // 'tum_urunler' için /urunler?kampanya=ID olabilir
+        else if (selectedCamp.kapsam === 'tum_urunler') {
+          newLinkUrl = `/urunler?kampanya=${selectedCamp.id}`;
+        }
       }
 
       // Kampanya seçildiğinde linki otomatik oluştur

@@ -8,11 +8,15 @@ import { getImageUrl } from '../utils/imageUtils'
 
 interface UrunKartProps {
     urun: any
+    kampanya?: {
+        indirim_tipi: 'yuzde' | 'tutar'
+        indirim_degeri: number
+    } | null
     // Performans için parent'tan hesaplanıp gelebilir veya component içinde tekrar hesaplanabilir.
     // Bağımsız olması için component içinde hesaplamayı tercih ediyorum şimdilik.
 }
 
-export default function UrunKart({ urun }: UrunKartProps) {
+export default function UrunKart({ urun, kampanya }: UrunKartProps) {
     const { user, grupIskontoOrani, ozelIskontoOrani } = useAuth()
     const { sepeteEkle } = useSepet()
     const navigate = useNavigate()
@@ -37,6 +41,33 @@ export default function UrunKart({ urun }: UrunKartProps) {
         ? kademeliIskontoUygula(secilenStok.fiyat, grupIskontoOrani, ozelIskontoOrani)
         : null
 
+    // Kampanya İskontosu Hesapla
+    let satisFiyati = secilenStok ? secilenStok.fiyat : 0
+    let eskiFiyat = secilenStok ? secilenStok.fiyat : 0
+    let indirimVar = false
+    let indirimOrani = 0
+
+    if (secilenStok) {
+        if (kampanya) {
+            // Kampanya varsa öncelikli olarak onu uygula
+            eskiFiyat = secilenStok.fiyat
+            if (kampanya.indirim_tipi === 'yuzde') {
+                satisFiyati = eskiFiyat * (1 - kampanya.indirim_degeri / 100)
+                indirimOrani = kampanya.indirim_degeri
+            } else {
+                satisFiyati = Math.max(0, eskiFiyat - kampanya.indirim_degeri)
+                indirimOrani = Math.round(((eskiFiyat - satisFiyati) / eskiFiyat) * 100)
+            }
+            indirimVar = true
+        } else if (iskontoInfo && iskontoInfo.varMi) {
+            // Yoksa müşteri iskontosunu uygula
+            satisFiyati = iskontoInfo.yeniFiyat
+            eskiFiyat = iskontoInfo.eskiFiyat
+            indirimVar = true
+            indirimOrani = iskontoInfo.oran
+        }
+    }
+
     const handleSepeteEkle = () => {
         if (!user) {
             navigate('/giris')
@@ -44,7 +75,7 @@ export default function UrunKart({ urun }: UrunKartProps) {
         }
 
         if (secilenStok) {
-            const fiyat = iskontoInfo?.varMi ? iskontoInfo.yeniFiyat : secilenStok.fiyat
+            const fiyat = satisFiyati
 
             sepeteEkle({
                 urun_id: urun.id,
@@ -85,9 +116,9 @@ export default function UrunKart({ urun }: UrunKartProps) {
                             </div>
                         </div>
                     )}
-                    {iskontoInfo?.varMi && (
+                    {indirimVar && (
                         <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-lg text-sm font-bold">
-                            %{iskontoInfo.oran} İndirim
+                            %{indirimOrani} İndirim
                         </div>
                     )}
                 </div>
@@ -127,13 +158,13 @@ export default function UrunKart({ urun }: UrunKartProps) {
                 {secilenStok && (
                     <div className="flex items-center justify-between mb-4 h-10">
                         <div className="flex flex-col">
-                            {iskontoInfo?.varMi ? (
+                            {indirimVar ? (
                                 <>
                                     <span className="text-orange-600 font-bold text-lg">
-                                        {iskontoInfo.yeniFiyat.toFixed(2)} ₺
+                                        {satisFiyati.toFixed(2)} ₺
                                     </span>
                                     <span className="text-gray-400 text-xs line-through">
-                                        {iskontoInfo.eskiFiyat.toFixed(2)} ₺
+                                        {eskiFiyat.toFixed(2)} ₺
                                     </span>
                                 </>
                             ) : (
