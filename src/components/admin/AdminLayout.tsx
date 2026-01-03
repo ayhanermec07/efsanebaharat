@@ -55,8 +55,7 @@ export default function AdminLayout() {
     { path: '/admin/musteriler', icon: Users, label: 'Müşteriler' },
     { path: '/admin/iskonto', icon: Percent, label: 'İskonto Grupları' },
     { path: '/admin/ayarlar', icon: Settings, label: 'Ayarlar' },
-    { path: '/admin/bannerlar', icon: Image, label: 'Banner' },
-    { path: '/admin/kampanyalar', icon: Megaphone, label: 'Kampanyalar' },
+    { path: '/admin/kampanyalar', icon: Megaphone, label: 'Kampanya & Banner' },
     { path: '/admin/sorular', icon: MessageSquare, label: 'Sorular' },
     { path: '/admin/canli-destek', icon: Headphones, label: 'Canlı Destek' }
   ]

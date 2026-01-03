@@ -29,7 +29,6 @@ import AdminKargo from './pages/admin/Kargo'
 import AdminBayiler from './pages/admin/Bayiler'
 import AdminBayiSatislari from './pages/admin/BayiSatislari'
 import AdminMusteriler from './pages/admin/Musteriler'
-import AdminBannerlar from './pages/admin/Bannerlar'
 import AdminKampanyalar from './pages/admin/KampanyalarYonetim'
 import AdminSorular from './pages/admin/Sorular'
 import AdminCanliDestek from './pages/admin/CanliDestek'
@@ -74,7 +73,6 @@ function App() {
                 <Route path="bayiler" element={<AdminBayiler />} />
                 <Route path="bayi-satislari" element={<AdminBayiSatislari />} />
                 <Route path="musteriler" element={<AdminMusteriler />} />
-                <Route path="bannerlar" element={<AdminBannerlar />} />
                 <Route path="kampanyalar" element={<AdminKampanyalar />} />
                 <Route path="sorular" element={<AdminSorular />} />
                 <Route path="canli-destek" element={<AdminCanliDestek />} />
