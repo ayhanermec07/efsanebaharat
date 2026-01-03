@@ -20,6 +20,9 @@ interface Kampanya {
   kullanim_limiti: number | null;
   kullanim_sayisi: number;
   aktif: boolean;
+  kapsam: 'tum_urunler' | 'kategori' | 'marka' | 'secili_urunler';
+  kategori_id?: string;
+  marka_id?: string;
 }
 
 interface KampanyaKodu {
@@ -42,6 +45,12 @@ export default function KampanyalarYonetim() {
   const [modalAcik, setModalAcik] = useState(false);
   const [activeTab, setActiveTab] = useState<'kampanyalar' | 'istatistikler' | 'kodlar' | 'bannerlar'>('kampanyalar');
   const [duzenlenecekKampanya, setDuzenlenecekKampanya] = useState<Kampanya | null>(null);
+  // Eklentiler: Kategoriler, Markalar, Ürünler
+  const [kategoriler, setKategoriler] = useState<any[]>([]);
+  const [markalar, setMarkalar] = useState<any[]>([]);
+  const [seciliUrunIds, setSeciliUrunIds] = useState<string[]>([]);
+  const [urunler, setUrunler] = useState<any[]>([]); // Sadece 'secili_urunler' modunda kullanmak için
+
   const [formData, setFormData] = useState({
     kod: '',
     ad: '',
@@ -55,11 +64,29 @@ export default function KampanyalarYonetim() {
     bitis_tarihi: '',
     kullanim_limiti: null as number | null,
     aktif: true,
+    kapsam: 'tum_urunler' as 'tum_urunler' | 'kategori' | 'marka' | 'secili_urunler',
+    kategori_id: '',
+    marka_id: ''
   });
 
   useEffect(() => {
     kampanyalariGetir();
+    loadLookups();
   }, []);
+
+  async function loadLookups() {
+    // Kategorileri getir
+    const { data: katData } = await supabase.from('kategoriler').select('*').order('kategori_adi');
+    if (katData) setKategoriler(katData);
+
+    // Markaları getir
+    const { data: markaData } = await supabase.from('markalar').select('*').order('marka_adi');
+    if (markaData) setMarkalar(markaData);
+
+    // Ürünleri de şimdilik basit bir liste için çekelim (çok ürün varsa bu optimize edilmeli)
+    const { data: urunData } = await supabase.from('urunler').select('id, urun_adi, urun_kodu').eq('aktif_durum', true).order('urun_adi');
+    if (urunData) setUrunler(urunData);
+  }
 
   const kampanyalariGetir = async () => {
     try {
@@ -79,8 +106,16 @@ export default function KampanyalarYonetim() {
     }
   };
 
-  const modalAc = (kampanya?: Kampanya) => {
+  const modalAc = async (kampanya?: Kampanya) => {
     if (kampanya) {
+      // Seçili ürünleri getir
+      let relatedProducts: string[] = [];
+      if (kampanya.kapsam === 'secili_urunler') {
+        const { data } = await supabase.from('kampanya_urunler').select('urun_id').eq('kampanya_id', kampanya.id);
+        if (data) relatedProducts = data.map(rx => rx.urun_id);
+      }
+      setSeciliUrunIds(relatedProducts);
+
       setDuzenlenecekKampanya(kampanya);
       setFormData({
         kod: kampanya.kod,
@@ -95,9 +130,13 @@ export default function KampanyalarYonetim() {
         bitis_tarihi: kampanya.bitis_tarihi.split('T')[0],
         kullanim_limiti: kampanya.kullanim_limiti,
         aktif: kampanya.aktif,
+        kapsam: kampanya.kapsam || 'tum_urunler',
+        kategori_id: kampanya.kategori_id || '',
+        marka_id: kampanya.marka_id || ''
       });
     } else {
       setDuzenlenecekKampanya(null);
+      setSeciliUrunIds([]);
       setFormData({
         kod: '',
         ad: '',
@@ -111,6 +150,9 @@ export default function KampanyalarYonetim() {
         bitis_tarihi: '',
         kullanim_limiti: null,
         aktif: true,
+        kapsam: 'tum_urunler',
+        kategori_id: '',
+        marka_id: ''
       });
     }
     setModalAcik(true);
@@ -119,6 +161,7 @@ export default function KampanyalarYonetim() {
   const modalKapat = () => {
     setModalAcik(false);
     setDuzenlenecekKampanya(null);
+    setSeciliUrunIds([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,8 +171,13 @@ export default function KampanyalarYonetim() {
       const kampanyaData = {
         baslik: formData.ad, // baslik alanı gerekli
         ...formData,
+        ...formData,
         kod: formData.kod.toUpperCase(),
+        kategori_id: formData.kapsam === 'kategori' ? formData.kategori_id : null,
+        marka_id: formData.kapsam === 'marka' ? formData.marka_id : null
       };
+
+      let kampanyaId = '';
 
       if (duzenlenecekKampanya) {
         const { error } = await supabase
@@ -138,14 +186,34 @@ export default function KampanyalarYonetim() {
           .eq('id', duzenlenecekKampanya.id);
 
         if (error) throw error;
+        kampanyaId = duzenlenecekKampanya.id;
         toast.success('Kampanya güncellendi');
       } else {
-        const { error } = await supabase
+        const { data: newCamp, error } = await supabase
           .from('kampanyalar')
-          .insert([kampanyaData]);
+          .insert([kampanyaData])
+          .select()
+          .single();
 
         if (error) throw error;
+        if (newCamp) kampanyaId = newCamp.id;
         toast.success('Kampanya oluşturuldu');
+      }
+
+      // Seçili ürünleri güncelle (varsa)
+      if (formData.kapsam === 'secili_urunler' && kampanyaId) {
+        // Önce temizle
+        await supabase.from('kampanya_urunler').delete().eq('kampanya_id', kampanyaId);
+
+        // Sonra ekle
+        if (seciliUrunIds.length > 0) {
+          const insertData = seciliUrunIds.map(uid => ({
+            kampanya_id: kampanyaId,
+            urun_id: uid
+          }));
+          const { error: prodError } = await supabase.from('kampanya_urunler').insert(insertData);
+          if (prodError) console.error('Ürün ekleme hatası', prodError);
+        }
       }
 
       modalKapat();
@@ -253,6 +321,7 @@ export default function KampanyalarYonetim() {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kod</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kampanya</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kapsam</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">İndirim</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hedef Grup</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tarih</th>
@@ -860,10 +929,24 @@ function BannerlarYonetim({ kampanyalar }: { kampanyalar: Kampanya[] }) {
     setSecilenKampanya(kampanyaId)
 
     if (kampanyaId) {
+      const selectedCamp = kampanyalar.find(k => k.id === kampanyaId);
+      let newLinkUrl = '/kampanyalar';
+
+      if (selectedCamp) {
+        if (selectedCamp.kapsam === 'kategori' && selectedCamp.kategori_id) {
+          newLinkUrl = `/urunler?kategori=${selectedCamp.kategori_id}`;
+        } else if (selectedCamp.kapsam === 'marka' && selectedCamp.marka_id) {
+          newLinkUrl = `/urunler?marka=${selectedCamp.marka_id}`;
+        } else if (selectedCamp.kapsam === 'secili_urunler') {
+          newLinkUrl = `/urunler?kampanya=${selectedCamp.id}`;
+        }
+        // 'tum_urunler' için veya varsayılan olarak /kampanyalar kalabilir veya /urunler olabilir.
+      }
+
       // Kampanya seçildiğinde linki otomatik oluştur
       setFormData(prev => ({
         ...prev,
-        link_url: '/kampanyalar' // Kampanya detay sayfası olmadığı için listeye yönlendiriyoruz
+        link_url: newLinkUrl
       }))
     }
   }
