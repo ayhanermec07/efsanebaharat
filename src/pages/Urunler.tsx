@@ -127,76 +127,86 @@ export default function Urunler() {
         {/* Filtreler */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-sm p-6 sticky top-20">
-            <div className="flex items-center space-x-2 mb-6">
-              <SlidersHorizontal className="w-5 h-5 text-gray-700" />
-              <h2 className="text-xl font-semibold text-gray-900">Filtreler</h2>
-            </div>
-
-            {/* Arama */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ürün Ara
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={aramaText}
-                  onChange={(e) => setAramaText(e.target.value)}
-                  placeholder="Ürün adı..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                />
-                <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-2">
+                <SlidersHorizontal className="w-5 h-5 text-gray-700" />
+                <h2 className="text-xl font-semibold text-gray-900">Filtreler</h2>
               </div>
-            </div>
-
-            {/* Kategori */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Kategori
-              </label>
-              <select
-                value={secilenKategori}
-                onChange={(e) => setSecilenKategori(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              <button
+                className="lg:hidden text-gray-500 hover:text-gray-700"
+                onClick={() => document.getElementById('mobile-filters')?.classList.toggle('hidden')}
               >
-                <option value="">Tüm Kategoriler</option>
-                {kategoriler.map((kat) => (
-                  <option key={kat.id} value={kat.id}>
-                    {kat.kategori_adi}
-                  </option>
-                ))}
-              </select>
+                <SlidersHorizontal className="w-5 h-5" />
+              </button>
             </div>
 
-            {/* Marka */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Marka
-              </label>
-              <select
-                value={secilenMarka}
-                onChange={(e) => setSecilenMarka(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            <div id="mobile-filters" className="hidden lg:block space-y-6">
+              {/* Arama */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ürün Ara
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={aramaText}
+                    onChange={(e) => setAramaText(e.target.value)}
+                    placeholder="Ürün adı..."
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                  <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                </div>
+              </div>
+
+              {/* Kategori */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Kategori
+                </label>
+                <select
+                  value={secilenKategori}
+                  onChange={(e) => setSecilenKategori(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Tüm Kategoriler</option>
+                  {kategoriler.map((kat) => (
+                    <option key={kat.id} value={kat.id}>
+                      {kat.kategori_adi}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Marka */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Marka
+                </label>
+                <select
+                  value={secilenMarka}
+                  onChange={(e) => setSecilenMarka(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Tüm Markalar</option>
+                  {markalar.map((marka) => (
+                    <option key={marka.id} value={marka.id}>
+                      {marka.marka_adi}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                onClick={() => {
+                  setSecilenKategori('')
+                  setSecilenMarka('')
+                  setAramaText('')
+                }}
+                className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition"
               >
-                <option value="">Tüm Markalar</option>
-                {markalar.map((marka) => (
-                  <option key={marka.id} value={marka.id}>
-                    {marka.marka_adi}
-                  </option>
-                ))}
-              </select>
+                Filtreleri Temizle
+              </button>
             </div>
-
-            <button
-              onClick={() => {
-                setSecilenKategori('')
-                setSecilenMarka('')
-                setAramaText('')
-              }}
-              className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition"
-            >
-              Filtreleri Temizle
-            </button>
           </div>
         </div>
 

@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { ShoppingCart, Check } from 'lucide-react'
 import UrunSoruModul from '../components/UrunSoruModul'
 import { kademeliIskontoUygula } from '../utils/iskonto'
+import { getImageUrl } from '../utils/imageUtils'
 
 export default function UrunDetay() {
   const { id } = useParams()
@@ -128,7 +129,7 @@ export default function UrunDetay() {
           <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
             {gorseller.length > 0 ? (
               <img
-                src={gorseller[secilenGorsel].gorsel_url}
+                src={getImageUrl(gorseller[secilenGorsel].gorsel_url)}
                 alt={urun.urun_adi}
                 className="w-full h-full object-cover"
               />
@@ -153,7 +154,7 @@ export default function UrunDetay() {
                     }`}
                 >
                   <img
-                    src={gorsel.gorsel_url}
+                    src={getImageUrl(gorsel.gorsel_url)}
                     alt={`${urun.urun_adi} ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
@@ -202,7 +203,7 @@ export default function UrunDetay() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Birim Seçin
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {urun.urun_stoklari.map((stok: any) => {
                   const stokIskontoInfo = kademeliIskontoUygula(stok.fiyat, grupIskontoOrani, ozelIskontoOrani)
                   return (
