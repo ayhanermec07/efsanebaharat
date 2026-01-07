@@ -1,77 +1,142 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Calendar, Tag, Package } from 'lucide-react'
+import { Tag, Calendar, Percent } from 'lucide-react'
+import UrunKart from '../components/UrunKart'
+import { useAuth } from '../contexts/AuthContext'
 
 interface Kampanya {
   id: string
-  baslik: string
+  kod: string
+  ad: string
   aciklama: string
+  indirim_tipi: 'yuzde' | 'tutar'
+  indirim_degeri: number
   baslangic_tarihi: string
   bitis_tarihi: string
   aktif: boolean
-  banner_gorseli: string | null
-  kampanya_tipi: 'indirim' | 'paket' | 'ozel'
+  kapsam: 'tum_urunler' | 'kategori' | 'marka' | 'secili_urunler'
+  kategori_id?: string
+  marka_id?: string
 }
 
-interface Banner {
-  id: string
-  kampanya_id: string
-  gorsel_url: string
-  baslik: string | null
-  aciklama: string | null
-  link_url: string | null
-  goruntuleme_sirasi: number
-  aktif: boolean
+interface KampanyaWithProducts extends Kampanya {
+  urunler: any[]
 }
 
 export default function Kampanyalar() {
-  const [kampanyalar, setKampanyalar] = useState<Kampanya[]>([])
-  const [banners, setBanners] = useState<Banner[]>([])
+  const { musteriData } = useAuth()
+  const [kampanyalar, setKampanyalar] = useState<KampanyaWithProducts[]>([])
   const [loading, setLoading] = useState(true)
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
 
   useEffect(() => {
-    loadData()
+    loadKampanyalarWithProducts()
   }, [])
 
-  // Banner otomatik geçiş
-  useEffect(() => {
-    if (banners.length > 1) {
-      const interval = setInterval(() => {
-        setCurrentBannerIndex((prev) => (prev + 1) % banners.length)
-      }, 5000)
-      return () => clearInterval(interval)
-    }
-  }, [banners.length])
-
-  async function loadData() {
+  async function loadKampanyalarWithProducts() {
     try {
       setLoading(true)
 
-      // Aktif kampanyaları yükle
+      // Aktif kampanyaları getir (tum_urunler hariç - çok fazla ürün olabilir)
+      const now = new Date().toISOString()
       const { data: kampanyalarData, error: kampanyalarError } = await supabase
         .from('kampanyalar')
         .select('*')
         .eq('aktif', true)
-        .gte('bitis_tarihi', new Date().toISOString())
-        .order('baslangic_tarihi', { ascending: false })
+        .lte('baslangic_tarihi', now)
+        .gte('bitis_tarihi', now)
+        .neq('kapsam', 'tum_urunler') // Tüm ürünler kapsamındaki kampanyalar hariç
+        .order('olusturma_tarihi', { ascending: false })
 
       if (kampanyalarError) throw kampanyalarError
 
-      // Aktif bannerları yükle
-      const { data: bannersData, error: bannersError } = await supabase
-        .from('kampanya_banner')
-        .select('*')
-        .eq('aktif', true)
-        .order('goruntuleme_sirasi', { ascending: true })
+      if (!kampanyalarData || kampanyalarData.length === 0) {
+        setKampanyalar([])
+        setLoading(false)
+        return
+      }
 
-      if (bannersError) throw bannersError
+      // Her kampanya için ilgili ürünleri getir
+      const kampanyalarWithProducts: KampanyaWithProducts[] = []
 
-      setKampanyalar(kampanyalarData || [])
-      setBanners(bannersData || [])
+      for (const kampanya of kampanyalarData) {
+        let urunler: any[] = []
+
+        if (kampanya.kapsam === 'kategori' && kampanya.kategori_id) {
+          const { data } = await supabase
+            .from('urunler')
+            .select('*')
+            .eq('aktif_durum', true)
+            .eq('kategori_id', kampanya.kategori_id)
+            .limit(12)
+
+          if (data) urunler = data
+        } else if (kampanya.kapsam === 'marka' && kampanya.marka_id) {
+          const { data } = await supabase
+            .from('urunler')
+            .select('*')
+            .eq('aktif_durum', true)
+            .eq('marka_id', kampanya.marka_id)
+            .limit(12)
+
+          if (data) urunler = data
+        } else if (kampanya.kapsam === 'secili_urunler') {
+          const { data: urunIds } = await supabase
+            .from('kampanya_urunler')
+            .select('urun_id')
+            .eq('kampanya_id', kampanya.id)
+
+          if (urunIds && urunIds.length > 0) {
+            const ids = urunIds.map(u => u.urun_id)
+            const { data } = await supabase
+              .from('urunler')
+              .select('*')
+              .eq('aktif_durum', true)
+              .in('id', ids)
+              .limit(12)
+
+            if (data) urunler = data
+          }
+        }
+
+        // Ürün yoksa bu kampanyayı atlayabiliriz
+        if (urunler.length === 0) continue
+
+        // Ürünler için stok ve görsel bilgilerini çek
+        const urunIds = urunler.map(u => u.id)
+
+        const [{ data: gorseller }, { data: stoklar }, { data: kategorilerData }, { data: markalarData }] = await Promise.all([
+          supabase.from('urun_gorselleri').select('*').in('urun_id', urunIds).order('sira_no'),
+          supabase.from('urun_stoklari').select('*').in('urun_id', urunIds).eq('aktif_durum', true),
+          supabase.from('kategoriler').select('id, kategori_adi').in('id', [...new Set(urunler.map(u => u.kategori_id))]),
+          supabase.from('markalar').select('id, marka_adi').in('id', [...new Set(urunler.map(u => u.marka_id))])
+        ])
+
+        const musteriTipi = musteriData?.musteri_tipi || 'musteri'
+
+        const urunlerWithData = urunler.map(urun => {
+          const urunStoklari = stoklar?.filter(s => s.urun_id === urun.id) || []
+          const filtreliStoklar = urunStoklari.filter(s =>
+            !s.stok_grubu || s.stok_grubu === 'hepsi' || s.stok_grubu === musteriTipi
+          )
+
+          return {
+            ...urun,
+            urun_gorselleri: gorseller?.filter(g => g.urun_id === urun.id) || [],
+            urun_stoklari: filtreliStoklar,
+            kategoriler: kategorilerData?.find(k => k.id === urun.kategori_id),
+            markalar: markalarData?.find(m => m.id === urun.marka_id)
+          }
+        })
+
+        kampanyalarWithProducts.push({
+          ...kampanya,
+          urunler: urunlerWithData
+        })
+      }
+
+      setKampanyalar(kampanyalarWithProducts)
     } catch (error) {
-      console.error('Veriler yüklenirken hata:', error)
+      console.error('Kampanyalar yüklenirken hata:', error)
     } finally {
       setLoading(false)
     }
@@ -86,44 +151,11 @@ export default function Kampanyalar() {
     })
   }
 
-  function isKampanyaActive(kampanya: Kampanya) {
-    const now = new Date()
-    const baslangic = new Date(kampanya.baslangic_tarihi)
-    const bitis = new Date(kampanya.bitis_tarihi)
-    return now >= baslangic && now <= bitis
-  }
-
-  function getKampanyaTipiLabel(tip: string) {
-    switch (tip) {
-      case 'indirim':
-        return 'İndirim'
-      case 'paket':
-        return 'Paket Kampanya'
-      case 'ozel':
-        return 'Özel Fırsat'
-      default:
-        return tip
-    }
-  }
-
-  function getKampanyaTipiColor(tip: string) {
-    switch (tip) {
-      case 'indirim':
-        return 'bg-red-100 text-red-800'
-      case 'paket':
-        return 'bg-blue-100 text-blue-800'
-      case 'ozel':
-        return 'bg-purple-100 text-purple-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
-
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-600">Yükleniyor...</div>
+          <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
     )
@@ -131,174 +163,71 @@ export default function Kampanyalar() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Banner Carousel */}
-      {banners.length > 0 && (
-        <div className="relative bg-gradient-to-r from-orange-500 to-red-600 overflow-hidden">
-          <div className="container mx-auto px-4">
-            <div className="relative h-80 md:h-96">
-              {banners.map((banner, index) => (
-                <div
-                  key={banner.id}
-                  className={`absolute inset-0 transition-opacity duration-500 ${
-                    index === currentBannerIndex ? 'opacity-100' : 'opacity-0'
-                  }`}
-                >
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center text-white z-10">
-                      {banner.baslik && (
-                        <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                          {banner.baslik}
-                        </h2>
-                      )}
-                      {banner.aciklama && (
-                        <p className="text-lg md:text-xl mb-6 max-w-2xl mx-auto">
-                          {banner.aciklama}
-                        </p>
-                      )}
-                      {banner.link_url && (
-                        <Link
-                          to={banner.link_url}
-                          className="inline-block bg-white text-orange-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
-                        >
-                          Kampanyayı İncele
-                        </Link>
-                      )}
-                    </div>
-                    {banner.gorsel_url && (
-                      <img
-                        src={banner.gorsel_url}
-                        alt={banner.baslik || 'Banner'}
-                        className="absolute inset-0 w-full h-full object-cover opacity-20"
-                      />
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Banner Navigation Dots */}
-          {banners.length > 1 && (
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
-              {banners.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentBannerIndex(index)}
-                  className={`w-2 h-2 rounded-full transition ${
-                    index === currentBannerIndex ? 'bg-white w-8' : 'bg-white bg-opacity-50'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-orange-500 to-red-600 py-12">
+        <div className="container mx-auto px-4 text-center text-white">
+          <h1 className="text-4xl font-bold mb-4">Kampanyalı Ürünler</h1>
+          <p className="text-lg opacity-90">Özel indirimler ve avantajlı fırsatları kaçırmayın!</p>
         </div>
-      )}
+      </div>
 
-      {/* Kampanyalar Listesi */}
       <div className="container mx-auto px-4 py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Aktif Kampanyalar</h1>
-          <p className="text-gray-600">
-            Özel indirimler ve avantajlı fırsatları kaçırmayın
-          </p>
-        </div>
-
         {kampanyalar.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+          <div className="text-center py-16 bg-white rounded-lg shadow-sm">
             <Tag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">Şu anda aktif kampanya bulunmuyor.</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Yeni kampanyalardan haberdar olmak için düzenli olarak kontrol edin.
-            </p>
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">Şu anda aktif kampanya bulunmuyor</h2>
+            <p className="text-gray-500">Yeni kampanyalardan haberdar olmak için düzenli olarak kontrol edin.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {kampanyalar.map((kampanya) => {
-              const isActive = isKampanyaActive(kampanya)
-              
-              return (
-                <div
-                  key={kampanya.id}
-                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden"
-                >
-                  {/* Kampanya Görseli */}
-                  {kampanya.banner_gorseli && (
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={kampanya.banner_gorseli}
-                        alt={kampanya.baslik}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-3 right-3">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${getKampanyaTipiColor(
-                            kampanya.kampanya_tipi
-                          )}`}
-                        >
-                          {getKampanyaTipiLabel(kampanya.kampanya_tipi)}
+          <div className="space-y-12">
+            {kampanyalar.map((kampanya) => (
+              <div key={kampanya.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
+                {/* Kampanya Başlığı */}
+                <div className="bg-gradient-to-r from-orange-50 to-red-50 p-6 border-b">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                          <Percent className="w-4 h-4" />
+                          {kampanya.indirim_tipi === 'yuzde'
+                            ? `%${kampanya.indirim_degeri} İndirim`
+                            : `${kampanya.indirim_degeri} TL İndirim`}
+                        </div>
+                        <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full border">
+                          {kampanya.kod}
                         </span>
                       </div>
+                      <h2 className="text-2xl font-bold text-gray-900">{kampanya.ad}</h2>
+                      {kampanya.aciklama && (
+                        <p className="text-gray-600 mt-1">{kampanya.aciklama}</p>
+                      )}
                     </div>
-                  )}
-
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {kampanya.baslik}
-                    </h3>
-
-                    {kampanya.aciklama && (
-                      <p className="text-gray-600 mb-4 line-clamp-3">
-                        {kampanya.aciklama}
-                      </p>
-                    )}
-
-                    {/* Tarih Bilgisi */}
-                    <div className="flex items-center space-x-2 text-sm text-gray-500 mb-3">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 bg-white px-4 py-2 rounded-lg border">
                       <Calendar className="w-4 h-4" />
-                      <span>
-                        {formatDate(kampanya.baslangic_tarihi)} - {formatDate(kampanya.bitis_tarihi)}
-                      </span>
+                      <span>{formatDate(kampanya.baslangic_tarihi)} - {formatDate(kampanya.bitis_tarihi)}</span>
                     </div>
-
-                    {/* Durum Badge */}
-                    {isActive ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span className="text-sm font-medium text-green-600">
-                          Kampanya Aktif
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                        <span className="text-sm font-medium text-orange-600">
-                          Yakında Başlıyor
-                        </span>
-                      </div>
-                    )}
                   </div>
                 </div>
-              )
-            })}
+
+                {/* Kampanya Ürünleri */}
+                <div className="p-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {kampanya.urunler.map((urun) => (
+                      <UrunKart
+                        key={urun.id}
+                        urun={urun}
+                        kampanya={{
+                          indirim_tipi: kampanya.indirim_tipi,
+                          indirim_degeri: kampanya.indirim_degeri
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
-
-        {/* Bilgilendirme */}
-        <div className="mt-12 bg-orange-50 border border-orange-200 rounded-lg p-6">
-          <div className="flex items-start space-x-3">
-            <Package className="w-6 h-6 text-orange-600 flex-shrink-0 mt-1" />
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                Kampanyalardan Nasıl Yararlanırım?
-              </h3>
-              <p className="text-gray-700 text-sm leading-relaxed">
-                Kampanyalardaki ürünler otomatik olarak indirimli fiyatlardan sepete eklenir. 
-                Paket kampanyaları için kampanya ürünlerinin tamamını sepetinize eklemeniz gerekmektedir. 
-                Kampanya koşulları ve detaylar için müşteri hizmetlerimizle iletişime geçebilirsiniz.
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )

@@ -583,6 +583,84 @@ export default function KampanyalarYonetim() {
                       </label>
                     </div>
 
+                    {/* Kampanya Kapsamı */}
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <h4 className="font-medium text-gray-900 mb-3 text-sm">Kampanya Kapsamı</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Kapsam Türü</label>
+                          <select
+                            value={formData.kapsam}
+                            onChange={(e) => setFormData({ ...formData, kapsam: e.target.value as any })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                          >
+                            <option value="tum_urunler">Tüm Ürünler</option>
+                            <option value="kategori">Belirli Kategori</option>
+                            <option value="marka">Belirli Marka</option>
+                            <option value="secili_urunler">Seçili Ürünler</option>
+                          </select>
+                        </div>
+
+                        {formData.kapsam === 'kategori' && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Kategori Seçin</label>
+                            <select
+                              value={formData.kategori_id}
+                              onChange={(e) => setFormData({ ...formData, kategori_id: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                              required
+                            >
+                              <option value="">Seçiniz...</option>
+                              {kategoriler.map(k => <option key={k.id} value={k.id}>{k.kategori_adi}</option>)}
+                            </select>
+                          </div>
+                        )}
+
+                        {formData.kapsam === 'marka' && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Marka Seçin</label>
+                            <select
+                              value={formData.marka_id}
+                              onChange={(e) => setFormData({ ...formData, marka_id: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                              required
+                            >
+                              <option value="">Seçiniz...</option>
+                              {markalar.map(m => <option key={m.id} value={m.id}>{m.marka_adi}</option>)}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+
+                      {formData.kapsam === 'secili_urunler' && (
+                        <div className="mt-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Ürünleri Seçin</label>
+                          <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-white grid grid-cols-2 gap-2">
+                            {urunler.map(urun => (
+                              <div key={urun.id} className="flex items-center text-sm">
+                                <input
+                                  type="checkbox"
+                                  id={`prod-${urun.id}`}
+                                  checked={seciliUrunIds.includes(urun.id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) setSeciliUrunIds([...seciliUrunIds, urun.id]);
+                                    else setSeciliUrunIds(seciliUrunIds.filter(id => id !== urun.id));
+                                  }}
+                                  className="w-4 h-4 text-orange-600 rounded mr-2"
+                                />
+                                <label htmlFor={`prod-${urun.id}`} className="truncate cursor-pointer select-none">
+                                  {urun.urun_adi} <span className="text-gray-400 text-xs">({urun.urun_kodu})</span>
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="text-right text-xs text-gray-500 mt-1">
+                            {seciliUrunIds.length} ürün seçildi
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="flex justify-end gap-3 pt-4">
                       <button
                         type="button"
