@@ -34,6 +34,7 @@ import AdminSorular from './pages/admin/Sorular'
 import AdminCanliDestek from './pages/admin/CanliDestek'
 import AdminIskontoGruplari from './pages/admin/IskontoGruplari'
 import AdminAyarlar from './pages/admin/Ayarlar'
+import AdminXMLYonetim from './pages/admin/XMLYonetim'
 import './App.css'
 
 function App() {
@@ -79,6 +80,7 @@ function App() {
                 <Route path="iskonto" element={<AdminIskontoGruplari />} />
                 <Route path="stok-azalan" element={<AdminStokAzalan />} />
                 <Route path="ayarlar" element={<AdminAyarlar />} />
+                <Route path="xml-yonetim" element={<AdminXMLYonetim />} />
               </Route>
             </Routes>
           </Router>

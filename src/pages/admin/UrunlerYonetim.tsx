@@ -19,7 +19,7 @@ export default function UrunlerYonetim() {
     aktif_durum: true
   })
   const [stoklar, setStoklar] = useState<any[]>([
-    { birim_adedi: 100, birim_adedi_turu: 'gr', birim_turu: 'gr', fiyat: 0, stok_miktari: 0, stok_birimi: 'gr', min_siparis_miktari: 1, stok_grubu: 'hepsi' }
+    { birim_adedi: 100, birim_adedi_turu: 'gr', birim_turu: 'gr', fiyat: 0, stok_miktari: 0, stok_birimi: 'gr', min_siparis_miktari: 1, stok_grubu: 'hepsi', xml_export: false }
   ])
   const [urunGorselleri, setUrunGorselleri] = useState<string[]>([])
 
@@ -29,14 +29,14 @@ export default function UrunlerYonetim() {
 
   async function loadData() {
     setLoading(true)
-    
+
     // Manual fetching (no foreign keys - Supabase best practice)
     const [urunRes, katRes, markaRes] = await Promise.all([
       supabase.from('urunler').select('*').order('created_at', { ascending: false }),
       supabase.from('kategoriler').select('*').eq('aktif_durum', true),
       supabase.from('markalar').select('*').eq('aktif_durum', true)
     ])
-    
+
     if (urunRes.data && katRes.data && markaRes.data) {
       // Manual join - Map kategoriler ve markalar
       const urunlerWithRelations = urunRes.data.map(urun => ({
@@ -46,7 +46,7 @@ export default function UrunlerYonetim() {
       }))
       setUrunler(urunlerWithRelations)
     }
-    
+
     if (katRes.data) setKategoriler(katRes.data)
     if (markaRes.data) setMarkalar(markaRes.data)
     setLoading(false)
@@ -54,19 +54,19 @@ export default function UrunlerYonetim() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    
+
     try {
       if (editingId) {
         // Güncelleme
         const { error: urunError } = await supabase.from('urunler').update(formData).eq('id', editingId)
         if (urunError) throw urunError
-        
+
         // Stokları güncelle - önce sil, sonra ekle
         await supabase.from('urun_stoklari').delete().eq('urun_id', editingId)
         const stokData = stoklar.map(s => ({ ...s, urun_id: editingId, aktif_durum: true }))
         const { error: stokError } = await supabase.from('urun_stoklari').insert(stokData)
         if (stokError) throw stokError
-        
+
         // Görselleri güncelle - önce sil, sonra ekle
         await supabase.from('urun_gorselleri').delete().eq('urun_id', editingId)
         if (urunGorselleri.length > 0) {
@@ -85,14 +85,14 @@ export default function UrunlerYonetim() {
           .insert(formData)
           .select()
           .maybeSingle()
-        
+
         if (urunError) throw urunError
-        
+
         if (newUrun) {
           const stokData = stoklar.map(s => ({ ...s, urun_id: newUrun.id, aktif_durum: true }))
           const { error: stokError } = await supabase.from('urun_stoklari').insert(stokData)
           if (stokError) throw stokError
-          
+
           // Görselleri ekle
           if (urunGorselleri.length > 0) {
             const gorselData = urunGorselleri.map((url, index) => ({
@@ -105,7 +105,7 @@ export default function UrunlerYonetim() {
           }
         }
       }
-      
+
       resetForm()
       await loadData()
       toast.success(editingId ? 'Ürün başarıyla güncellendi!' : 'Ürün başarıyla eklendi!')
@@ -117,7 +117,7 @@ export default function UrunlerYonetim() {
 
   async function handleDelete(id: string) {
     if (!confirm('Bu ürünü silmek istediğinizden emin misiniz?')) return
-    
+
     try {
       await supabase.from('urun_stoklari').delete().eq('urun_id', id)
       await supabase.from('urun_gorselleri').delete().eq('urun_id', id)
@@ -138,10 +138,10 @@ export default function UrunlerYonetim() {
       marka_id: urun.marka_id,
       aktif_durum: urun.aktif_durum
     })
-    
+
     // Stokları yükle
     supabase.from('urun_stoklari')
-      .select('id, urun_id, birim_turu, birim_adedi, birim_adedi_turu, fiyat, stok_miktari, stok_birimi, min_siparis_miktari, stok_grubu, aktif_durum')
+      .select('id, urun_id, birim_turu, birim_adedi, birim_adedi_turu, fiyat, stok_miktari, stok_birimi, min_siparis_miktari, stok_grubu, aktif_durum, xml_export')
       .eq('urun_id', urun.id)
       .then(({ data }) => {
         if (data && data.length > 0) {
@@ -157,7 +157,7 @@ export default function UrunlerYonetim() {
                 stokBirimi = 'gr'
               }
             }
-            
+
             return {
               birim_adedi: Number(s.birim_adedi) || 100,
               birim_adedi_turu: s.birim_adedi_turu || s.birim_turu,
@@ -166,31 +166,33 @@ export default function UrunlerYonetim() {
               stok_miktari: Number(s.stok_miktari) || 0,
               stok_birimi: stokBirimi,
               min_siparis_miktari: Number(s.min_siparis_miktari) || 1,
-              stok_grubu: s.stok_grubu || 'hepsi'
+              stok_grubu: s.stok_grubu || 'hepsi',
+              xml_export: s.xml_export || false
             }
           }))
         } else {
           // Stok yoksa default ekle
-          setStoklar([{ 
-            birim_adedi: 100, 
+          setStoklar([{
+            birim_adedi: 100,
             birim_adedi_turu: 'gr',
-            birim_turu: 'gr', 
-            fiyat: 0, 
-            stok_miktari: 0, 
-            stok_birimi: 'gr', 
-            min_siparis_miktari: 1, 
-            stok_grubu: 'hepsi' 
+            birim_turu: 'gr',
+            fiyat: 0,
+            stok_miktari: 0,
+            stok_birimi: 'gr',
+            min_siparis_miktari: 1,
+            stok_grubu: 'hepsi',
+            xml_export: false
           }])
         }
       })
-    
+
     // Görselleri yükle
     supabase.from('urun_gorselleri').select('*').eq('urun_id', urun.id).order('sira_no', { ascending: true }).then(({ data }) => {
       if (data && data.length > 0) {
         setUrunGorselleri(data.map(g => g.gorsel_url))
       }
     })
-    
+
     setModalOpen(true)
   }
 
@@ -203,13 +205,13 @@ export default function UrunlerYonetim() {
       marka_id: '',
       aktif_durum: true
     })
-    setStoklar([{ birim_adedi: 100, birim_adedi_turu: 'gr', birim_turu: 'gr', fiyat: 0, stok_miktari: 0, stok_birimi: 'gr', min_siparis_miktari: 1, stok_grubu: 'hepsi' }])
+    setStoklar([{ birim_adedi: 100, birim_adedi_turu: 'gr', birim_turu: 'gr', fiyat: 0, stok_miktari: 0, stok_birimi: 'gr', min_siparis_miktari: 1, stok_grubu: 'hepsi', xml_export: false }])
     setUrunGorselleri([])
     setModalOpen(false)
   }
 
   function addStok() {
-    setStoklar([...stoklar, { birim_adedi: 100, birim_adedi_turu: 'gr', birim_turu: 'gr', fiyat: 0, stok_miktari: 0, stok_birimi: 'gr', min_siparis_miktari: 1, stok_grubu: 'hepsi' }])
+    setStoklar([...stoklar, { birim_adedi: 100, birim_adedi_turu: 'gr', birim_turu: 'gr', fiyat: 0, stok_miktari: 0, stok_birimi: 'gr', min_siparis_miktari: 1, stok_grubu: 'hepsi', xml_export: false }])
   }
 
   function removeStok(index: number) {
@@ -402,12 +404,13 @@ export default function UrunlerYonetim() {
                   </div>
 
                   {/* Başlıklar */}
-                  <div className="grid grid-cols-8 gap-2 mb-3">
+                  <div className="grid grid-cols-9 gap-2 mb-3">
                     <div className="text-sm font-medium text-gray-700 col-span-2">Birim Adedi</div>
                     <div className="text-sm font-medium text-gray-700">Fiyat (TL)</div>
                     <div className="text-sm font-medium text-gray-700 col-span-2">Stok</div>
                     <div className="text-sm font-medium text-gray-700">Min. Sipariş</div>
                     <div className="text-sm font-medium text-gray-700">Müşteri Grubu</div>
+                    <div className="text-sm font-medium text-gray-700 text-center">XML</div>
                     <div></div>
                   </div>
 
@@ -426,9 +429,9 @@ export default function UrunlerYonetim() {
                     } else {
                       stokBirimiSecenekleri = [{ value: 'gr', label: 'GR' }]
                     }
-                    
+
                     return (
-                      <div key={index} className="grid grid-cols-8 gap-2 mb-2">
+                      <div key={index} className="grid grid-cols-9 gap-2 mb-2">
                         <input
                           type="number"
                           placeholder="100"
@@ -448,7 +451,7 @@ export default function UrunlerYonetim() {
                             const yeniBirim = e.target.value
                             const newStoklar = [...stoklar]
                             newStoklar[index] = { ...newStoklar[index], birim_turu: yeniBirim }
-                            
+
                             // Birim türü değiştiğinde stok birimini otomatik ayarla
                             if (yeniBirim === 'adet') {
                               newStoklar[index].stok_birimi = 'adet'
@@ -461,7 +464,7 @@ export default function UrunlerYonetim() {
                               }
                               // Aksi halde mevcut değeri koru (gr veya kg)
                             }
-                            
+
                             setStoklar(newStoklar)
                           }}
                           required
@@ -540,6 +543,15 @@ export default function UrunlerYonetim() {
                           <option value="musteri">Müşteri</option>
                           <option value="bayi">Bayi</option>
                         </select>
+                        <div className="flex items-center justify-center">
+                          <input
+                            type="checkbox"
+                            checked={stok.xml_export || false}
+                            onChange={(e) => updateStok(index, 'xml_export', e.target.checked)}
+                            className="w-4 h-4 text-orange-600 rounded cursor-pointer"
+                            title="XML'e gönder"
+                          />
+                        </div>
                         {stoklar.length > 1 && (
                           <button
                             type="button"

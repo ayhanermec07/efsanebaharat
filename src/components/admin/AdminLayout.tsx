@@ -19,7 +19,8 @@ import {
   Percent,
   ExternalLink,
   LifeBuoy,
-  Settings
+  Settings,
+  FileCode
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -54,6 +55,7 @@ export default function AdminLayout() {
     { path: '/admin/bayi-satislari', icon: BarChart3, label: 'Bayi Satışları' },
     { path: '/admin/musteriler', icon: Users, label: 'Müşteriler' },
     { path: '/admin/iskonto', icon: Percent, label: 'İskonto Grupları' },
+    { path: '/admin/xml-yonetim', icon: FileCode, label: 'XML Yönetimi' },
     { path: '/admin/ayarlar', icon: Settings, label: 'Ayarlar' },
     { path: '/admin/kampanyalar', icon: Megaphone, label: 'Kampanya & Banner' },
     { path: '/admin/sorular', icon: MessageSquare, label: 'Sorular' },
