@@ -154,7 +154,7 @@ export default function AdminBayiler() {
         // Şimdilik sadece bayi kaydı yapılıyor
         const password = formData.bayii_kodu.toUpperCase() + '2024!'
         console.log(`Bayi oluşturuldu. Kullanıcı hesabı için şifre: ${password}`)
-        
+
         toast.success('Bayi başarıyla oluşturuldu')
       } else if (modal === 'edit' && selectedBayi) {
         // Bayi güncelle
@@ -245,19 +245,19 @@ export default function AdminBayiler() {
 
   return (
     <div className="p-8">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-4 sm:mb-6 lg:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <Store className="w-8 h-8 text-orange-600" />
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 flex items-center gap-3">
+            <Store className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600" />
             Bayi Yönetimi
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
             Bayileri yönetin, yeni bayi ekleyin ve satış raporlarını takip edin
           </p>
         </div>
         <button
           onClick={openCreateModal}
-          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center gap-2"
+          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" />
           Yeni Bayi Ekle
@@ -276,7 +276,7 @@ export default function AdminBayiler() {
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-lg shadow overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -326,11 +326,10 @@ export default function AdminBayiler() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
                       onClick={() => toggleAktif(bayi)}
-                      className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                        bayi.aktif
+                      className={`px-3 py-1 text-xs font-semibold rounded-full ${bayi.aktif
                           ? 'bg-green-100 text-green-800 hover:bg-green-200'
                           : 'bg-red-100 text-red-800 hover:bg-red-200'
-                      }`}
+                        }`}
                     >
                       {bayi.aktif ? 'Aktif' : 'Pasif'}
                     </button>
@@ -360,8 +359,8 @@ export default function AdminBayiler() {
 
       {/* Bayi Modal */}
       {modal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white sm:rounded-lg shadow-xl w-full max-w-2xl min-h-screen sm:min-h-0 sm:max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
               <h3 className="text-xl font-bold text-gray-800">
                 {modal === 'create' ? 'Yeni Bayi Ekle' : 'Bayi Düzenle'}

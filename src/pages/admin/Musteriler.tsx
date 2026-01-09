@@ -25,31 +25,31 @@ export default function Musteriler() {
 
   async function loadData() {
     setLoading(true)
-    
+
     // Müşterileri ve fiyat gruplarını çek
     const [{ data: musteriData }, { data: fiyatData }] = await Promise.all([
       supabase.from('musteriler').select('*').order('created_at', { ascending: false }),
       supabase.from('fiyat_gruplari').select('*')
     ])
-    
+
     if (musteriData && fiyatData) {
       // Müşterilere fiyat grubu bilgilerini ekle
       const musterilerWithFiyat = musteriData.map(musteri => ({
         ...musteri,
         fiyat_grubu: fiyatData.find(fg => fg.id === musteri.fiyat_grubu_id)
       }))
-      
+
       setMusteriler(musterilerWithFiyat)
       setFilteredMusteriler(musterilerWithFiyat)
       setFiyatGruplari(fiyatData)
     }
-    
+
     setLoading(false)
   }
 
   function handleSearch(query: string) {
     setSearchQuery(query)
-    
+
     if (!query.trim()) {
       setFilteredMusteriler(musteriler)
       return
@@ -61,7 +61,7 @@ export default function Musteriler() {
       const telefon = (musteri.telefon || '').toLowerCase()
       const adres = (musteri.adres || '').toLowerCase()
       const fiyatGrubu = (musteri.fiyat_grubu?.grup_adi || '').toLowerCase()
-      
+
       return (
         fullName.includes(lowerQuery) ||
         telefon.includes(lowerQuery) ||
@@ -92,15 +92,15 @@ export default function Musteriler() {
 
   async function handleGuncelle(e: React.FormEvent) {
     e.preventDefault()
-    
+
     try {
       const { error } = await supabase
         .from('musteriler')
         .update(formData)
         .eq('id', secilenMusteri.id)
-      
+
       if (error) throw error
-      
+
       toast.success('Müşteri bilgileri güncellendi!')
       setDuzenlemeModalOpen(false)
       await loadData()
@@ -117,8 +117,8 @@ export default function Musteriler() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Müşteri Yönetimi</h1>
+      <div className="mb-4 sm:mb-6 lg:mb-8">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Müşteri Yönetimi</h1>
         <AdminSearchBar
           placeholder="Müşteri adı, telefon, adres ile ara..."
           onSearch={handleSearch}
@@ -138,13 +138,13 @@ export default function Musteriler() {
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="px-6 py-3 bg-gray-50 border-b">
+        <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+          <div className="px-4 sm:px-6 py-3 bg-gray-50 border-b">
             <p className="text-sm text-gray-600">
               {filteredMusteriler.length} müşteri gösteriliyor
             </p>
           </div>
-          <table className="w-full">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ad Soyad</th>
@@ -192,9 +192,9 @@ export default function Musteriler() {
 
       {/* Detay Modal */}
       {detayModalOpen && secilenMusteri && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-lg max-w-2xl w-full my-8">
-            <div className="p-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-0 sm:p-4 z-50 overflow-y-auto">
+          <div className="bg-white sm:rounded-lg w-full max-w-2xl min-h-screen sm:min-h-0 my-0 sm:my-8">
+            <div className="p-4 sm:p-6 sm:max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Müşteri Detayı</h2>
                 <button onClick={() => setDetayModalOpen(false)} className="text-gray-400 hover:text-gray-600">
@@ -203,7 +203,7 @@ export default function Musteriler() {
               </div>
 
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-500">Ad</label>
                     <p className="text-gray-900">{secilenMusteri.ad}</p>
@@ -252,9 +252,9 @@ export default function Musteriler() {
 
       {/* Düzenleme Modal */}
       {duzenlemeModalOpen && secilenMusteri && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-lg max-w-lg w-full my-8">
-            <div className="p-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-0 sm:p-4 z-50 overflow-y-auto">
+          <div className="bg-white sm:rounded-lg w-full max-w-lg min-h-screen sm:min-h-0 my-0 sm:my-8">
+            <div className="p-4 sm:p-6 sm:max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">
                   Müşteri Düzenle: {secilenMusteri.ad} {secilenMusteri.soyad}
@@ -319,22 +319,22 @@ export default function Musteriler() {
                     {(() => {
                       const grupIskonto = fiyatGruplari.find(fg => fg.id === formData.fiyat_grubu_id)?.indirim_orani || 0
                       const ozelIskonto = formData.ozel_iskonto_orani || 0
-                      
+
                       // Örnek hesaplama: 100 TL üzerinden
                       const ornekFiyat = 100
                       let mevcutFiyat = ornekFiyat
-                      
+
                       // 1. Grup iskontosunu uygula
                       const grupIndirim = (mevcutFiyat * grupIskonto) / 100
                       mevcutFiyat -= grupIndirim
-                      
+
                       // 2. Özel iskontonu uygula
                       const ozelIndirim = (mevcutFiyat * ozelIskonto) / 100
                       mevcutFiyat -= ozelIndirim
-                      
+
                       const toplamIndirim = ornekFiyat - mevcutFiyat
                       const toplamIskontoOrani = (toplamIndirim / ornekFiyat) * 100
-                      
+
                       return (
                         <>
                           <p>1. Grup İskontosu: %{grupIskonto} → {grupIndirim.toFixed(2)} TL indirim</p>

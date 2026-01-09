@@ -139,7 +139,7 @@ export default function Dashboard() {
       const { data: siparisler } = await supabase
         .from('siparisler')
         .select('toplam_tutar')
-      
+
       const toplamGelir = siparisler?.reduce((sum, s) => sum + (s.toplam_tutar || 0), 0) || 0
 
       // Kargo bekleyen siparişler
@@ -241,25 +241,25 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Kontrol Paneli</h1>
-        <p className="text-gray-600 mt-2">Sistemin genel durumunu takip edin</p>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Kontrol Paneli</h1>
+        <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Sistemin genel durumunu takip edin</p>
       </div>
 
       {/* Main Stats */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           {mainStats.map((stat) => {
             const Icon = stat.icon
             return (
-              <Link 
-                key={stat.title} 
+              <Link
+                key={stat.title}
                 to={stat.link}
                 className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-all hover:scale-105 cursor-pointer"
               >
@@ -283,15 +283,15 @@ export default function Dashboard() {
       {/* Quick Access Cards */}
       {loading ? (
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Hızlı Erişim</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Hızlı Erişim</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => <SkeletonCard key={i} />)}
           </div>
         </div>
       ) : (
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Hızlı Erişim</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Hızlı Erişim</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {quickAccessCards.map((card) => {
               const Icon = card.icon
               const colorClasses = {
@@ -405,25 +405,22 @@ export default function Dashboard() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setPeriod(7)}
-                  className={`px-3 py-1 text-sm rounded-lg transition ${
-                    period === 7 ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                  className={`px-3 py-1 text-sm rounded-lg transition ${period === 7 ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
                 >
                   7 Gün
                 </button>
                 <button
                   onClick={() => setPeriod(30)}
-                  className={`px-3 py-1 text-sm rounded-lg transition ${
-                    period === 30 ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                  className={`px-3 py-1 text-sm rounded-lg transition ${period === 30 ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
                 >
                   30 Gün
                 </button>
                 <button
                   onClick={() => setPeriod(90)}
-                  className={`px-3 py-1 text-sm rounded-lg transition ${
-                    period === 90 ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                  className={`px-3 py-1 text-sm rounded-lg transition ${period === 90 ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
                 >
                   90 Gün
                 </button>
