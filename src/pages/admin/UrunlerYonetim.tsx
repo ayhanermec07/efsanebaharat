@@ -228,11 +228,11 @@ export default function UrunlerYonetim() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Ürün Yönetimi</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6 lg:mb-8">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Ürün Yönetimi</h1>
         <button
           onClick={() => setModalOpen(true)}
-          className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition flex items-center space-x-2"
+          className="bg-orange-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-orange-700 transition flex items-center justify-center space-x-2 w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" />
           <span>Yeni Ürün Ekle</span>
@@ -244,8 +244,8 @@ export default function UrunlerYonetim() {
           <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ürün Adı</th>
@@ -296,8 +296,8 @@ export default function UrunlerYonetim() {
 
       {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-0 sm:p-4 z-50 overflow-y-auto">
+          <div className="bg-white sm:rounded-lg w-full max-w-2xl min-h-screen sm:min-h-0 sm:max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">
@@ -335,7 +335,7 @@ export default function UrunlerYonetim() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
                     <select
@@ -403,8 +403,8 @@ export default function UrunlerYonetim() {
                     </button>
                   </div>
 
-                  {/* Başlıklar */}
-                  <div className="grid grid-cols-9 gap-2 mb-3">
+                  {/* Başlıklar - Desktop */}
+                  <div className="hidden lg:grid grid-cols-9 gap-2 mb-3">
                     <div className="text-sm font-medium text-gray-700 col-span-2">Birim Adedi</div>
                     <div className="text-sm font-medium text-gray-700">Fiyat (TL)</div>
                     <div className="text-sm font-medium text-gray-700 col-span-2">Stok</div>
@@ -431,7 +431,7 @@ export default function UrunlerYonetim() {
                     }
 
                     return (
-                      <div key={index} className="grid grid-cols-9 gap-2 mb-2">
+                      <div key={index} className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-2 mb-4 lg:mb-2 p-3 lg:p-0 bg-gray-50 lg:bg-transparent rounded-lg lg:rounded-none">
                         <input
                           type="number"
                           placeholder="100"

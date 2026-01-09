@@ -25,32 +25,32 @@ export default function Markalar() {
       .from('markalar')
       .select('*')
       .order('marka_adi', { ascending: true })
-    
+
     if (data) setMarkalar(data)
     setLoading(false)
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    
+
     try {
       if (editingId) {
         const { error } = await supabase
           .from('markalar')
           .update(formData)
           .eq('id', editingId)
-        
+
         if (error) throw error
         toast.success('Marka başarıyla güncellendi!')
       } else {
         const { error } = await supabase
           .from('markalar')
           .insert(formData)
-        
+
         if (error) throw error
         toast.success('Marka başarıyla eklendi!')
       }
-      
+
       resetForm()
       await loadMarkalar()
     } catch (error: any) {
@@ -61,15 +61,15 @@ export default function Markalar() {
 
   async function handleDelete(id: string) {
     if (!confirm('Bu markayı silmek istediğinizden emin misiniz?')) return
-    
+
     try {
       const { error } = await supabase
         .from('markalar')
         .delete()
         .eq('id', id)
-      
+
       if (error) throw error
-      
+
       await loadMarkalar()
       toast.success('Marka silindi!')
     } catch (error: any) {
@@ -100,11 +100,11 @@ export default function Markalar() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Marka Yönetimi</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6 lg:mb-8">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Marka Yönetimi</h1>
         <button
           onClick={() => setModalOpen(true)}
-          className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition flex items-center space-x-2"
+          className="bg-orange-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-orange-700 transition flex items-center justify-center space-x-2 w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" />
           <span>Yeni Marka Ekle</span>
@@ -116,8 +116,8 @@ export default function Markalar() {
           <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+          <table className="w-full min-w-[500px]">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Marka Adı</th>
@@ -165,9 +165,9 @@ export default function Markalar() {
 
       {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-lg max-w-lg w-full my-8">
-            <div className="p-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-0 sm:p-4 z-50 overflow-y-auto">
+          <div className="bg-white sm:rounded-lg w-full max-w-lg min-h-screen sm:min-h-0 my-0 sm:my-8">
+            <div className="p-4 sm:p-6 sm:max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">
                   {editingId ? 'Marka Düzenle' : 'Yeni Marka Ekle'}

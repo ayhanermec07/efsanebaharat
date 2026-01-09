@@ -16,21 +16,21 @@ export default function Siparisler() {
 
   async function loadSiparisler() {
     setLoading(true)
-    
+
     try {
       // Siparişleri çek
       const { data: siparisData, error } = await supabase
         .from('siparisler')
         .select('*')
         .order('olusturma_tarihi', { ascending: false })
-      
+
       if (error) {
         console.error('Sipariş yükleme hatası:', error)
         setSiparisler([])
         setLoading(false)
         return
       }
-      
+
       if (siparisData && siparisData.length > 0) {
         // Müşteri bilgilerini çek
         const musteriIds = [...new Set(siparisData.map(s => s.musteri_id))]
@@ -38,13 +38,13 @@ export default function Siparisler() {
           .from('musteriler')
           .select('id, ad, soyad')
           .in('id', musteriIds)
-        
+
         // Siparişlere müşteri bilgilerini ekle
         const siparislerWithMusteriler = siparisData.map(siparis => ({
           ...siparis,
           musteri: musteriler?.find(m => m.id === siparis.musteri_id)
         }))
-        
+
         setSiparisler(siparislerWithMusteriler)
       } else {
         setSiparisler([])
@@ -53,7 +53,7 @@ export default function Siparisler() {
       console.error('Sipariş yükleme hatası:', error)
       setSiparisler([])
     }
-    
+
     setLoading(false)
   }
 
@@ -63,9 +63,9 @@ export default function Siparisler() {
         .from('siparisler')
         .update({ siparis_durumu: yeniDurum })
         .eq('id', siparisId)
-      
+
       if (error) throw error
-      
+
       await loadSiparisler()
       toast.success('Sipariş durumu güncellendi!')
     } catch (error: any) {
@@ -81,7 +81,7 @@ export default function Siparisler() {
         .from('siparis_urunleri')
         .select('*')
         .eq('siparis_id', siparis.id)
-      
+
       if (siparisUrunleri && siparisUrunleri.length > 0) {
         // Ürün bilgilerini çek
         const urunIds = [...new Set(siparisUrunleri.map(su => su.urun_id))]
@@ -89,13 +89,13 @@ export default function Siparisler() {
           .from('urunler')
           .select('id, urun_adi')
           .in('id', urunIds)
-        
+
         // Sipariş ürünlerine ürün bilgilerini ekle
         const detayliSiparisUrunleri = siparisUrunleri.map(su => ({
           ...su,
           urun: urunler?.find(u => u.id === su.urun_id)
         }))
-        
+
         setSecilenSiparis({
           ...siparis,
           siparis_urunleri: detayliSiparisUrunleri
@@ -106,7 +106,7 @@ export default function Siparisler() {
           siparis_urunleri: []
         })
       }
-      
+
       setDetayModalOpen(true)
     } catch (error: any) {
       console.error('Detay görüntüleme hatası:', error)
@@ -124,8 +124,8 @@ export default function Siparisler() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Sipariş Yönetimi</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6 lg:mb-8">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Sipariş Yönetimi</h1>
       </div>
 
       {loading ? (
@@ -137,8 +137,8 @@ export default function Siparisler() {
           <p className="text-gray-500">Henüz sipariş bulunmuyor</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+          <table className="w-full min-w-[700px]">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sipariş No</th>
@@ -194,8 +194,8 @@ export default function Siparisler() {
 
       {/* Detay Modal */}
       {detayModalOpen && secilenSiparis && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-lg max-w-3xl w-full my-8 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-0 sm:p-4 z-50 overflow-y-auto">
+          <div className="bg-white sm:rounded-lg w-full max-w-3xl min-h-screen sm:min-h-0 sm:max-h-[90vh] my-0 sm:my-8 overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">
@@ -218,7 +218,7 @@ export default function Siparisler() {
                 {/* Sipariş Ürünleri */}
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-3">Sipariş Ürünleri</h3>
-                  <table className="w-full">
+                  <table className="w-full min-w-[400px]">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Ürün</th>
