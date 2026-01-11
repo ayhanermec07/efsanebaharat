@@ -37,117 +37,90 @@ export default function Sepet() {
 
     setLoading(true)
     try {
-      // PayTr edge function'ını çağır
-      const { data: functionData, error: functionError } = await supabase.functions.invoke('paytr-payment', {
-        body: {
-          sepetItems: sepetItems.map(item => ({
-            urun_adi: item.urun_adi,
-            birim_fiyat: item.birim_fiyat,
-            miktar: item.miktar
-          })),
-          musteriData: {
-            ad: musteriData.ad,
-            soyad: musteriData.soyad,
-            email: user.email,
-            telefon: musteriData.telefon,
-            adres: musteriData.adres
-          },
-          toplamTutar: indirimliToplam,
-          kampanyaKodu: uygulananKampanya?.kod,
-          kampanyaIndirimi: kampanyaIndirimi
-        }
-      })
+      // GEÇİCİ: Ödeme işlemini bypass et ve doğrudan sipariş oluştur
+      const siparisNo = 'TEST-' + Math.floor(Math.random() * 1000000000).toString()
 
-      if (functionError) {
-        console.error('PayTr function error:', functionError)
-        throw new Error('Ödeme sayfası oluşturulamadı')
-      }
+      // Sipariş kaydını oluştur
+      await supabase
+        .from('siparisler')
+        .insert({
+          siparis_no: siparisNo,
+          musteri_id: musteriData.id,
+          toplam_tutar: indirimliToplam,
+          kampanya_kodu: uygulananKampanya?.kod,
+          kampanya_indirimi: kampanyaIndirimi,
+          siparis_durumu: 'beklemede',
+          odeme_durumu: 'bekliyor',
+          adres: musteriData.adres,
+          telefon: musteriData.telefon
+        })
+        .select()
+        .maybeSingle()
+        .then(async ({ data: siparis }) => {
+          if (siparis) {
+            // Sipariş ürünlerini ekle
+            const siparisUrunleri = sepetItems.map(item => ({
+              siparis_id: siparis.id,
+              urun_id: item.urun_id,
+              birim_turu: item.birim_turu,
+              birim_adedi: item.birim_adedi,
+              birim_adedi_turu: item.birim_adedi_turu,
+              miktar: item.miktar,
+              birim_fiyat: item.birim_fiyat,
+              toplam_fiyat: item.birim_fiyat * item.miktar
+            }))
+            await supabase.from('siparis_urunleri').insert(siparisUrunleri)
 
-      if (functionData?.success && functionData?.token) {
-        setPaymentToken(functionData.token)
-        setShowPaymentIframe(true)
+            // Stokları düşür ve rezervasyonları kaldır
+            for (const item of sepetItems) {
+              // İlgili stok kaydını bul
+              const { data: stok } = await supabase
+                .from('urun_stoklari')
+                .select('*')
+                .eq('urun_id', item.urun_id)
+                .eq('birim_turu', item.birim_turu)
+                .single()
 
-        // Sipariş kaydını oluştur (ödeme öncesi)
-        const siparisNo = functionData.merchant_oid
-        await supabase
-          .from('siparisler')
-          .insert({
-            siparis_no: siparisNo,
-            musteri_id: musteriData.id,
-            toplam_tutar: indirimliToplam,
-            kampanya_kodu: uygulananKampanya?.kod,
-            kampanya_indirimi: kampanyaIndirimi,
-            siparis_durumu: 'beklemede',
-            odeme_durumu: 'bekliyor',
-            adres: musteriData.adres,
-            telefon: musteriData.telefon
-          })
-          .select()
-          .maybeSingle()
-          .then(async ({ data: siparis }) => {
-            if (siparis) {
-              // Sipariş ürünlerini ekle
-              const siparisUrunleri = sepetItems.map(item => ({
-                siparis_id: siparis.id,
-                urun_id: item.urun_id,
-                birim_turu: item.birim_turu,
-                birim_adedi: item.birim_adedi,
-                birim_adedi_turu: item.birim_adedi_turu,
-                miktar: item.miktar,
-                birim_fiyat: item.birim_fiyat,
-                toplam_fiyat: item.birim_fiyat * item.miktar
-              }))
-              await supabase.from('siparis_urunleri').insert(siparisUrunleri)
+              if (stok) {
+                // Satılan toplam miktarı hesapla (birim_adedi * miktar)
+                const satilanMiktar = (item.birim_adedi || 100) * item.miktar
 
-              // Stokları düşür ve rezervasyonları kaldır
-              for (const item of sepetItems) {
-                // İlgili stok kaydını bul
-                const { data: stok } = await supabase
-                  .from('urun_stoklari')
-                  .select('*')
-                  .eq('urun_id', item.urun_id)
-                  .eq('birim_turu', item.birim_turu)
-                  .single()
-
-                if (stok) {
-                  // Satılan toplam miktarı hesapla (birim_adedi * miktar)
-                  const satilanMiktar = (item.birim_adedi || 100) * item.miktar
-
-                  // Birim dönüştürme: satılan miktarı stok birimine çevir
-                  let stokDusumu = satilanMiktar
-                  if (item.birim_turu === 'gr' && stok.stok_birimi === 'kg') {
-                    stokDusumu = satilanMiktar / 1000 // gr'ı kg'a çevir
-                  } else if (item.birim_turu === 'kg' && stok.stok_birimi === 'gr') {
-                    stokDusumu = satilanMiktar * 1000 // kg'ı gr'a çevir
-                  }
-
-                  // Yeni stok miktarını hesapla
-                  const yeniStok = Math.max(0, (stok.stok_miktari || 0) - stokDusumu)
-
-                  // Stoku güncelle
-                  await supabase
-                    .from('urun_stoklari')
-                    .update({ stok_miktari: yeniStok })
-                    .eq('id', stok.id)
+                // Birim dönüştürme: satılan miktarı stok birimine çevir
+                let stokDusumu = satilanMiktar
+                if (item.birim_turu === 'gr' && stok.stok_birimi === 'kg') {
+                  stokDusumu = satilanMiktar / 1000 // gr'ı kg'a çevir
+                } else if (item.birim_turu === 'kg' && stok.stok_birimi === 'gr') {
+                  stokDusumu = satilanMiktar * 1000 // kg'ı gr'a çevir
                 }
 
-                // Rezervasyonu kaldır
-                await supabase
-                  .from('stok_rezervasyonlari')
-                  .delete()
-                  .eq('musteri_id', musteriData.id)
-                  .eq('urun_id', item.urun_id)
-                  .eq('birim_turu', item.birim_turu)
-              }
-            }
-          })
+                // Yeni stok miktarını hesapla
+                const yeniStok = Math.max(0, (stok.stok_miktari || 0) - stokDusumu)
 
-      } else {
-        throw new Error('Ödeme tokenı alınamadı')
-      }
+                // Stoku güncelle
+                await supabase
+                  .from('urun_stoklari')
+                  .update({ stok_miktari: yeniStok })
+                  .eq('id', stok.id)
+              }
+
+              // Rezervasyonu kaldır
+              await supabase
+                .from('stok_rezervasyonlari')
+                .delete()
+                .eq('musteri_id', musteriData.id)
+                .eq('urun_id', item.urun_id)
+                .eq('birim_turu', item.birim_turu)
+            }
+
+            // Başarılı sayfasına yönlendir
+            sepetiTemizle()
+            navigate('/odeme-basarili', { state: { siparisNo } })
+          }
+        })
+
     } catch (error: any) {
-      console.error('Ödeme hatası:', error)
-      toast.error(error.message || 'Ödeme işlemi başlatılamadı')
+      console.error('Sipariş oluşturma hatası:', error)
+      toast.error(error.message || 'Sipariş oluşturulamadı')
     } finally {
       setLoading(false)
     }
