@@ -77,7 +77,7 @@ export default function AdminSorular() {
         // Şimdilik kullanıcı bilgilerini musteriler tablosundan alalım
         const { data: musterilerData } = await supabase
           .from('musteriler')
-          .select('id, email')
+          .select('id')
           .in('id', kullaniciIds)
 
         // Ürün adlarını al (ürün soruları için)
@@ -95,7 +95,8 @@ export default function AdminSorular() {
 
         const sorularWithDetails = data.map(soru => ({
           ...soru,
-          kullanici_email: musterilerData?.find(m => m.id === soru.kullanici_id)?.email || 'Bilinmeyen',
+          // Email bilgisi şu an veritabanında yok
+          kullanici_email: 'Email Görünmüyor',
           urun_adi: urunler.find(u => u.id === soru.urun_id)?.urun_adi
         }))
 
@@ -313,8 +314,8 @@ export default function AdminSorular() {
         <button
           onClick={() => setActiveTab('genel')}
           className={`px-6 py-3 font-medium transition ${activeTab === 'genel'
-              ? 'border-b-2 border-orange-600 text-orange-600'
-              : 'text-gray-600 hover:text-gray-900'
+            ? 'border-b-2 border-orange-600 text-orange-600'
+            : 'text-gray-600 hover:text-gray-900'
             }`}
         >
           <div className="flex items-center space-x-2">
@@ -325,8 +326,8 @@ export default function AdminSorular() {
         <button
           onClick={() => setActiveTab('urun')}
           className={`px-6 py-3 font-medium transition ${activeTab === 'urun'
-              ? 'border-b-2 border-orange-600 text-orange-600'
-              : 'text-gray-600 hover:text-gray-900'
+            ? 'border-b-2 border-orange-600 text-orange-600'
+            : 'text-gray-600 hover:text-gray-900'
             }`}
         >
           <div className="flex items-center space-x-2">

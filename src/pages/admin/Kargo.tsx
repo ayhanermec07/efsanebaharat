@@ -21,7 +21,7 @@ interface Siparis {
 interface Musteri {
   id: string
   ad_soyad: string
-  email: string
+  telefon?: string // 'email' alanı kaldırıldı, 'telefon' eklendi
   siparisler: Siparis[]
 }
 
@@ -93,9 +93,9 @@ export default function AdminKargo() {
       const musteriIds = [...new Set(siparisler.map(s => s.musteri_id))]
 
       // Müşteri bilgilerini çek
-      const { data: musterilerData, error: musteriError } = await supabase
+      const { data: musterilerData, error: musteriError } = await supabase // 'musterilerData' değişken adı kullanıldı
         .from('musteriler')
-        .select('id, ad, soyad, email')
+        .select('id, ad, soyad, telefon') // 'email' yerine 'telefon' çekildi
         .in('id', musteriIds)
 
       if (musteriError) throw musteriError
@@ -107,7 +107,7 @@ export default function AdminKargo() {
         musteriMap.set(musteri.id, {
           id: musteri.id,
           ad_soyad: `${musteri.ad} ${musteri.soyad}`,
-          email: musteri.email,
+          telefon: musteri.telefon, // 'email' yerine 'telefon' eklendi
           siparisler: []
         })
       })
@@ -259,7 +259,10 @@ export default function AdminKargo() {
             <div key={musteri.id} className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="bg-gradient-to-r from-orange-600 to-orange-500 text-white p-4">
                 <h2 className="text-xl font-bold">{musteri.ad_soyad}</h2>
-                <p className="text-orange-100 text-sm">{musteri.email}</p>
+                {/* 'email' alanı kaldırıldı, 'telefon' eklendi */}
+                {musteri.telefon && (
+                  <p className="text-orange-100 text-sm">{musteri.telefon}</p>
+                )}
                 <p className="text-orange-100 text-sm mt-1">
                   Toplam Sipariş: {musteri.siparisler.length}
                 </p>
