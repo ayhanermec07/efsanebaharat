@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { 
-  MessageSquare, 
-  Package, 
+import {
+  MessageSquare,
+  Package,
   Filter,
   Search,
   Edit,
@@ -35,7 +35,7 @@ export default function AdminSorular() {
   const [cevapModal, setCevapModal] = useState<Soru | null>(null)
   const [cevapMetni, setCevapMetni] = useState('')
   const [savingCevap, setSavingCevap] = useState(false)
-  
+
   // Toplu işlemler için
   const [selectedSorular, setSelectedSorular] = useState<string[]>([])
   const [processingBulk, setProcessingBulk] = useState(false)
@@ -72,14 +72,14 @@ export default function AdminSorular() {
       if (data && data.length > 0) {
         // Kullanıcı email'lerini al
         const kullaniciIds = [...new Set(data.map(s => s.kullanici_id))]
-        
+
         // Supabase auth admin API'sını kullan - Uyarı: Production'da alternatif yöntem kullanılmalı
         // Şimdilik kullanıcı bilgilerini musteriler tablosundan alalım
         const { data: musterilerData } = await supabase
           .from('musteriler')
-          .select('kullanici_id, email')
-          .in('kullanici_id', kullaniciIds)
-        
+          .select('id, email')
+          .in('id', kullaniciIds)
+
         // Ürün adlarını al (ürün soruları için)
         let urunler: any[] = []
         if (activeTab === 'urun') {
@@ -95,7 +95,7 @@ export default function AdminSorular() {
 
         const sorularWithDetails = data.map(soru => ({
           ...soru,
-          kullanici_email: musterilerData?.find(m => m.kullanici_id === soru.kullanici_id)?.email || 'Bilinmeyen',
+          kullanici_email: musterilerData?.find(m => m.id === soru.kullanici_id)?.email || 'Bilinmeyen',
           urun_adi: urunler.find(u => u.id === soru.urun_id)?.urun_adi
         }))
 
@@ -142,7 +142,7 @@ export default function AdminSorular() {
       // Email bildirimi gönder (Edge Function)
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        
+
         await fetch('https://uvagzvevktzzfrzkvtsd.supabase.co/functions/v1/soru-cevap-email', {
           method: 'POST',
           headers: {
@@ -173,7 +173,7 @@ export default function AdminSorular() {
     try {
       const { error } = await supabase
         .from('sorular')
-        .update({ 
+        .update({
           durum: yeniDurum,
           guncelleme_tarihi: new Date().toISOString()
         })
@@ -190,8 +190,8 @@ export default function AdminSorular() {
 
   // Toplu İşlem Fonksiyonları
   function toggleSelectSoru(soruId: string) {
-    setSelectedSorular(prev => 
-      prev.includes(soruId) 
+    setSelectedSorular(prev =>
+      prev.includes(soruId)
         ? prev.filter(id => id !== soruId)
         : [...prev, soruId]
     )
@@ -220,7 +220,7 @@ export default function AdminSorular() {
     try {
       const { error } = await supabase
         .from('sorular')
-        .update({ 
+        .update({
           durum: yeniDurum,
           guncelleme_tarihi: new Date().toISOString()
         })
@@ -312,11 +312,10 @@ export default function AdminSorular() {
       <div className="flex space-x-2 mb-6 border-b">
         <button
           onClick={() => setActiveTab('genel')}
-          className={`px-6 py-3 font-medium transition ${
-            activeTab === 'genel'
+          className={`px-6 py-3 font-medium transition ${activeTab === 'genel'
               ? 'border-b-2 border-orange-600 text-orange-600'
               : 'text-gray-600 hover:text-gray-900'
-          }`}
+            }`}
         >
           <div className="flex items-center space-x-2">
             <MessageSquare className="w-5 h-5" />
@@ -325,11 +324,10 @@ export default function AdminSorular() {
         </button>
         <button
           onClick={() => setActiveTab('urun')}
-          className={`px-6 py-3 font-medium transition ${
-            activeTab === 'urun'
+          className={`px-6 py-3 font-medium transition ${activeTab === 'urun'
               ? 'border-b-2 border-orange-600 text-orange-600'
               : 'text-gray-600 hover:text-gray-900'
-          }`}
+            }`}
         >
           <div className="flex items-center space-x-2">
             <Package className="w-5 h-5" />
@@ -381,8 +379,8 @@ export default function AdminSorular() {
                   <Square className="w-5 h-5" />
                 )}
                 <span className="text-sm font-medium">
-                  {selectedSorular.length > 0 
-                    ? `${selectedSorular.length} soru seçildi` 
+                  {selectedSorular.length > 0
+                    ? `${selectedSorular.length} soru seçildi`
                     : 'Tümünü Seç'}
                 </span>
               </button>

@@ -95,8 +95,8 @@ export default function AdminKargo() {
       // Müşteri bilgilerini çek
       const { data: musterilerData, error: musteriError } = await supabase
         .from('musteriler')
-        .select('kullanici_id, ad_soyad, email')
-        .in('kullanici_id', musteriIds)
+        .select('id, ad, soyad, email')
+        .in('id', musteriIds)
 
       if (musteriError) throw musteriError
 
@@ -104,9 +104,9 @@ export default function AdminKargo() {
       const musteriMap = new Map<string, Musteri>()
 
       musterilerData?.forEach(musteri => {
-        musteriMap.set(musteri.kullanici_id, {
-          id: musteri.kullanici_id,
-          ad_soyad: musteri.ad_soyad,
+        musteriMap.set(musteri.id, {
+          id: musteri.id,
+          ad_soyad: `${musteri.ad} ${musteri.soyad}`,
           email: musteri.email,
           siparisler: []
         })
@@ -134,7 +134,7 @@ export default function AdminKargo() {
     setFormData({
       kargo_firmasi: siparis.kargo_firmasi || '',
       kargo_takip_no: siparis.kargo_takip_no || '',
-      tahmini_teslimat_tarihi: siparis.tahmini_teslimat_tarihi 
+      tahmini_teslimat_tarihi: siparis.tahmini_teslimat_tarihi
         ? new Date(siparis.tahmini_teslimat_tarihi).toISOString().split('T')[0]
         : ''
     })
@@ -189,7 +189,7 @@ export default function AdminKargo() {
       // Email bildirim gönder (Edge Function)
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        
+
         const response = await fetch('https://uvagzvevktzzfrzkvtsd.supabase.co/functions/v1/kargo-bildirim', {
           method: 'POST',
           headers: {
@@ -280,11 +280,11 @@ export default function AdminKargo() {
                             </span>
                             {kargoDurumBadge(siparis.kargo_durumu || 'hazirlaniyor')}
                           </div>
-                          
+
                           <div className="text-sm text-gray-600 space-y-1">
                             <p>Tarih: {new Date(siparis.olusturma_tarihi).toLocaleDateString('tr-TR')}</p>
                             <p>Tutar: {siparis.toplam_tutar} TL</p>
-                            
+
                             {siparis.kargo_firmasi && (
                               <div className="mt-2 pt-2 border-t border-gray-100">
                                 <p className="font-medium text-gray-700">Kargo Bilgileri:</p>
