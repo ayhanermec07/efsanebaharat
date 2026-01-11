@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { FileCode, RefreshCw, Download, Copy, Check, Key, Eye, EyeOff, Package } from 'lucide-react'
+import { FileCode, RefreshCw, Download, Copy, Check, Key, Eye, EyeOff, Package, CheckCircle, XCircle, AlertTriangle, Activity } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { generateXMLContent, downloadXML, generateSecureToken, copyToClipboard, XMLProduct } from '../../utils/xmlGenerator'
 
@@ -17,6 +17,20 @@ interface SelectedProduct {
     gorsel_url: string | null
 }
 
+interface XMLHealthStatus {
+    isHealthy: boolean
+    lastCheck: Date | null
+    errors: XMLError[]
+    warnings: string[]
+}
+
+interface XMLError {
+    id: string
+    message: string
+    timestamp: Date
+    type: 'error' | 'warning'
+}
+
 export default function XMLYonetim() {
     const [loading, setLoading] = useState(true)
     const [generating, setGenerating] = useState(false)
@@ -25,6 +39,13 @@ export default function XMLYonetim() {
     const [showToken, setShowToken] = useState(false)
     const [copied, setCopied] = useState(false)
     const [lastGeneratedXML, setLastGeneratedXML] = useState<string | null>(null)
+    const [healthStatus, setHealthStatus] = useState<XMLHealthStatus>({
+        isHealthy: true,
+        lastCheck: null,
+        errors: [],
+        warnings: []
+    })
+    const [checking, setChecking] = useState(false)
 
     useEffect(() => {
         loadData()
@@ -88,9 +109,95 @@ export default function XMLYonetim() {
         } catch (error: any) {
             console.error('Veri yükleme hatası:', error)
             toast.error('Veriler yüklenirken hata oluştu')
+            addError('Veri yükleme hatası: ' + (error.message || 'Bilinmeyen hata'), 'error')
         }
 
         setLoading(false)
+    }
+
+    function addError(message: string, type: 'error' | 'warning') {
+        const newError: XMLError = {
+            id: Date.now().toString(),
+            message,
+            timestamp: new Date(),
+            type
+        }
+        setHealthStatus(prev => ({
+            ...prev,
+            isHealthy: type === 'warning' ? prev.isHealthy : false,
+            errors: [newError, ...prev.errors].slice(0, 10) // Son 10 hata
+        }))
+    }
+
+    function clearErrors() {
+        setHealthStatus(prev => ({
+            ...prev,
+            isHealthy: true,
+            errors: []
+        }))
+        toast.success('Hata geçmişi temizlendi')
+    }
+
+    async function runHealthCheck() {
+        setChecking(true)
+        const warnings: string[] = []
+        let hasErrors = false
+
+        try {
+            // 1. Veritabanı bağlantısı kontrolü
+            const { error: dbError } = await supabase.from('bayi_xml_settings').select('id').limit(1)
+            if (dbError) {
+                addError('Veritabanı bağlantı hatası: ' + dbError.message, 'error')
+                hasErrors = true
+            }
+
+            // 2. Token kontrolü
+            if (!xmlSettings?.xml_token) {
+                warnings.push('Erişim token\'ı henüz oluşturulmamış')
+            }
+
+            // 3. Ürün kontrolü
+            if (selectedProducts.length === 0) {
+                warnings.push('XML\'e dahil edilecek ürün seçilmemiş')
+            }
+
+            // 4. Stok kontrolü - 0 stoklu ürünler
+            const outOfStock = selectedProducts.filter(p => p.stok_miktari <= 0)
+            if (outOfStock.length > 0) {
+                warnings.push(`${outOfStock.length} üründe stok yok`)
+            }
+
+            // 5. Fiyat kontrolü - 0 fiyatlı ürünler
+            const zeroPriceProducts = selectedProducts.filter(p => p.fiyat <= 0)
+            if (zeroPriceProducts.length > 0) {
+                warnings.push(`${zeroPriceProducts.length} üründe fiyat 0 veya eksik`)
+            }
+
+            // 6. Görsel kontrolü
+            const noImageProducts = selectedProducts.filter(p => !p.gorsel_url)
+            if (noImageProducts.length > 0) {
+                warnings.push(`${noImageProducts.length} üründe görsel yok`)
+            }
+
+            setHealthStatus(prev => ({
+                ...prev,
+                isHealthy: !hasErrors,
+                lastCheck: new Date(),
+                warnings
+            }))
+
+            if (!hasErrors && warnings.length === 0) {
+                toast.success('Sistem sağlık kontrolü başarılı!')
+            } else if (!hasErrors) {
+                toast.success(`Kontrol tamamlandı. ${warnings.length} uyarı var.`)
+            }
+
+        } catch (error: any) {
+            console.error('Sağlık kontrolü hatası:', error)
+            addError('Sağlık kontrolü yapılamadı: ' + (error.message || 'Bilinmeyen hata'), 'error')
+        }
+
+        setChecking(false)
     }
 
     async function handleGenerateXML() {
@@ -216,6 +323,150 @@ export default function XMLYonetim() {
                     <RefreshCw className="w-4 h-4" />
                     Yenile
                 </button>
+            </div>
+
+            {/* Sistem Durum Kontrol Paneli */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Activity className="w-5 h-5 text-orange-600" />
+                        Sistem Durum Paneli
+                    </h2>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={runHealthCheck}
+                            disabled={checking}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                        >
+                            {checking ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Activity className="w-4 h-4" />
+                            )}
+                            Kontrol Et
+                        </button>
+                    </div>
+                </div>
+
+                {/* Durum Kartları */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    {/* Ana Durum */}
+                    <div className={`rounded-lg p-4 ${healthStatus.isHealthy ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                        <div className="flex items-center gap-2 mb-2">
+                            {healthStatus.isHealthy ? (
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                            ) : (
+                                <XCircle className="w-5 h-5 text-red-600" />
+                            )}
+                            <span className={`font-semibold ${healthStatus.isHealthy ? 'text-green-700' : 'text-red-700'}`}>
+                                {healthStatus.isHealthy ? 'Çalışıyor' : 'Hata Var'}
+                            </span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                            {healthStatus.lastCheck
+                                ? `Son kontrol: ${healthStatus.lastCheck.toLocaleTimeString('tr-TR')}`
+                                : 'Henüz kontrol edilmedi'}
+                        </p>
+                    </div>
+
+                    {/* Token Durumu */}
+                    <div className={`rounded-lg p-4 ${xmlSettings?.xml_token ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                        <div className="flex items-center gap-2 mb-2">
+                            {xmlSettings?.xml_token ? (
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                            ) : (
+                                <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                            )}
+                            <span className={`font-semibold ${xmlSettings?.xml_token ? 'text-green-700' : 'text-yellow-700'}`}>
+                                Token
+                            </span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                            {xmlSettings?.xml_token ? 'Aktif' : 'Oluşturulmamış'}
+                        </p>
+                    </div>
+
+                    {/* Ürün Sayısı */}
+                    <div className={`rounded-lg p-4 ${selectedProducts.length > 0 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                        <div className="flex items-center gap-2 mb-2">
+                            {selectedProducts.length > 0 ? (
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                            ) : (
+                                <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                            )}
+                            <span className={`font-semibold ${selectedProducts.length > 0 ? 'text-green-700' : 'text-yellow-700'}`}>
+                                Ürünler
+                            </span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                            {selectedProducts.length} ürün seçili
+                        </p>
+                    </div>
+
+                    {/* Hata Sayısı */}
+                    <div className={`rounded-lg p-4 ${healthStatus.errors.length === 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                        <div className="flex items-center gap-2 mb-2">
+                            {healthStatus.errors.length === 0 ? (
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                            ) : (
+                                <XCircle className="w-5 h-5 text-red-600" />
+                            )}
+                            <span className={`font-semibold ${healthStatus.errors.length === 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                Hatalar
+                            </span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                            {healthStatus.errors.length} hata kaydı
+                        </p>
+                    </div>
+                </div>
+
+                {/* Uyarılar */}
+                {healthStatus.warnings.length > 0 && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                        <h3 className="font-semibold text-yellow-800 flex items-center gap-2 mb-2">
+                            <AlertTriangle className="w-4 h-4" />
+                            Uyarılar ({healthStatus.warnings.length})
+                        </h3>
+                        <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
+                            {healthStatus.warnings.map((warning, index) => (
+                                <li key={index}>{warning}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {/* Hata Geçmişi */}
+                {healthStatus.errors.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-semibold text-red-800 flex items-center gap-2">
+                                <XCircle className="w-4 h-4" />
+                                Hata Geçmişi ({healthStatus.errors.length})
+                            </h3>
+                            <button
+                                onClick={clearErrors}
+                                className="text-sm text-red-600 hover:text-red-800 transition"
+                            >
+                                Temizle
+                            </button>
+                        </div>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                            {healthStatus.errors.map((error) => (
+                                <div key={error.id} className="bg-white rounded p-2 text-sm">
+                                    <div className="flex items-center justify-between">
+                                        <span className={error.type === 'error' ? 'text-red-700' : 'text-yellow-700'}>
+                                            {error.message}
+                                        </span>
+                                        <span className="text-xs text-gray-500">
+                                            {error.timestamp.toLocaleTimeString('tr-TR')}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Token Yönetimi */}
