@@ -79,7 +79,8 @@ export default function Sepet() {
                 .select('*')
                 .eq('urun_id', item.urun_id)
                 .eq('birim_turu', item.birim_turu)
-                .single()
+                .limit(1)
+                .maybeSingle()
 
               if (stok) {
                 // Satılan toplam miktarı hesapla (birim_adedi * miktar)

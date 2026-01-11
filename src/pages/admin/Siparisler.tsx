@@ -33,11 +33,16 @@ export default function Siparisler() {
 
       if (siparisData && siparisData.length > 0) {
         // Müşteri bilgilerini çek
-        const musteriIds = [...new Set(siparisData.map(s => s.musteri_id))]
-        const { data: musteriler } = await supabase
-          .from('musteriler')
-          .select('id, ad, soyad')
-          .in('id', musteriIds)
+        const musteriIds = [...new Set(siparisData.map(s => s.musteri_id).filter(Boolean))]
+
+        let musteriler: any[] = []
+        if (musteriIds.length > 0) {
+          const { data } = await supabase
+            .from('musteriler')
+            .select('id, ad, soyad')
+            .in('id', musteriIds)
+          if (data) musteriler = data
+        }
 
         // Siparişlere müşteri bilgilerini ekle
         const siparislerWithMusteriler = siparisData.map(siparis => ({
