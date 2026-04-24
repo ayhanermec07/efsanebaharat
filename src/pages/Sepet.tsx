@@ -37,91 +37,26 @@ export default function Sepet() {
 
     setLoading(true)
     try {
-      // GEÇİCİ: Ödeme işlemini bypass et ve doğrudan sipariş oluştur
-      const siparisNo = 'TEST-' + Math.floor(Math.random() * 1000000000).toString()
+      const { data, error } = await supabase.functions.invoke('paytr-payment', {
+        body: {
+          kampanyaKodu: uygulananKampanya?.kod || null,
+        },
+      })
 
-      // Sipariş kaydını oluştur
-      await supabase
-        .from('siparisler')
-        .insert({
-          siparis_no: siparisNo,
-          musteri_id: musteriData.id,
-          toplam_tutar: indirimliToplam,
-          kampanya_kodu: uygulananKampanya?.kod,
-          kampanya_indirimi: kampanyaIndirimi,
-          siparis_durumu: 'beklemede',
-          odeme_durumu: 'bekliyor',
-          adres: musteriData.adres,
-          telefon: musteriData.telefon
-        })
-        .select()
-        .maybeSingle()
-        .then(async ({ data: siparis }) => {
-          if (siparis) {
-            // Sipariş ürünlerini ekle
-            const siparisUrunleri = sepetItems.map(item => ({
-              siparis_id: siparis.id,
-              urun_id: item.urun_id,
-              birim_turu: item.birim_turu,
-              birim_adedi: item.birim_adedi,
-              birim_adedi_turu: item.birim_adedi_turu,
-              miktar: item.miktar,
-              birim_fiyat: item.birim_fiyat,
-              toplam_fiyat: item.birim_fiyat * item.miktar
-            }))
-            await supabase.from('siparis_urunleri').insert(siparisUrunleri)
+      if (error) {
+        throw error
+      }
 
-            // Stokları düşür ve rezervasyonları kaldır
-            for (const item of sepetItems) {
-              // İlgili stok kaydını bul
-              const { data: stok } = await supabase
-                .from('urun_stoklari')
-                .select('*')
-                .eq('urun_id', item.urun_id)
-                .eq('birim_turu', item.birim_turu)
-                .limit(1)
-                .maybeSingle()
+      const token = data?.token
+      if (!token) {
+        throw new Error(data?.error?.message || 'Ödeme tokenı alınamadı')
+      }
 
-              if (stok) {
-                // Satılan toplam miktarı hesapla (birim_adedi * miktar)
-                const satilanMiktar = (item.birim_adedi || 100) * item.miktar
-
-                // Birim dönüştürme: satılan miktarı stok birimine çevir
-                let stokDusumu = satilanMiktar
-                if (item.birim_turu === 'gr' && stok.stok_birimi === 'kg') {
-                  stokDusumu = satilanMiktar / 1000 // gr'ı kg'a çevir
-                } else if (item.birim_turu === 'kg' && stok.stok_birimi === 'gr') {
-                  stokDusumu = satilanMiktar * 1000 // kg'ı gr'a çevir
-                }
-
-                // Yeni stok miktarını hesapla
-                const yeniStok = Math.max(0, (stok.stok_miktari || 0) - stokDusumu)
-
-                // Stoku güncelle
-                await supabase
-                  .from('urun_stoklari')
-                  .update({ stok_miktari: yeniStok })
-                  .eq('id', stok.id)
-              }
-
-              // Rezervasyonu kaldır
-              await supabase
-                .from('stok_rezervasyonlari')
-                .delete()
-                .eq('musteri_id', musteriData.id)
-                .eq('urun_id', item.urun_id)
-                .eq('birim_turu', item.birim_turu)
-            }
-
-            // Başarılı sayfasına yönlendir
-            sepetiTemizle()
-            navigate('/odeme-basarili', { state: { siparisNo } })
-          }
-        })
-
+      setPaymentToken(token)
+      setShowPaymentIframe(true)
     } catch (error: any) {
-      console.error('Sipariş oluşturma hatası:', error)
-      toast.error(error.message || 'Sipariş oluşturulamadı')
+      console.error('Ödeme başlatma hatası:', error)
+      toast.error(error.message || 'Ödeme başlatılamadı')
     } finally {
       setLoading(false)
     }
@@ -181,7 +116,6 @@ export default function Sepet() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Sepet Ürünleri */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm">
               {sepetItems.map((item) => (
@@ -261,7 +195,6 @@ export default function Sepet() {
             </div>
           </div>
 
-          {/* Sipariş Özeti */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-20">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Sipariş Özeti</h2>

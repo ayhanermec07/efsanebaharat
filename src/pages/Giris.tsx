@@ -14,7 +14,7 @@ export default function Giris() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { signIn } = useAuth()
+  const { signIn, signOut } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -24,57 +24,50 @@ export default function Giris() {
     setError('')
 
     try {
+      const normalizedEmail = email.trim().toLowerCase()
+
       if (girisTipi === 'bayi') {
-        // Bayi girişi: Bayii kodu ve email eşleştirmesi kontrolü
-        if (!bayiiKodu) {
+        const normalizedBayiiKodu = bayiiKodu.trim().toUpperCase()
+        if (!normalizedBayiiKodu) {
           throw new Error('Bayii kodu giriniz')
         }
 
-        // Bayii kodu ve email'in eşleşip eşleşmediğini kontrol et
+        const result = await signIn(normalizedEmail, password)
+        if (result.error) {
+          throw result.error
+        }
+
+        const userId = result.data.user?.id
+        if (!userId) {
+          throw new Error('Oturum başlatılamadı')
+        }
+
         const { data: bayiData, error: bayiError } = await supabase
           .from('bayiler')
           .select('*')
-          .eq('bayii_kodu', bayiiKodu.toUpperCase())
-          .eq('email', email.toLowerCase())
+          .eq('kullanici_id', userId)
+          .eq('bayii_kodu', normalizedBayiiKodu)
+          .eq('email', normalizedEmail)
           .maybeSingle()
 
         if (bayiError) {
-          console.error('Bayi sorgu hatası:', bayiError)
           throw new Error('Bayi bilgileri kontrol edilemedi')
         }
 
         if (!bayiData) {
+          await signOut()
           throw new Error('Bayii kodu veya email hatalı. Lütfen bilgilerinizi kontrol edin.')
         }
 
         if (!bayiData.aktif) {
-          throw new Error('Bayi hesabınız pasif durumda. Lütfen yönetici ile iletişime geçin.')
+          await signOut()
+          throw new Error('Bayi hesabı pasif durumda. Lütfen yönetici ile iletişime geçin.')
         }
 
-        // Şifre kontrolü: Bayii kodu + 2024! formatında olmalı
-        const beklenenSifre = bayiiKodu.toUpperCase() + '2024!'
-        if (password !== beklenenSifre) {
-          throw new Error('Şifre hatalı. Şifreniz: [Bayii Kodu]2024! formatında olmalıdır.')
-        }
-
-        // Bayi bilgilerini localStorage'a kaydet (geçici çözüm)
-        localStorage.setItem('bayiData', JSON.stringify({
-          id: bayiData.id,
-          bayii_kodu: bayiData.bayii_kodu,
-          bayi_adi: bayiData.bayi_adi,
-          email: bayiData.email,
-          yetkili_kisi: bayiData.yetkili_kisi,
-          loginTime: new Date().toISOString()
-        }))
-
-        // Başarılı bayi girişi
         toast.success(`Hoş geldiniz, ${bayiData.bayi_adi}`)
-        
-        // Bayi dashboard'a yönlendir
         navigate('/bayi-dashboard')
       } else {
-        // Müşteri girişi (normal)
-        const { error } = await signIn(email, password)
+        const { error } = await signIn(normalizedEmail, password)
         if (error) throw error
 
         const redirect = searchParams.get('redirect') || '/'
@@ -82,8 +75,7 @@ export default function Giris() {
       }
     } catch (err: any) {
       console.error('Giriş hatası:', err)
-      
-      // E-posta onaylanmamış hatası
+
       if (err.message && err.message.includes('Email not confirmed')) {
         setError('E-posta adresiniz henüz onaylanmamış. Lütfen e-postanızdaki doğrulama linkine tıklayın veya yönetici ile iletişime geçin.')
         toast.error('E-posta onayı gerekli')
@@ -108,7 +100,6 @@ export default function Giris() {
             <p className="text-gray-600 mt-2">Hesabınıza giriş yapın</p>
           </div>
 
-          {/* Giriş Tipi Toggle */}
           <div className="mb-6 bg-gray-100 p-1 rounded-lg flex">
             <button
               type="button"
@@ -144,33 +135,23 @@ export default function Giris() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {girisTipi === 'bayi' && (
-              <>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-blue-800 mb-2">
-                    <strong>Bayi Girişi:</strong> Bayii kodunuz ve kayıtlı email adresiniz ile giriş yapabilirsiniz.
-                  </p>
-                  <p className="text-xs text-blue-700">
-                    <strong>Şifre Formatı:</strong> [Bayii Kodu]2024! (Örn: BAY1234562024!)
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bayii Kodu *
-                  </label>
-                  <input
-                    type="text"
-                    value={bayiiKodu}
-                    onChange={(e) => setBayiiKodu(e.target.value.toUpperCase())}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono"
-                    placeholder="BAY123456"
-                    minLength={5}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Size atanan bayii kodunu girin
-                  </p>
-                </div>
-              </>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Bayii Kodu *
+                </label>
+                <input
+                  type="text"
+                  value={bayiiKodu}
+                  onChange={(e) => setBayiiKodu(e.target.value.toUpperCase())}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono"
+                  placeholder="BAY123456"
+                  minLength={5}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Size atanan bayii kodunu girin
+                </p>
+              </div>
             )}
 
             <div>
@@ -197,7 +178,7 @@ export default function Giris() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="••••••••"
+                placeholder="********"
               />
             </div>
 
