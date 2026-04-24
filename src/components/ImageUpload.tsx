@@ -138,30 +138,25 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
     setAddingFromUrl(true);
     try {
-      // Lokal upload server'a gönder
-      const response = await fetch('http://localhost:3001/upload-from-url', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          imageUrl: urlInput,
-          folder: bucketName
-        })
+      const { data, error } = await supabase.functions.invoke('image-storage-upload', {
+        body: {
+          imageUrl: urlInput.trim(),
+          bucketName
+        }
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Upload hatası');
+      if (error || data?.error) {
+        throw error || new Error(data.error.message || 'Upload hatasi');
       }
 
-      if (data.success && data.publicUrl) {
-        setPreviewUrls(prev => [...prev, data.publicUrl]);
+      const publicUrl = data?.data?.publicUrl;
+
+      if (data?.success && publicUrl) {
+        setPreviewUrls(prev => [...prev, publicUrl]);
         toast.success('Görsel başarıyla yüklendi');
         setUrlInput('');
       } else {
-        throw new Error('Upload başarısız: Geçersiz response');
+        throw new Error('Upload basarisiz: Gecersiz response');
       }
 
     } catch (error: any) {
@@ -215,33 +210,28 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           // Base64'e çevir
           const base64 = await fileToBase64(file);
           
-          // Lokal upload server'a gönder
-          const response = await fetch('http://localhost:3001/upload-base64', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+          const { data, error } = await supabase.functions.invoke('image-storage-upload', {
+            body: {
               imageData: base64,
-              folder: bucketName,
+              bucketName,
               fileName: `${Date.now()}_${file.name.replace(/\.[^/.]+$/, '')}`
-            })
+            }
           });
 
-          const data = await response.json();
-
-          if (!response.ok) {
-            console.error('Upload error:', data);
+          if (error || data?.error) {
+            console.error('Upload error:', error || data);
             toast.error(`${file.name} yüklenemedi`);
             continue;
           }
 
-          if (data.success && data.publicUrl) {
-            finalUrls.push(data.publicUrl);
+          const publicUrl = data?.data?.publicUrl;
+
+          if (data?.success && publicUrl) {
+            finalUrls.push(publicUrl);
             setUploadProgress(((i + 1) / filesToUploadCount) * 100);
           } else {
             console.error('Upload response error:', data);
-            toast.error(`${file.name} yüklenemedi: ${data.error || 'Geçersiz response'}`);
+            toast.error(`${file.name} yüklenemedi: ${data?.error?.message || 'Gecersiz response'}`);
           }
         }
       }

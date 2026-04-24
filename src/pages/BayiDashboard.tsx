@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -32,58 +32,31 @@ export default function BayiDashboard() {
     buAySatis: 0
   })
 
-  useEffect(() => {
-    // localStorage'dan bayi bilgilerini kontrol et
-    const bayiDataStr = localStorage.getItem('bayiData')
-    if (bayiDataStr) {
-      const bayiData = JSON.parse(bayiDataStr)
-      setBayi(bayiData)
-      loadBayiData()
-    } else if (!authLoading && !user) {
-      navigate('/giris')
-    } else if (user) {
-      loadBayiData()
+  const loadBayiData = useCallback(async () => {
+    if (!user) {
+      return
     }
-  }, [user, authLoading])
 
-  async function loadBayiData() {
     try {
       setLoading(true)
 
-      // localStorage'dan bayi bilgilerini al
-      const bayiDataStr = localStorage.getItem('bayiData')
-      if (bayiDataStr) {
-        const localBayiData = JSON.parse(bayiDataStr)
-        setBayi(localBayiData)
-        
-        // Satış verilerini çek (demo)
-        setSatislar([])
-        setStats({
-          toplamSatis: 0,
-          toplamUrun: 0,
-          buAySatis: 0
-        })
-        setLoading(false)
-        return
-      }
-
-      // Bayi bilgilerini çek (eski yöntem)
       const { data: bayiData, error: bayiError } = await supabase
         .from('bayiler')
         .select('*')
-        .eq('kullanici_id', user?.id)
+        .eq('kullanici_id', user.id)
         .maybeSingle()
 
       if (bayiError) throw bayiError
 
       if (!bayiData) {
         toast.error('Bayi bilgileri bulunamadı')
+        await signOut()
         navigate('/giris')
         return
       }
 
       if (!bayiData.aktif) {
-        toast.error('Bayi hesabınız pasif durumda')
+        toast.error('Bayi hesabı pasif durumda')
         await signOut()
         navigate('/giris')
         return
@@ -91,7 +64,6 @@ export default function BayiDashboard() {
 
       setBayi(bayiData)
 
-      // Satış verilerini çek
       const { data: satisData, error: satisError } = await supabase
         .from('bayi_satislari')
         .select('*')
@@ -103,15 +75,14 @@ export default function BayiDashboard() {
 
       setSatislar(satisData || [])
 
-      // İstatistikleri hesapla
       if (satisData && satisData.length > 0) {
         const toplamSatis = satisData.reduce((sum, s) => sum + Number(s.toplam_tutar), 0)
         const toplamUrun = satisData.reduce((sum, s) => sum + s.urun_adedi, 0)
-        
+
         const buAyBaslangic = new Date()
         buAyBaslangic.setDate(1)
         buAyBaslangic.setHours(0, 0, 0, 0)
-        
+
         const buAySatis = satisData
           .filter(s => new Date(s.satis_tarihi) >= buAyBaslangic)
           .reduce((sum, s) => sum + Number(s.toplam_tutar), 0)
@@ -121,6 +92,12 @@ export default function BayiDashboard() {
           toplamUrun,
           buAySatis
         })
+      } else {
+        setStats({
+          toplamSatis: 0,
+          toplamUrun: 0,
+          buAySatis: 0
+        })
       }
     } catch (error: any) {
       console.error('Bayi verileri yükleme hatası:', error)
@@ -128,24 +105,26 @@ export default function BayiDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [navigate, signOut, user])
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/giris')
+      return
+    }
+
+    if (user) {
+      loadBayiData()
+    }
+  }, [authLoading, loadBayiData, navigate, user])
 
   async function handleSignOut() {
     try {
-      // localStorage'dan bayi bilgilerini temizle
-      localStorage.removeItem('bayiData')
-      
-      // Eğer user varsa signOut yap
-      if (user) {
-        await signOut()
-      }
-      
+      await signOut()
       toast.success('Çıkış yapıldı')
       navigate('/giris')
     } catch (error) {
       console.error('Çıkış hatası:', error)
-      // Hata olsa bile çıkış yap
-      localStorage.removeItem('bayiData')
       navigate('/giris')
     }
   }
@@ -164,7 +143,6 @@ export default function BayiDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white shadow">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -188,9 +166,7 @@ export default function BayiDashboard() {
         </div>
       </div>
 
-      {/* Content */}
       <div className="container mx-auto px-4 py-8">
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
@@ -223,7 +199,6 @@ export default function BayiDashboard() {
           </div>
         </div>
 
-        {/* Recent Sales */}
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-900">Son Satışlar</h2>
@@ -274,7 +249,6 @@ export default function BayiDashboard() {
           )}
         </div>
 
-        {/* Contact Info */}
         <div className="mt-8 bg-blue-50 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-blue-900 mb-2">İletişim Bilgileri</h3>
           <div className="space-y-1 text-blue-800">
