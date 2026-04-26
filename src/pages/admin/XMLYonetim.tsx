@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { FileCode, RefreshCw, Download, Copy, Check, Key, Eye, EyeOff, Package, CheckCircle, XCircle, AlertTriangle, Activity } from 'lucide-react'
+import { FileCode, RefreshCw, Download, Copy, Check, Key, Eye, EyeOff, Package, CheckCircle, XCircle, AlertTriangle, Activity, UploadCloud } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { generateXMLContent, downloadXML, generateSecureToken, copyToClipboard, XMLProduct } from '../../utils/xmlGenerator'
 
@@ -31,6 +31,29 @@ interface XMLError {
     type: 'error' | 'warning'
 }
 
+interface XMLImportResult {
+    dryRun?: boolean
+    sourceUrl?: string
+    totalInXml?: number
+    parsed?: number
+    createdProducts?: number
+    updatedProducts?: number
+    createdCategories?: number
+    createdBrands?: number
+    updatedStocks?: number
+    insertedImages?: number
+    skipped?: number
+    sample?: Array<{
+        productCode: string
+        name: string
+        mainCategory: string
+        category: string
+        price: number
+        stock: number
+        brand: string
+    }>
+}
+
 export default function XMLYonetim() {
     const [loading, setLoading] = useState(true)
     const [generating, setGenerating] = useState(false)
@@ -46,6 +69,9 @@ export default function XMLYonetim() {
         warnings: []
     })
     const [checking, setChecking] = useState(false)
+    const [importUrl, setImportUrl] = useState('http://panel.efsanebaharat.com/urunler.xml')
+    const [importing, setImporting] = useState(false)
+    const [importResult, setImportResult] = useState<XMLImportResult | null>(null)
 
     useEffect(() => {
         loadData()
@@ -301,6 +327,38 @@ export default function XMLYonetim() {
         }
     }
 
+    async function handleImportXML(dryRun = false) {
+        setImporting(true)
+        setImportResult(null)
+
+        try {
+            const { data, error } = await supabase.functions.invoke('xml-product-import', {
+                body: {
+                    xmlUrl: importUrl,
+                    dryRun
+                }
+            })
+
+            if (error) throw error
+
+            setImportResult(data)
+
+            if (dryRun) {
+                toast.success(`XML okundu: ${data?.parsed || 0} ürün bulundu`)
+            } else {
+                toast.success(`XML içe aktarıldı: ${data?.createdProducts || 0} yeni, ${data?.updatedProducts || 0} güncel ürün`)
+                await loadData()
+            }
+        } catch (error: any) {
+            console.error('XML içe aktarma hatası:', error)
+            const message = error?.context?.error?.message || error?.message || 'XML içe aktarılırken hata oluştu'
+            toast.error(message)
+            addError('XML içe aktarma hatası: ' + message, 'error')
+        }
+
+        setImporting(false)
+    }
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
@@ -323,6 +381,109 @@ export default function XMLYonetim() {
                     <RefreshCw className="w-4 h-4" />
                     Yenile
                 </button>
+            </div>
+
+            {/* XML İçe Aktarma */}
+            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <UploadCloud className="w-5 h-5 text-orange-600" />
+                            XML İçe Aktarma
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Ürünler, kategoriler, markalar, stoklar ve görseller panel XML yapısına göre güncellenir.
+                        </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                        <button
+                            onClick={() => handleImportXML(true)}
+                            disabled={importing}
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
+                        >
+                            {importing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
+                            Önizle
+                        </button>
+                        <button
+                            onClick={() => handleImportXML(false)}
+                            disabled={importing}
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50"
+                        >
+                            {importing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+                            İçe Aktar
+                        </button>
+                    </div>
+                </div>
+
+                <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        XML Kaynağı
+                    </label>
+                    <input
+                        type="url"
+                        value={importUrl}
+                        onChange={(e) => setImportUrl(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    />
+                </div>
+
+                {importResult && (
+                    <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                            <div>
+                                <p className="text-xs text-gray-500">Okunan</p>
+                                <p className="text-lg font-semibold text-gray-900">{importResult.parsed || 0}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500">Yeni Ürün</p>
+                                <p className="text-lg font-semibold text-green-700">{importResult.createdProducts || 0}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500">Güncellenen</p>
+                                <p className="text-lg font-semibold text-blue-700">{importResult.updatedProducts || 0}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500">Kategori</p>
+                                <p className="text-lg font-semibold text-gray-900">{importResult.createdCategories || 0}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500">Marka</p>
+                                <p className="text-lg font-semibold text-gray-900">{importResult.createdBrands || 0}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500">Görsel</p>
+                                <p className="text-lg font-semibold text-gray-900">{importResult.insertedImages || 0}</p>
+                            </div>
+                        </div>
+
+                        {importResult.sample && importResult.sample.length > 0 && (
+                            <div className="mt-4 overflow-x-auto">
+                                <table className="w-full min-w-[640px] text-sm">
+                                    <thead>
+                                        <tr className="text-left text-xs uppercase text-gray-500">
+                                            <th className="py-2 pr-3">Kod</th>
+                                            <th className="py-2 pr-3">Ürün</th>
+                                            <th className="py-2 pr-3">Kategori</th>
+                                            <th className="py-2 pr-3">Fiyat</th>
+                                            <th className="py-2 pr-3">Stok</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200">
+                                        {importResult.sample.map((item) => (
+                                            <tr key={item.productCode}>
+                                                <td className="py-2 pr-3 font-mono text-xs">{item.productCode}</td>
+                                                <td className="py-2 pr-3">{item.name}</td>
+                                                <td className="py-2 pr-3">{item.category || item.mainCategory}</td>
+                                                <td className="py-2 pr-3">{item.price.toFixed(2)} ₺</td>
+                                                <td className="py-2 pr-3">{item.stock}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Sistem Durum Kontrol Paneli */}
