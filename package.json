@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm install --prefer-offline && vite",
+    "dev:functions": "npx -y supabase@latest functions serve --workdir .. --env-file ../supabase/.env.local",
+    "dev:local": "concurrently \"npm run dev:functions\" \"npm run dev\"",
     "upload-server": "node upload-server.cjs",
     "dev:full": "concurrently \"npm run upload-server\" \"npm run dev\"",
     "build": "pnpm install --prefer-offline && rm -rf node_modules/.vite-temp && tsc -b && vite build",
