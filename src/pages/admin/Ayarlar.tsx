@@ -8,8 +8,12 @@ import toast from 'react-hot-toast'
 import { Save, RefreshCw, Upload, Shield, Palette, UserPlus } from 'lucide-react'
 
 // Supabase config for temporary client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://uvagzvevktzzfrzkvtsd.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2YWd6dmV2a3R6emZyemt2dHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyNzA1NDMsImV4cCI6MjA3Nzg0NjU0M30.ENrSW4rJmbwEWi6eSynCuXv8CdC9JroK-fpiIiVYwP0'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY tanimli olmali')
+}
 
 export default function Ayarlar() {
     const { theme, logo, updateTheme, updateLogo } = useTheme()

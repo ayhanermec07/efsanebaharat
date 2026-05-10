@@ -70,6 +70,7 @@ export default function XMLYonetim() {
     })
     const [checking, setChecking] = useState(false)
     const [importUrl, setImportUrl] = useState('http://panel.efsanebaharat.com/urunler.xml')
+    const [importAllowedHosts, setImportAllowedHosts] = useState('panel.efsanebaharat.com')
     const [importing, setImporting] = useState(false)
     const [importResult, setImportResult] = useState<XMLImportResult | null>(null)
 
@@ -89,6 +90,12 @@ export default function XMLYonetim() {
                 .maybeSingle()
 
             setXmlSettings(settings)
+            if (settings?.import_url) {
+                setImportUrl(settings.import_url)
+            }
+            if (Array.isArray(settings?.import_allowed_hosts)) {
+                setImportAllowedHosts(settings.import_allowed_hosts.join(', '))
+            }
 
             // XML'e seçili ürünleri çek
             const { data: stoklar } = await supabase
@@ -281,6 +288,125 @@ export default function XMLYonetim() {
         toast.success('XML dosyası indirildi!')
     }
 
+    function getFeedUrl() {
+        const baseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+        const token = encodeURIComponent(xmlSettings?.xml_token || '')
+        return `${baseUrl.replace(/\/$/, '')}/functions/v1/bayi-xml-feed?token=${token}`
+    }
+
+    async function handleGenerateFeedXML() {
+        if (selectedProducts.length === 0) {
+            toast.error('XML\'e gÃ¶nderilecek sorti seÃ§ilmemiÅŸ!')
+            return
+        }
+
+        if (!xmlSettings?.xml_token) {
+            toast.error('Ã–nce XML eriÅŸim token\'Ä± oluÅŸturun')
+            return
+        }
+
+        setGenerating(true)
+        try {
+            const response = await fetch(getFeedUrl())
+            if (!response.ok) {
+                throw new Error('XML feed oluÅŸturulamadÄ±')
+            }
+
+            const xmlContent = await response.text()
+            setLastGeneratedXML(xmlContent)
+
+            await supabase
+                .from('bayi_xml_settings')
+                .update({ last_updated_at: new Date().toISOString() })
+                .eq('id', xmlSettings.id)
+
+            setXmlSettings({ ...xmlSettings, last_updated_at: new Date().toISOString() })
+            toast.success(`XML feed baÅŸarÄ±yla hazÄ±rlandÄ±! (${selectedProducts.length} sorti)`)
+        } catch (error: any) {
+            console.error('XML feed oluÅŸturma hatasÄ±:', error)
+            toast.error(error.message || 'XML feed oluÅŸturulurken hata oluÅŸtu')
+        } finally {
+            setGenerating(false)
+        }
+    }
+
+    function handleOpenFeedXML() {
+        if (!xmlSettings?.xml_token) {
+            toast.error('Ã–nce XML eriÅŸim token\'Ä± oluÅŸturun')
+            return
+        }
+
+        window.open(getFeedUrl(), '_blank', 'noopener,noreferrer')
+    }
+
+    async function handleCopyFeedUrl() {
+        if (!xmlSettings?.xml_token) {
+            toast.error('Ã–nce XML eriÅŸim token\'Ä± oluÅŸturun')
+            return
+        }
+
+        const success = await copyToClipboard(getFeedUrl())
+        if (success) {
+            toast.success('XML feed linki kopyalandÄ±')
+        }
+    }
+
+    async function handleSaveImportSettings() {
+        const hosts = importAllowedHosts
+            .split(',')
+            .map(host => host.trim().toLowerCase())
+            .filter(Boolean)
+
+        if (!importUrl.trim()) {
+            toast.error('XML kaynaÄŸÄ± boÅŸ olamaz')
+            return
+        }
+
+        if (hosts.length === 0) {
+            toast.error('En az bir izinli host girin')
+            return
+        }
+
+        try {
+            if (xmlSettings?.id) {
+                const { data, error } = await supabase
+                    .from('bayi_xml_settings')
+                    .update({
+                        import_url: importUrl.trim(),
+                        import_allowed_hosts: hosts,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', xmlSettings.id)
+                    .select()
+                    .maybeSingle()
+
+                if (error) throw error
+                if (data) setXmlSettings(data)
+            } else {
+                const newToken = generateSecureToken()
+                const { data, error } = await supabase
+                    .from('bayi_xml_settings')
+                    .insert({
+                        xml_token: newToken,
+                        import_url: importUrl.trim(),
+                        import_allowed_hosts: hosts,
+                        auto_update_enabled: false,
+                        update_interval_minutes: 15
+                    })
+                    .select()
+                    .maybeSingle()
+
+                if (error) throw error
+                if (data) setXmlSettings(data)
+            }
+
+            toast.success('XML ayarlarÄ± kaydedildi')
+        } catch (error: any) {
+            console.error('XML ayarlarÄ± kaydedilemedi:', error)
+            toast.error(error.message || 'XML ayarlarÄ± kaydedilemedi')
+        }
+    }
+
     async function handleGenerateNewToken() {
         if (!confirm('Yeni token oluşturulacak. Mevcut erişimler geçersiz olacak. Devam edilsin mi?')) {
             return
@@ -301,7 +427,13 @@ export default function XMLYonetim() {
                 // İlk token
                 const { data } = await supabase
                     .from('bayi_xml_settings')
-                    .insert({ xml_token: newToken, auto_update_enabled: false, update_interval_minutes: 15 })
+                    .insert({
+                        xml_token: newToken,
+                        auto_update_enabled: false,
+                        update_interval_minutes: 15,
+                        import_url: importUrl.trim(),
+                        import_allowed_hosts: importAllowedHosts.split(',').map(host => host.trim().toLowerCase()).filter(Boolean)
+                    })
                     .select()
                     .maybeSingle()
 
@@ -425,6 +557,31 @@ export default function XMLYonetim() {
                         onChange={(e) => setImportUrl(e.target.value)}
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
                     />
+                </div>
+
+                <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Izinli XML Hostlari
+                    </label>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                        <input
+                            type="text"
+                            value={importAllowedHosts}
+                            onChange={(e) => setImportAllowedHosts(e.target.value)}
+                            placeholder="panel.efsanebaharat.com, tedarikci.example.com"
+                            className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                        />
+                        <button
+                            type="button"
+                            onClick={handleSaveImportSettings}
+                            className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
+                        >
+                            Ayarlari Kaydet
+                        </button>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                        Duzenli XML importu icin kaynak domain burada izinli olmalidir.
+                    </p>
                 </div>
 
                 {importResult && (
@@ -714,7 +871,7 @@ export default function XMLYonetim() {
 
                 <div className="flex gap-4">
                     <button
-                        onClick={handleGenerateXML}
+                        onClick={handleGenerateFeedXML}
                         disabled={generating || selectedProducts.length === 0}
                         className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -727,8 +884,8 @@ export default function XMLYonetim() {
                     </button>
 
                     <button
-                        onClick={handleDownloadXML}
-                        disabled={!lastGeneratedXML}
+                        onClick={handleOpenFeedXML}
+                        disabled={!xmlSettings?.xml_token}
                         className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Download className="w-5 h-5" />
