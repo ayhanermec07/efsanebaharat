@@ -188,19 +188,12 @@ export default function AdminKargo() {
 
       // Email bildirim gönder (Edge Function)
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-
-        const response = await fetch('https://uvagzvevktzzfrzkvtsd.supabase.co/functions/v1/kargo-bildirim', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token}`
-          },
-          body: JSON.stringify({ orderId: kargoModal.id })
+        const { error: emailError } = await supabase.functions.invoke('kargo-bildirim', {
+          body: { orderId: kargoModal.id }
         })
 
-        if (!response.ok) {
-          console.warn('Email gönderilemedi')
+        if (emailError) {
+          console.warn('Email gönderilemedi:', emailError)
         }
       } catch (emailError) {
         console.warn('Email gönderimi başarısız:', emailError)
