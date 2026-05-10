@@ -339,17 +339,15 @@ export default function Dashboard() {
             </div>
             {dashboardData?.enCokSatanlar && dashboardData.enCokSatanlar.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                {/* @ts-ignore */}
                 <BarChart data={dashboardData.enCokSatanlar} layout="vertical">
-                  {/* @ts-ignore */}
                   <CartesianGrid strokeDasharray="3 3" />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <XAxis type="number" />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <YAxis dataKey="urun_adi" type="category" width={120} />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <Tooltip />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <Bar dataKey="toplam_satis" fill="#3B82F6" name="Satış Adedi" />
                 </BarChart>
               </ResponsiveContainer>
@@ -367,17 +365,15 @@ export default function Dashboard() {
             </div>
             {dashboardData?.enCokZiyaretEdilen && dashboardData.enCokZiyaretEdilen.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                {/* @ts-ignore */}
                 <BarChart data={dashboardData.enCokZiyaretEdilen}>
-                  {/* @ts-ignore */}
                   <CartesianGrid strokeDasharray="3 3" />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <XAxis dataKey="urun_adi" angle={-45} textAnchor="end" height={100} />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <YAxis />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <Tooltip />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <Bar dataKey="ziyaret_sayisi" fill="#F59E0B" name="Ziyaret" />
                 </BarChart>
               </ResponsiveContainer>
@@ -428,19 +424,17 @@ export default function Dashboard() {
             </div>
             {dashboardData?.gunlukSatislar && dashboardData.gunlukSatislar.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                {/* @ts-ignore */}
                 <LineChart data={dashboardData.gunlukSatislar}>
-                  {/* @ts-ignore */}
                   <CartesianGrid strokeDasharray="3 3" />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <XAxis dataKey="tarih" />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <YAxis />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <Tooltip formatter={(value) => `${value} TL`} />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <Legend />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <Line type="monotone" dataKey="tutar" stroke="#10B981" strokeWidth={2} name="Satış (TL)" dot={{ fill: '#10B981' }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -458,19 +452,17 @@ export default function Dashboard() {
             </div>
             {dashboardData?.aylikSatislar && dashboardData.aylikSatislar.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                {/* @ts-ignore */}
                 <BarChart data={dashboardData.aylikSatislar}>
-                  {/* @ts-ignore */}
                   <CartesianGrid strokeDasharray="3 3" />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <XAxis dataKey="ay" />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <YAxis />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <Tooltip formatter={(value) => `${value} TL`} />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <Legend />
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error recharts jsx typing */}
                   <Bar dataKey="tutar" fill="#10B981" name="Aylık Satış (TL)" />
                 </BarChart>
               </ResponsiveContainer>

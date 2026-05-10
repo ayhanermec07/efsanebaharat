@@ -140,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       let grupIskonto = 0
-      let ozelIskonto = musteri.ozel_iskonto_orani || 0
+      const ozelIskonto = musteri.ozel_iskonto_orani || 0
 
       // Grup iskontosunu al
       if (musteri.fiyat_grubu_id) {

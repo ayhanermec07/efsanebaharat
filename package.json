@@ -9,12 +9,12 @@
     "dev:local": "concurrently \"npm run dev:functions\" \"npm run dev\"",
     "upload-server": "node upload-server.cjs",
     "dev:full": "concurrently \"npm run upload-server\" \"npm run dev\"",
-    "build": "pnpm install --prefer-offline && rm -rf node_modules/.vite-temp && tsc -b && vite build",
-    "build:prod": "pnpm install --prefer-offline && rm -rf node_modules/.vite-temp && tsc -b && BUILD_MODE=prod vite build",
+    "build": "pnpm install --prefer-offline && node -e \"require('fs').rmSync('node_modules/.vite-temp',{recursive:true,force:true})\" && tsc -b && vite build",
+    "build:prod": "pnpm install --prefer-offline && node -e \"require('fs').rmSync('node_modules/.vite-temp',{recursive:true,force:true})\" && tsc -b && vite build --mode production",
     "lint": "pnpm install --prefer-offline && eslint .",
     "preview": "pnpm install --prefer-offline && vite preview",
     "install-deps": "pnpm install --prefer-offline",
-    "clean": "rm -rf node_modules .pnpm-store pnpm-lock.yaml && pnpm store prune"
+    "clean": "node -e \"const fs=require('fs'); ['node_modules','.pnpm-store','pnpm-lock.yaml'].forEach(p=>fs.rmSync(p,{recursive:true,force:true}))\" && pnpm store prune"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { ChevronLeft, ChevronRight, ShoppingBag, TruckIcon, Shield } from 'lucide-react'
@@ -25,7 +26,7 @@ export default function AnaSayfa() {
   useEffect(() => {
     if (hasLoadedRef.current) return
 
-    async function loadUrunlerByIds(urunIds: string[], setter: Function) {
+    async function loadUrunlerByIds(urunIds: string[], setter: Dispatch<SetStateAction<any[]>>) {
       const { data: urunData } = await supabase
         .from('urunler')
         .select('*')
@@ -437,4 +438,3 @@ export default function AnaSayfa() {
     </div>
   )
 }
-
