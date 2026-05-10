@@ -1,17 +1,7 @@
-import { useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { CheckCircle } from 'lucide-react'
-import { useSepet } from '../contexts/SepetContext'
 
 export default function OdemeBasarili() {
-  const { sepetiTemizle } = useSepet()
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    // Sepeti temizle
-    sepetiTemizle()
-  }, [])
-
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm p-8 text-center">

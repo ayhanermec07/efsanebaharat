@@ -464,21 +464,67 @@ export default function XMLYonetim() {
         setImportResult(null)
 
         try {
-            const { data, error } = await supabase.functions.invoke('xml-product-import', {
-                body: {
-                    xmlUrl: importUrl,
-                    dryRun
-                }
-            })
-
-            if (error) throw error
-
-            setImportResult(data)
-
             if (dryRun) {
-                toast.success(`XML okundu: ${data?.parsed || 0} ürün bulundu`)
+                const { data, error } = await supabase.functions.invoke('xml-product-import', {
+                    body: {
+                        xmlUrl: importUrl,
+                        dryRun: true,
+                        limit: 5
+                    }
+                })
+
+                if (error) throw error
+
+                setImportResult(data)
+                toast.success(`XML okundu: ${data?.totalInXml || data?.parsed || 0} ürün bulundu`)
             } else {
-                toast.success(`XML içe aktarıldı: ${data?.createdProducts || 0} yeni, ${data?.updatedProducts || 0} güncel ürün`)
+                const batchSize = 75
+                let offset = 0
+                let totalInXml: number | null = null
+                const aggregate = {
+                    sourceUrl: importUrl,
+                    importedAt: new Date().toISOString(),
+                    totalInXml: 0,
+                    parsed: 0,
+                    createdProducts: 0,
+                    updatedProducts: 0,
+                    createdCategories: 0,
+                    createdBrands: 0,
+                    updatedStocks: 0,
+                    insertedImages: 0,
+                    skipped: 0,
+                }
+
+                while (totalInXml === null || offset < totalInXml) {
+                    const { data, error } = await supabase.functions.invoke('xml-product-import', {
+                        body: {
+                            xmlUrl: importUrl,
+                            dryRun: false,
+                            limit: batchSize,
+                            offset
+                        }
+                    })
+
+                    if (error) throw error
+                    if (!data || data.parsed === 0) break
+
+                    totalInXml = Number(data.totalInXml || 0)
+                    aggregate.totalInXml = totalInXml
+                    aggregate.parsed += Number(data.parsed || 0)
+                    aggregate.createdProducts += Number(data.createdProducts || 0)
+                    aggregate.updatedProducts += Number(data.updatedProducts || 0)
+                    aggregate.createdCategories += Number(data.createdCategories || 0)
+                    aggregate.createdBrands += Number(data.createdBrands || 0)
+                    aggregate.updatedStocks += Number(data.updatedStocks || 0)
+                    aggregate.insertedImages += Number(data.insertedImages || 0)
+                    aggregate.skipped += Number(data.skipped || 0)
+
+                    offset += Number(data.parsed || batchSize)
+                    toast.success(`XML aktarılıyor: ${Math.min(offset, totalInXml)} / ${totalInXml}`)
+                }
+
+                setImportResult(aggregate)
+                toast.success(`XML içe aktarıldı: ${aggregate.createdProducts} yeni, ${aggregate.updatedProducts} güncel ürün`)
                 await loadData()
             }
         } catch (error: any) {

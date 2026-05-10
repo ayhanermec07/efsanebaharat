@@ -122,14 +122,20 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
   }, [sepetItems, user])
 
   // Stok kontrolü ve rezervasyon
-  const stokKontrolVeRezerve = async (urun_id: string, birim_turu: string, miktar: number) => {
+  const stokKontrolVeRezerve = async (
+    urun_id: string,
+    birim_turu: string,
+    miktar: number,
+    birim_adedi?: number,
+    birim_adedi_turu?: string
+  ) => {
     if (!musteriData) return { success: false, message: 'Giriş yapmalısınız' }
 
     try {
       // İlgili ürün ve birim türüne ait tüm stokları çek
       const { data: stoklar, error: stokError } = await supabase
         .from('urun_stoklari')
-        .select('stok_miktari, aktif_durum, stok_grubu')
+        .select('stok_miktari, aktif_durum, stok_grubu, birim_adedi, birim_adedi_turu')
         .eq('urun_id', urun_id)
         .eq('birim_turu', birim_turu)
 
@@ -139,14 +145,20 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
 
       // Kullanıcının tipine uygun stoku bul
       const musteriTipi = musteriData.musteri_tipi || 'musteri'
+      const hedefBirimAdedi = Number(birim_adedi || 100)
+      const hedefBirimAdediTuru = birim_adedi_turu || birim_turu
+      const uygunStoklar = stoklar.filter(s =>
+        Number(s.birim_adedi || 100) === hedefBirimAdedi &&
+        (s.birim_adedi_turu || birim_turu) === hedefBirimAdediTuru
+      )
 
       // Öncelik sırası:
       // 1. Tam eşleşen stok grubu (örn: 'bayi' ise 'bayi')
       // 2. 'hepsi' olan stok grubu
       // 3. Stok grubu belirtilmemiş olanlar (null/boş)
-      const stokData = stoklar.find(s => s.stok_grubu === musteriTipi) ||
-        stoklar.find(s => s.stok_grubu === 'hepsi') ||
-        stoklar.find(s => !s.stok_grubu)
+      const stokData = uygunStoklar.find(s => s.stok_grubu === musteriTipi) ||
+        uygunStoklar.find(s => s.stok_grubu === 'hepsi') ||
+        uygunStoklar.find(s => !s.stok_grubu)
 
       if (!stokData) {
         return { success: false, message: 'Size uygun stok bulunamadı' }
@@ -163,6 +175,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
         .select('miktar')
         .eq('urun_id', urun_id)
         .eq('birim_turu', birim_turu)
+        .eq('birim_adedi', hedefBirimAdedi)
         .gt('rezervasyon_tarihi', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
 
       const rezerveMiktar = rezervasyonlar?.reduce((sum, r) => sum + Number(r.miktar), 0) || 0
@@ -175,6 +188,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
         .eq('musteri_id', musteriData.id)
         .eq('urun_id', urun_id)
         .eq('birim_turu', birim_turu)
+        .eq('birim_adedi', hedefBirimAdedi)
         .maybeSingle()
 
       const mevcutMiktar = mevcutRezervasyon?.miktar || 0
@@ -199,6 +213,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
           .eq('musteri_id', musteriData.id)
           .eq('urun_id', urun_id)
           .eq('birim_turu', birim_turu)
+          .eq('birim_adedi', hedefBirimAdedi)
       } else {
         // Yeni rezervasyon oluştur
         await supabase
@@ -207,6 +222,8 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
             musteri_id: musteriData.id,
             urun_id: urun_id,
             birim_turu: birim_turu,
+            birim_adedi: hedefBirimAdedi,
+            birim_adedi_turu: hedefBirimAdediTuru,
             miktar: miktar
           })
       }
@@ -219,7 +236,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Rezervasyonu kaldır
-  const rezervasyonKaldir = async (urun_id: string, birim_turu: string) => {
+  const rezervasyonKaldir = async (urun_id: string, birim_turu: string, birim_adedi?: number) => {
     if (!musteriData) return
 
     try {
@@ -229,6 +246,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
         .eq('musteri_id', musteriData.id)
         .eq('urun_id', urun_id)
         .eq('birim_turu', birim_turu)
+        .eq('birim_adedi', Number(birim_adedi || 100))
     } catch (error) {
       console.error('Rezervasyon kaldırma hatası:', error)
     }
@@ -239,17 +257,6 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
     if (!musteriData) return
 
     try {
-      // Önce stok kontrolü ve rezervasyon yap
-      const rezervasyonSonuc = await stokKontrolVeRezerve(
-        item.urun_id,
-        item.birim_turu,
-        item.miktar
-      )
-
-      if (!rezervasyonSonuc.success) {
-        throw new Error(rezervasyonSonuc.message)
-      }
-
       const { data: existing } = await supabase
         .from('sepet_items')
         .select('*')
@@ -259,11 +266,24 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
         .eq('birim_adedi', item.birim_adedi || 100) // Default to 100 if null/undefined
         .maybeSingle()
 
+      const hedefMiktar = Number(existing?.miktar || 0) + Number(item.miktar)
+      const rezervasyonSonuc = await stokKontrolVeRezerve(
+        item.urun_id,
+        item.birim_turu,
+        hedefMiktar,
+        item.birim_adedi,
+        item.birim_adedi_turu
+      )
+
+      if (!rezervasyonSonuc.success) {
+        throw new Error(rezervasyonSonuc.message)
+      }
+
       if (existing) {
         // Mevcut ürün - miktarı artır
         await supabase
           .from('sepet_items')
-          .update({ miktar: Number(existing.miktar) + Number(item.miktar) })
+          .update({ miktar: hedefMiktar })
           .eq('id', existing.id)
       } else {
         // Yeni ürün - ekle
@@ -306,7 +326,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
       // Giriş yapmış kullanıcı - veritabanından sil
       try {
         // Rezervasyonu kaldır
-        await rezervasyonKaldir(urun_id, birim_turu)
+        await rezervasyonKaldir(urun_id, birim_turu, birim_adedi)
 
         // Let's rewrite the query construction properly
         let query = supabase
@@ -341,7 +361,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
       // Giriş yapmış kullanıcı - veritabanında güncelle
       try {
         // Önce stok kontrolü ve rezervasyon güncelle
-        const rezervasyonSonuc = await stokKontrolVeRezerve(urun_id, birim_turu, miktar)
+        const rezervasyonSonuc = await stokKontrolVeRezerve(urun_id, birim_turu, miktar, birim_adedi)
 
         if (!rezervasyonSonuc.success) {
           toast.error(rezervasyonSonuc.message)

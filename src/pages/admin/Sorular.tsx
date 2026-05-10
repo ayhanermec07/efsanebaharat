@@ -77,8 +77,15 @@ export default function AdminSorular() {
         // Şimdilik kullanıcı bilgilerini musteriler tablosundan alalım
         const { data: musterilerData } = await supabase
           .from('musteriler')
-          .select('id')
-          .in('id', kullaniciIds)
+          .select('user_id, email, ad, soyad')
+          .in('user_id', kullaniciIds)
+        const musteriMap = new Map((musterilerData || []).map((musteri: any) => [
+          musteri.user_id,
+          {
+            email: musteri.email || 'Email Görünmüyor',
+            adSoyad: `${musteri.ad || ''} ${musteri.soyad || ''}`.trim()
+          }
+        ]))
 
         // Ürün adlarını al (ürün soruları için)
         let urunler: any[] = []
@@ -95,8 +102,7 @@ export default function AdminSorular() {
 
         const sorularWithDetails = data.map(soru => ({
           ...soru,
-          // Email bilgisi şu an veritabanında yok
-          kullanici_email: 'Email Görünmüyor',
+          kullanici_email: musteriMap.get(soru.kullanici_id)?.email || 'Email Görünmüyor',
           urun_adi: urunler.find(u => u.id === soru.urun_id)?.urun_adi
         }))
 
@@ -142,16 +148,13 @@ export default function AdminSorular() {
 
       // Email bildirimi gönder (Edge Function)
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-
-        await fetch('https://uvagzvevktzzfrzkvtsd.supabase.co/functions/v1/soru-cevap-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token}`
-          },
-          body: JSON.stringify({ soruId: cevapModal.id })
+        const { error: emailError } = await supabase.functions.invoke('soru-cevap-email', {
+          body: { soruId: cevapModal.id }
         })
+
+        if (emailError) {
+          console.warn('Email gönderilemedi:', emailError)
+        }
 
         // Email gönderimi başarısız olsa bile devam et
       } catch (emailError) {
