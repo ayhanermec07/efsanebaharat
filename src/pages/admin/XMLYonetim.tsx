@@ -724,28 +724,13 @@ export default function XMLYonetim() {
                 </div>
 
                 <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Izinli XML Hostlari
-                    </label>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                        <input
-                            type="text"
-                            value={importAllowedHosts}
-                            onChange={(e) => setImportAllowedHosts(e.target.value)}
-                            placeholder="panel.efsanebaharat.com, tedarikci.example.com"
-                            className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
-                        />
-                        <button
-                            type="button"
-                            onClick={handleSaveImportSettings}
-                            className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
-                        >
-                            Kaynağı Kaydet
-                        </button>
-                    </div>
-                    <p className="mt-1 text-xs text-gray-500">
-                        Düzenli XML içe aktarması için kaynak domain burada izinli olmalıdır.
-                    </p>
+                    <button
+                        type="button"
+                        onClick={handleSaveImportSettings}
+                        className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
+                    >
+                        Kaynağı Kaydet
+                    </button>
                 </div>
 
                 <div className="mt-4 max-w-xs">
@@ -967,109 +952,36 @@ export default function XMLYonetim() {
                 )}
             </div>
 
-            {/* XML artık doğrudan bayi.xml adresinden yayınlanır; erişim token'ı arayüzde kullanılmaz. */}
-            {false && <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            {/* XML Dışa Aktarma Bağlantısı */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Key className="w-5 h-5 text-orange-600" />
-                    Erişim Token'ı
+                    <Download className="w-5 h-5 text-orange-600" />
+                    XML Dışa Aktarma Linki
                 </h2>
+                
+                <p className="text-sm text-gray-600 mb-4">
+                    Seçili ürünler (toplam {selectedProducts.length} adet) herhangi bir kısıtlama veya token olmadan doğrudan aşağıdaki bağlantıdan çekilebilir. Bu bağlantıyı bayilerinizle veya pazaryerleriyle paylaşabilirsiniz.
+                </p>
 
-                {xmlSettings?.xml_token ? (
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex-1 bg-gray-100 rounded-lg px-4 py-3 font-mono text-sm">
-                                {showToken ? xmlSettings.xml_token : '••••••••••••••••••••••••••••••••'}
-                            </div>
-                            <button
-                                onClick={() => setShowToken(!showToken)}
-                                className="p-2 text-gray-500 hover:text-gray-700 transition"
-                                title={showToken ? 'Gizle' : 'Göster'}
-                            >
-                                {showToken ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                            </button>
-                            <button
-                                onClick={handleCopyToken}
-                                className="p-2 text-gray-500 hover:text-gray-700 transition"
-                                title="Kopyala"
-                            >
-                                {copied ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
-                            </button>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={handleGenerateNewToken}
-                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm"
-                            >
-                                Yeni Token Oluştur
-                            </button>
-                            <p className="text-sm text-gray-500">
-                                Bu token ile bayiler XML'e erişebilir
-                            </p>
-                        </div>
+                <div className="flex items-center gap-3">
+                    <div className="flex-1 bg-gray-100 rounded-lg px-4 py-3 font-mono text-sm text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap border border-gray-200" title={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bayi-xml-feed`}>
+                        {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bayi-xml-feed`}
                     </div>
-                ) : (
-                    <div className="text-center py-6">
-                        <p className="text-gray-500 mb-4">Henüz erişim token'ı oluşturulmamış</p>
-                        <button
-                            onClick={handleGenerateNewToken}
-                            className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
-                        >
-                            Token Oluştur
-                        </button>
-                    </div>
-                )}
-            </div>}
-
-            {/* XML Durumu */}
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Package className="w-5 h-5 text-orange-600" />
-                    XML Durumu
-                </h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-orange-50 rounded-lg p-4">
-                        <p className="text-sm text-orange-600 mb-1">Seçili Ürün Sayısı</p>
-                        <p className="text-2xl font-bold text-orange-700">{selectedProducts.length}</p>
-                    </div>
-                    <div className="bg-blue-50 rounded-lg p-4">
-                        <p className="text-sm text-blue-600 mb-1">Son Güncelleme</p>
-                        <p className="text-sm font-medium text-blue-700">
-                            {xmlSettings?.last_updated_at
-                                ? new Date(xmlSettings.last_updated_at).toLocaleString('tr-TR')
-                                : 'Henüz oluşturulmadı'}
-                        </p>
-                    </div>
-                    <div className="bg-green-50 rounded-lg p-4">
-                        <p className="text-sm text-green-600 mb-1">XML Oluşturuldu</p>
-                        <p className="text-sm font-medium text-green-700">
-                            {lastGeneratedXML ? 'Evet - İndirmeye hazır' : 'Hayır'}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex gap-4">
                     <button
-                        onClick={handleGenerateFeedXML}
-                        disabled={generating || selectedProducts.length === 0}
-                        className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={async () => {
+                            const success = await copyToClipboard(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bayi-xml-feed`)
+                            if (success) toast.success('XML Bağlantısı kopyalandı!')
+                        }}
+                        className="px-4 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition flex items-center gap-2"
+                        title="Kopyala"
                     >
-                        {generating ? (
-                            <RefreshCw className="w-5 h-5 animate-spin" />
-                        ) : (
-                            <FileCode className="w-5 h-5" />
-                        )}
-                        XML Oluştur
+                        <Copy className="w-4 h-4" /> Kopyala
                     </button>
-
                     <button
-                        onClick={handleOpenFeedXML}
-                        disabled={!xmlSettings?.xml_token}
-                        className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => window.open(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bayi-xml-feed`, '_blank')}
+                        className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center gap-2"
                     >
-                        <Download className="w-5 h-5" />
-                        XML İndir
+                        <Eye className="w-4 h-4" /> Aç
                     </button>
                 </div>
             </div>
