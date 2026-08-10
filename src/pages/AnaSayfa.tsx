@@ -7,6 +7,7 @@ import UrunKart from '../components/UrunKart'
 import { supabase } from '../lib/supabase'
 import { getImageUrl } from '../utils/imageUtils'
 import { fetchInBatches } from '../utils/supabaseBatch'
+import { useAuth } from '../contexts/AuthContext'
 
 const pageSize = 4
 
@@ -22,6 +23,9 @@ export default function AnaSayfa() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const hasLoadedRef = useRef(false)
+  const { musteriData } = useAuth()
+  
+  const musteriTipi = musteriData?.musteri_tipi || 'musteri'
 
   useEffect(() => {
     if (hasLoadedRef.current) return
@@ -70,9 +74,12 @@ export default function AnaSayfa() {
         setError(null)
 
         const { data: bannerData, error: bannerError } = await supabase
-          .from('bannerlar')
-          .select('*')
+          .from('kampanyalar')
+          .select('id, baslik, aciklama, banner_gorseli, kapsam, kategori_id, marka_id, kod, hedef_grup')
           .eq('aktif_durum', true)
+          .eq('aktif', true)
+          .eq('anasayfada_goster', true)
+          .in('hedef_grup', ['hepsi', musteriTipi])
           .order('sira_no')
 
         if (bannerError) console.error('Banner yükleme hatası:', bannerError)
@@ -139,13 +146,23 @@ export default function AnaSayfa() {
     }
 
     loadData()
-  }, [])
+  }, [musteriTipi])
 
   const activeBanner = banners[currentBanner]
-  const heroImage = getImageUrl(activeBanner?.resim_url || oneCikanUrunler[0]?.urun_gorselleri?.[0]?.gorsel_url)
-  const heroTitle = activeBanner?.banner_baslik || 'Efsane Baharat'
-  const heroText = activeBanner?.banner_aciklama || 'Seçili baharatlar, kahveler ve gurme ürünler tek ekranda, hızlı sipariş akışıyla.'
-  const heroLink = activeBanner?.link_url || '/urunler'
+  const heroImage = getImageUrl(activeBanner?.banner_gorseli || oneCikanUrunler[0]?.urun_gorselleri?.[0]?.gorsel_url)
+  const heroTitle = activeBanner?.baslik || 'Efsane Baharat'
+  const heroText = activeBanner?.aciklama || 'Seçili baharatlar, kahveler ve gurme ürünler tek ekranda, hızlı sipariş akışıyla.'
+  
+  let heroLink = '/urunler'
+  if (activeBanner) {
+    if (activeBanner.kapsam === 'kategori' && activeBanner.kategori_id) {
+      heroLink = `/urunler?kategori=${activeBanner.kategori_id}&kampanya=${activeBanner.id}`
+    } else if (activeBanner.kapsam === 'marka' && activeBanner.marka_id) {
+      heroLink = `/urunler?marka=${activeBanner.marka_id}&kampanya=${activeBanner.id}`
+    } else {
+      heroLink = `/urunler?kampanya=${activeBanner.id}`
+    }
+  }
 
   const nextBanner = () => setCurrentBanner((prev) => (prev + 1) % Math.max(banners.length, 1))
   const prevBanner = () => setCurrentBanner((prev) => (prev - 1 + Math.max(banners.length, 1)) % Math.max(banners.length, 1))
