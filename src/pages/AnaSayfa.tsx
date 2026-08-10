@@ -75,8 +75,7 @@ export default function AnaSayfa() {
 
         const { data: bannerData, error: bannerError } = await supabase
           .from('kampanyalar')
-          .select('id, baslik, aciklama, banner_gorseli, kapsam, kategori_id, marka_id, kod, hedef_grup')
-          .eq('aktif_durum', true)
+          .select('id, ad, aciklama, banner_gorseli, kapsam, kategori_id, marka_id, kod, hedef_grup')
           .eq('aktif', true)
           .eq('anasayfada_goster', true)
           .in('hedef_grup', ['hepsi', musteriTipi])
@@ -150,7 +149,7 @@ export default function AnaSayfa() {
 
   const activeBanner = banners[currentBanner]
   const heroImage = getImageUrl(activeBanner?.banner_gorseli || oneCikanUrunler[0]?.urun_gorselleri?.[0]?.gorsel_url)
-  const heroTitle = activeBanner?.baslik || 'Efsane Baharat'
+  const heroTitle = activeBanner?.ad || 'Efsane Baharat'
   const heroText = activeBanner?.aciklama || 'Seçili baharatlar, kahveler ve gurme ürünler tek ekranda, hızlı sipariş akışıyla.'
   
   let heroLink = '/urunler'
