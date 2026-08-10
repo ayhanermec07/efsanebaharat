@@ -123,7 +123,13 @@ export default function Urunler() {
     }
 
     if (searchTerm) {
-      data = [...data].sort((a, b) => scoreProductRelevance(b, searchTerm) - scoreProductRelevance(a, searchTerm))
+      data = data.filter(
+        (p) =>
+          scoreProductRelevance(p, searchTerm) > 0 ||
+          matchingCategoryIds.includes(p.kategori_id) ||
+          matchingBrandIds.includes(p.marka_id)
+      )
+      data.sort((a, b) => scoreProductRelevance(b, searchTerm) - scoreProductRelevance(a, searchTerm))
     }
 
     const urunIds = data.map(u => u.id)

@@ -26,32 +26,25 @@ export function normalizeSearchText(value: string): string {
 
 export function getMatchingCategoryIds(categories: SearchableCategory[], searchText: string): string[] {
   const normSearch = normalizeSearchText(searchText)
-  if (!normSearch) return []
+  if (!normSearch || normSearch.length < 2) return []
 
   const searchWords = normSearch.split(/\s+/).filter(Boolean)
   if (searchWords.length === 0) return []
 
-  const childrenByParent = new Map<string, string[]>()
-  for (const category of categories) {
-    if (!category.ust_kategori_id) continue
-    const children = childrenByParent.get(category.ust_kategori_id) || []
-    children.push(category.id)
-    childrenByParent.set(category.ust_kategori_id, children)
-  }
-
   const result = new Set<string>()
-  const visit = (categoryId: string) => {
-    if (result.has(categoryId)) return
-    result.add(categoryId)
-    for (const childId of childrenByParent.get(categoryId) || []) {
-      visit(childId)
-    }
-  }
 
   for (const category of categories) {
     const normName = normalizeSearchText(category.kategori_adi || '')
-    if (searchWords.every((w) => normName.includes(w)) || normName.includes(normSearch)) {
-      visit(category.id)
+    if (!normName) continue
+
+    const isExact = normName === normSearch
+    const isWordMatch = searchWords.every((w) => {
+      const catWords = normName.split(/\s+/)
+      return catWords.some((cw) => cw === w || cw.startsWith(w))
+    })
+
+    if (isExact || isWordMatch) {
+      result.add(category.id)
     }
   }
 
@@ -60,7 +53,7 @@ export function getMatchingCategoryIds(categories: SearchableCategory[], searchT
 
 export function getMatchingBrandIds(brands: SearchableBrand[], searchText: string): string[] {
   const normSearch = normalizeSearchText(searchText)
-  if (!normSearch) return []
+  if (!normSearch || normSearch.length < 2) return []
 
   const searchWords = normSearch.split(/\s+/).filter(Boolean)
   if (searchWords.length === 0) return []
@@ -68,7 +61,15 @@ export function getMatchingBrandIds(brands: SearchableBrand[], searchText: strin
   const result: string[] = []
   for (const brand of brands) {
     const normName = normalizeSearchText(brand.marka_adi || '')
-    if (searchWords.every((w) => normName.includes(w)) || normName.includes(normSearch)) {
+    if (!normName) continue
+
+    const isExact = normName === normSearch
+    const isWordMatch = searchWords.every((w) => {
+      const brandWords = normName.split(/\s+/)
+      return brandWords.some((bw) => bw === w || bw.startsWith(w))
+    })
+
+    if (isExact || isWordMatch) {
       result.push(brand.id)
     }
   }
@@ -151,7 +152,9 @@ export function scoreProductRelevance(
   searchText: string
 ): number {
   const title = product.urun_adi || ''
+  const description = product.aciklama || ''
   const normTitle = normalizeSearchText(title)
+  const normDesc = normalizeSearchText(description)
   const normSearch = normalizeSearchText(searchText)
 
   if (!normSearch) return 0
@@ -162,12 +165,14 @@ export function scoreProductRelevance(
 
   const searchWords = normSearch.split(/\s+/).filter(Boolean)
   if (searchWords.length > 0) {
-    const matchedCount = searchWords.filter((w) => normTitle.includes(w)).length
+    const matchedCount = searchWords.filter((w) => normTitle.includes(w) || normDesc.includes(w)).length
     if (matchedCount > 0) {
       return 30 + (matchedCount / searchWords.length) * 20
     }
   }
 
-  return 10
+  if (normDesc.includes(normSearch)) return 20
+
+  return 0
 }
 
