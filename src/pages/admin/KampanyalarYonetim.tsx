@@ -47,6 +47,7 @@ export default function KampanyalarYonetim() {
   const [yukleniyor, setYukleniyor] = useState(true);
   const [modalAcik, setModalAcik] = useState(false);
   const [activeTab, setActiveTab] = useState<'kampanyalar' | 'istatistikler' | 'kodlar'>('kampanyalar');
+  const [formTab, setFormTab] = useState<'genel' | 'kosullar' | 'banner'>('genel');
   const [duzenlenecekKampanya, setDuzenlenecekKampanya] = useState<Kampanya | null>(null);
   // Eklentiler: Kategoriler, Markalar, Ürünler
   const [kategoriler, setKategoriler] = useState<any[]>([]);
@@ -113,6 +114,7 @@ export default function KampanyalarYonetim() {
   };
 
   const modalAc = async (kampanya?: Kampanya) => {
+    setFormTab('genel'); // Modalı açarken hep ilk sekmeyle başlat
     if (kampanya) {
       // Seçili ürünleri getir
       let relatedProducts: string[] = [];
@@ -314,412 +316,502 @@ export default function KampanyalarYonetim() {
             </button>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kod</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kampanya</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kapsam</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">İndirim</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hedef Grup</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tarih</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kullanım</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Durum</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">İşlemler</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {kampanyalar.map((kampanya) => (
-                  <tr key={kampanya.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <Tag className="w-4 h-4 text-orange-600" />
-                        <span className="font-mono font-semibold text-gray-900">{kampanya.kod}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="font-medium text-gray-900">{kampanya.ad}</div>
-                        <div className="text-sm text-gray-500">{kampanya.aciklama}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-semibold text-green-600">
-                        {kampanya.indirim_tipi === 'yuzde'
-                          ? `%${kampanya.indirim_degeri}`
-                          : `${kampanya.indirim_degeri} TL`}
-                      </span>
-                      {kampanya.max_indirim_tutari && (
-                        <div className="text-xs text-gray-500">Max: {kampanya.max_indirim_tutari} TL</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full ${kampanya.hedef_grup === 'musteri' ? 'bg-blue-100 text-blue-800' :
-                        kampanya.hedef_grup === 'bayi' ? 'bg-purple-100 text-purple-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                        {kampanya.hedef_grup === 'musteri' ? 'Müşteri' :
-                          kampanya.hedef_grup === 'bayi' ? 'Bayi' : 'Hepsi'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>{new Date(kampanya.baslangic_tarihi).toLocaleDateString('tr-TR')}</span>
-                      </div>
-                      <div className="text-xs">- {new Date(kampanya.bitis_tarihi).toLocaleDateString('tr-TR')}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="text-gray-900 font-semibold">{kampanya.kullanim_sayisi || 0}</div>
-                      {kampanya.kullanim_limiti && (
-                        <div className="text-xs text-gray-500">/ {kampanya.kullanim_limiti}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full ${kampanya.aktif ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
+          <div className="grid gap-4 mt-2">
+            {kampanyalar.map((kampanya) => (
+              <div key={kampanya.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all">
+                <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  
+                  {/* Sol Bölüm: Başlık ve Rozetler */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg font-bold text-gray-900">{kampanya.ad}</h3>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${kampanya.aktif ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                         {kampanya.aktif ? 'Aktif' : 'Pasif'}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      {kampanya.anasayfada_goster && (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+                          <ImageIcon className="w-3 h-3" /> Ana Sayfa
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                      <span className="font-mono bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs font-medium tracking-wide">
+                        {kampanya.kod}
+                      </span>
+                      {kampanya.aciklama && (
+                        <>
+                          <span>•</span>
+                          <span className="truncate max-w-[200px] sm:max-w-xs">{kampanya.aciklama}</span>
+                        </>
+                      )}
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span className={`px-2 py-1 rounded-md font-medium ${kampanya.hedef_grup === 'musteri' ? 'bg-indigo-50 text-indigo-700' : kampanya.hedef_grup === 'bayi' ? 'bg-purple-50 text-purple-700' : 'bg-gray-100 text-gray-700'}`}>
+                        Hedef: {kampanya.hedef_grup === 'musteri' ? 'Müşteriler' : kampanya.hedef_grup === 'bayi' ? 'Bayiler' : 'Herkes'}
+                      </span>
+                      <span className="px-2 py-1 bg-orange-50 text-orange-700 rounded-md font-medium flex items-center gap-1">
+                        <Tag className="w-3 h-3" />
+                        {kampanya.kapsam === 'tum_urunler' ? 'Tüm Ürünler' : kampanya.kapsam === 'kategori' ? 'Belirli Kategori' : kampanya.kapsam === 'marka' ? 'Belirli Marka' : 'Seçili Ürünler'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Orta Bölüm: İndirim ve Tarih */}
+                  <div className="flex flex-col gap-3 min-w-[200px] md:border-l md:border-gray-100 md:px-6">
+                    <div>
+                      <div className="text-xs text-gray-500 font-medium mb-1 uppercase tracking-wider">İndirim Miktarı</div>
+                      <div className="text-xl font-black text-green-600">
+                        {kampanya.indirim_tipi === 'yuzde' ? `%${kampanya.indirim_degeri}` : `${kampanya.indirim_degeri} ₺`}
+                      </div>
+                      {(kampanya.min_sepet_tutari > 0 || kampanya.max_indirim_tutari) && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {kampanya.min_sepet_tutari > 0 && `Min: ${kampanya.min_sepet_tutari} ₺ `}
+                          {kampanya.max_indirim_tutari && `Max: ${kampanya.max_indirim_tutari} ₺`}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <span>{new Date(kampanya.baslangic_tarihi).toLocaleDateString('tr-TR')} - {new Date(kampanya.bitis_tarihi).toLocaleDateString('tr-TR')}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sağ Bölüm: İstatistik ve Aksiyonlar */}
+                  <div className="flex items-center justify-between md:flex-col md:items-end gap-3 md:border-l md:border-gray-100 md:pl-6">
+                    <div className="text-sm">
+                      <div className="text-xs text-gray-500 mb-0.5">Kullanım</div>
+                      <div className="font-semibold text-gray-900">
+                        {kampanya.kullanim_sayisi || 0}
+                        <span className="text-gray-400 font-normal">
+                          {kampanya.kullanim_limiti ? ` / ${kampanya.kullanim_limiti}` : ' / Sınırsız'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => modalAc(kampanya)}
-                        className="text-blue-600 hover:text-blue-900 mr-3"
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Düzenle"
                       >
                         <Edit className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => kampanyaSil(kampanya.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Sil"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {kampanyalar.length === 0 && (
+              <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+                <Tag className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <h3 className="text-lg font-medium text-gray-900">Henüz kampanya yok</h3>
+                <p className="text-gray-500 mt-1">Yeni bir kampanya oluşturarak satışlarınızı artırın.</p>
+              </div>
+            )}
           </div>
 
           {/* Modal */}
           {modalAcik && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">
+              <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+                <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-white">
+                  <h2 className="text-xl font-bold text-gray-900">
                     {duzenlenecekKampanya ? 'Kampanya Düzenle' : 'Yeni Kampanya'}
                   </h2>
+                  <button onClick={modalKapat} className="text-gray-400 hover:text-gray-500 transition-colors">
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                
+                {/* Tab Navigasyon */}
+                <div className="flex border-b border-gray-200 px-6 pt-2 bg-gray-50/50">
+                  <button 
+                    type="button" 
+                    onClick={() => setFormTab('genel')} 
+                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'genel' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                  >Temel Bilgiler</button>
+                  <button 
+                    type="button" 
+                    onClick={() => setFormTab('kosullar')} 
+                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'kosullar' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                  >Koşullar ve Kapsam</button>
+                  <button 
+                    type="button" 
+                    onClick={() => setFormTab('banner')} 
+                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'banner' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                  >Görünüm ve Banner</button>
+                </div>
 
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Kampanya Kodu *
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.kod}
-                          onChange={(e) => setFormData({ ...formData, kod: e.target.value.toUpperCase() })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 uppercase"
-                          required
-                          disabled={!!duzenlenecekKampanya}
-                        />
-                      </div>
+                <div className="p-6 overflow-y-auto flex-1 bg-white">
+                  <form id="kampanya-form" onSubmit={handleSubmit} className="space-y-6">
+                    {/* --- TAB 1: TEMEL BİLGİLER --- */}
+                    {formTab === 'genel' && (
+                      <div className="space-y-5 animate-in fade-in duration-300">
+                        <div className="grid grid-cols-2 gap-5">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Kampanya Kodu *
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.kod}
+                              onChange={(e) => setFormData({ ...formData, kod: e.target.value.toUpperCase() })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 uppercase transition-all"
+                              required
+                              disabled={!!duzenlenecekKampanya}
+                              placeholder="Örn: YAZ20"
+                            />
+                          </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Kampanya Adı *
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.ad}
-                          onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Açıklama
-                      </label>
-                      <textarea
-                        value={formData.aciklama}
-                        onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          İndirim Tipi *
-                        </label>
-                        <select
-                          value={formData.indirim_tipi}
-                          onChange={(e) => setFormData({ ...formData, indirim_tipi: e.target.value as 'yuzde' | 'tutar' })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                        >
-                          <option value="yuzde">Yüzde (%)</option>
-                          <option value="tutar">Tutar (TL)</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          İndirim Değeri *
-                        </label>
-                        <input
-                          type="number"
-                          value={formData.indirim_degeri}
-                          onChange={(e) => setFormData({ ...formData, indirim_degeri: parseFloat(e.target.value) })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                          required
-                          min="0"
-                          step="0.01"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Max İndirim (TL)
-                        </label>
-                        <input
-                          type="number"
-                          value={formData.max_indirim_tutari || ''}
-                          onChange={(e) => setFormData({ ...formData, max_indirim_tutari: e.target.value ? parseFloat(e.target.value) : null })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                          min="0"
-                          step="0.01"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Min Sepet Tutarı (TL) *
-                        </label>
-                        <input
-                          type="number"
-                          value={formData.min_sepet_tutari}
-                          onChange={(e) => setFormData({ ...formData, min_sepet_tutari: parseFloat(e.target.value) })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                          required
-                          min="0"
-                          step="0.01"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Hedef Grup *
-                        </label>
-                        <select
-                          value={formData.hedef_grup}
-                          onChange={(e) => setFormData({ ...formData, hedef_grup: e.target.value as 'musteri' | 'bayi' | 'hepsi' })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                        >
-                          <option value="hepsi">Hepsi</option>
-                          <option value="musteri">Müşteri</option>
-                          <option value="bayi">Bayi</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Kullanım Limiti
-                        </label>
-                        <input
-                          type="number"
-                          value={formData.kullanim_limiti || ''}
-                          onChange={(e) => setFormData({ ...formData, kullanim_limiti: e.target.value ? parseInt(e.target.value) : null })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                          min="1"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Başlangıç Tarihi *
-                        </label>
-                        <input
-                          type="date"
-                          value={formData.baslangic_tarihi}
-                          onChange={(e) => setFormData({ ...formData, baslangic_tarihi: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Bitiş Tarihi *
-                        </label>
-                        <input
-                          type="date"
-                          value={formData.bitis_tarihi}
-                          onChange={(e) => setFormData({ ...formData, bitis_tarihi: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.aktif}
-                        onChange={(e) => setFormData({ ...formData, aktif: e.target.checked })}
-                        className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                      />
-                      <label className="ml-2 text-sm text-gray-700">
-                        Kampanya aktif
-                      </label>
-                    </div>
-
-                    {/* Anasayfa Gösterim Ayarları */}
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <h4 className="font-medium text-gray-900 mb-3 text-sm">Ana Sayfa Banner Ayarları</h4>
-                      <div className="space-y-4">
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id="anasayfada_goster"
-                            checked={formData.anasayfada_goster}
-                            onChange={(e) => setFormData({ ...formData, anasayfada_goster: e.target.checked })}
-                            className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                          />
-                          <label htmlFor="anasayfada_goster" className="ml-2 text-sm font-medium text-gray-700">
-                            Ana sayfada slider banner olarak göster
-                          </label>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Kampanya Adı *
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.ad}
+                              onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 transition-all"
+                              required
+                              placeholder="Yaza Merhaba İndirimi"
+                            />
+                          </div>
                         </div>
-                        
-                        {formData.anasayfada_goster && (
-                          <div className="grid grid-cols-2 gap-4 pt-2">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Banner Görseli</label>
-                              <ImageUpload
-                                maxFiles={1}
-                                bucketName="banners"
-                                onUploadComplete={(urls) => setFormData({ ...formData, banner_gorseli: urls[0] || '' })}
-                                existingImages={formData.banner_gorseli ? [formData.banner_gorseli] : []}
-                                maxSizeMB={8}
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Gösterim Sırası</label>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Açıklama
+                          </label>
+                          <textarea
+                            value={formData.aciklama}
+                            onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 transition-all"
+                            rows={3}
+                            placeholder="Kampanya detaylarını buraya girebilirsiniz..."
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-5">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              İndirim Tipi *
+                            </label>
+                            <select
+                              value={formData.indirim_tipi}
+                              onChange={(e) => setFormData({ ...formData, indirim_tipi: e.target.value as 'yuzde' | 'tutar' })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 transition-all bg-white"
+                            >
+                              <option value="yuzde">Yüzde (%) İndirim</option>
+                              <option value="tutar">Sabit Tutar (TL) İndirimi</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              İndirim Değeri *
+                            </label>
+                            <div className="relative">
                               <input
                                 type="number"
-                                value={formData.sira_no}
-                                onChange={(e) => setFormData({ ...formData, sira_no: parseInt(e.target.value) || 0 })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                value={formData.indirim_degeri}
+                                onChange={(e) => setFormData({ ...formData, indirim_degeri: parseFloat(e.target.value) })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 transition-all pr-10"
+                                required
+                                min="0"
+                                step="0.01"
                               />
+                              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                                {formData.indirim_tipi === 'yuzde' ? '%' : 'TL'}
+                              </div>
                             </div>
                           </div>
-                        )}
+                        </div>
+                        
+                        <div className="flex justify-end pt-4">
+                          <button type="button" onClick={() => setFormTab('kosullar')} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">İleri: Koşullar</button>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    {/* Kampanya Kapsamı */}
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <h4 className="font-medium text-gray-900 mb-3 text-sm">Kampanya Kapsamı</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Kapsam Türü</label>
-                          <select
-                            value={formData.kapsam}
-                            onChange={(e) => setFormData({ ...formData, kapsam: e.target.value as any })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                          >
-                            <option value="tum_urunler">Tüm Ürünler</option>
-                            <option value="kategori">Belirli Kategori</option>
-                            <option value="marka">Belirli Marka</option>
-                            <option value="secili_urunler">Seçili Ürünler</option>
-                          </select>
+                    {/* --- TAB 2: KOŞULLAR VE KAPSAM --- */}
+                    {formTab === 'kosullar' && (
+                      <div className="space-y-6 animate-in fade-in duration-300">
+                        <div className="grid grid-cols-2 gap-5">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Başlangıç Tarihi *</label>
+                            <input
+                              type="date"
+                              value={formData.baslangic_tarihi}
+                              onChange={(e) => setFormData({ ...formData, baslangic_tarihi: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Bitiş Tarihi *</label>
+                            <input
+                              type="date"
+                              value={formData.bitis_tarihi}
+                              onChange={(e) => setFormData({ ...formData, bitis_tarihi: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                              required
+                            />
+                          </div>
                         </div>
 
-                        {formData.kapsam === 'kategori' && (
+                        <div className="grid grid-cols-3 gap-5">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Kategori Seçin</label>
-                            <select
-                              value={formData.kategori_id}
-                              onChange={(e) => setFormData({ ...formData, kategori_id: e.target.value })}
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Min. Sepet (TL) *</label>
+                            <input
+                              type="number"
+                              value={formData.min_sepet_tutari}
+                              onChange={(e) => setFormData({ ...formData, min_sepet_tutari: parseFloat(e.target.value) })}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                               required
-                            >
-                              <option value="">Seçiniz...</option>
-                              {kategoriler.map(k => <option key={k.id} value={k.id}>{k.kategori_adi}</option>)}
-                            </select>
+                              min="0"
+                              step="0.01"
+                            />
                           </div>
-                        )}
-
-                        {formData.kapsam === 'marka' && (
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Marka Seçin</label>
-                            <select
-                              value={formData.marka_id}
-                              onChange={(e) => setFormData({ ...formData, marka_id: e.target.value })}
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Maks. İndirim (TL)</label>
+                            <input
+                              type="number"
+                              value={formData.max_indirim_tutari || ''}
+                              onChange={(e) => setFormData({ ...formData, max_indirim_tutari: e.target.value ? parseFloat(e.target.value) : null })}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                              required
-                            >
-                              <option value="">Seçiniz...</option>
-                              {markalar.map(m => <option key={m.id} value={m.id}>{m.marka_adi}</option>)}
-                            </select>
+                              min="0"
+                              step="0.01"
+                              placeholder="Sınırsız"
+                            />
                           </div>
-                        )}
-                      </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Kullanım Limiti</label>
+                            <input
+                              type="number"
+                              value={formData.kullanim_limiti || ''}
+                              onChange={(e) => setFormData({ ...formData, kullanim_limiti: e.target.value ? parseInt(e.target.value) : null })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                              min="1"
+                              placeholder="Sınırsız"
+                            />
+                          </div>
+                        </div>
 
-                      {formData.kapsam === 'secili_urunler' && (
-                        <div className="mt-4">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Ürünleri Seçin</label>
-                          <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-white grid grid-cols-2 gap-2">
-                            {urunler.map(urun => (
-                              <div key={urun.id} className="flex items-center text-sm">
-                                <input
-                                  type="checkbox"
-                                  id={`prod-${urun.id}`}
-                                  checked={seciliUrunIds.includes(urun.id)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) setSeciliUrunIds([...seciliUrunIds, urun.id]);
-                                    else setSeciliUrunIds(seciliUrunIds.filter(id => id !== urun.id));
-                                  }}
-                                  className="w-4 h-4 text-orange-600 rounded mr-2"
-                                />
-                                <label htmlFor={`prod-${urun.id}`} className="truncate cursor-pointer select-none">
-                                  {urun.urun_adi} <span className="text-gray-400 text-xs">({urun.urun_kodu})</span>
-                                </label>
+                        <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
+                          <h4 className="font-medium text-orange-900 mb-4 text-sm flex items-center gap-2">
+                            <Tag className="w-4 h-4" /> Kapsam ve Hedef Kitle
+                          </h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Hedef Grup *</label>
+                              <select
+                                value={formData.hedef_grup}
+                                onChange={(e) => setFormData({ ...formData, hedef_grup: e.target.value as 'musteri' | 'bayi' | 'hepsi' })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white"
+                              >
+                                <option value="hepsi">Herkes (Bayi ve Müşteri)</option>
+                                <option value="musteri">Sadece Standart Müşteriler</option>
+                                <option value="bayi">Sadece Bayiler</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Kapsam Türü</label>
+                              <select
+                                value={formData.kapsam}
+                                onChange={(e) => setFormData({ ...formData, kapsam: e.target.value as any })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white"
+                              >
+                                <option value="tum_urunler">Tüm Ürünler</option>
+                                <option value="kategori">Belirli Kategori</option>
+                                <option value="marka">Belirli Marka</option>
+                                <option value="secili_urunler">Seçili Ürünler</option>
+                              </select>
+                            </div>
+
+                            {formData.kapsam === 'kategori' && (
+                              <div className="col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Kategori Seçin</label>
+                                <select
+                                  value={formData.kategori_id}
+                                  onChange={(e) => setFormData({ ...formData, kategori_id: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white"
+                                  required
+                                >
+                                  <option value="">Seçiniz...</option>
+                                  {kategoriler.map(k => <option key={k.id} value={k.id}>{k.kategori_adi}</option>)}
+                                </select>
                               </div>
-                            ))}
-                          </div>
-                          <div className="text-right text-xs text-gray-500 mt-1">
-                            {seciliUrunIds.length} ürün seçildi
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                            )}
 
-                    <div className="flex justify-end gap-3 pt-4">
-                      <button
-                        type="button"
-                        onClick={modalKapat}
-                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                      >
-                        İptal
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
-                      >
-                        {duzenlenecekKampanya ? 'Güncelle' : 'Oluştur'}
-                      </button>
-                    </div>
+                            {formData.kapsam === 'marka' && (
+                              <div className="col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Marka Seçin</label>
+                                <select
+                                  value={formData.marka_id}
+                                  onChange={(e) => setFormData({ ...formData, marka_id: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white"
+                                  required
+                                >
+                                  <option value="">Seçiniz...</option>
+                                  {markalar.map(m => <option key={m.id} value={m.id}>{m.marka_adi}</option>)}
+                                </select>
+                              </div>
+                            )}
+                          </div>
+
+                          {formData.kapsam === 'secili_urunler' && (
+                            <div className="col-span-2 mt-4 bg-white p-3 rounded-lg border border-gray-200">
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Ürünleri Seçin</label>
+                              <div className="max-h-48 overflow-y-auto grid grid-cols-2 gap-2 pr-2">
+                                {urunler.map(urun => (
+                                  <div key={urun.id} className="flex items-center text-sm p-1.5 hover:bg-gray-50 rounded">
+                                    <input
+                                      type="checkbox"
+                                      id={`prod-${urun.id}`}
+                                      checked={seciliUrunIds.includes(urun.id)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) setSeciliUrunIds([...seciliUrunIds, urun.id]);
+                                        else setSeciliUrunIds(seciliUrunIds.filter(id => id !== urun.id));
+                                      }}
+                                      className="w-4 h-4 text-orange-600 rounded mr-2 focus:ring-orange-500 border-gray-300"
+                                    />
+                                    <label htmlFor={`prod-${urun.id}`} className="truncate cursor-pointer select-none text-gray-700">
+                                      {urun.urun_adi}
+                                    </label>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="text-right text-xs text-orange-600 mt-2 font-medium">
+                                {seciliUrunIds.length} ürün seçildi
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex justify-between pt-4">
+                          <button type="button" onClick={() => setFormTab('genel')} className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors">Geri</button>
+                          <button type="button" onClick={() => setFormTab('banner')} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">İleri: Banner</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* --- TAB 3: BANNER VE GÖRÜNÜM --- */}
+                    {formTab === 'banner' && (
+                      <div className="space-y-6 animate-in fade-in duration-300">
+                        
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          <div>
+                            <h4 className="font-semibold text-gray-900">Kampanya Aktiflik Durumu</h4>
+                            <p className="text-sm text-gray-500">Müşterilerin kullanabilmesi için açık olmalıdır.</p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={formData.aktif}
+                              onChange={(e) => setFormData({ ...formData, aktif: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                          </label>
+                        </div>
+
+                        <div className="p-5 bg-blue-50/50 rounded-lg border border-blue-100">
+                          <div className="flex items-center justify-between mb-4">
+                            <div>
+                              <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                                <ImageIcon className="w-4 h-4 text-blue-600" />
+                                Ana Sayfa Banner Gösterimi
+                              </h4>
+                              <p className="text-sm text-gray-500 mt-1">
+                                Kampanyanızı e-ticaret sitenizin ana sayfasındaki en üst slider alanında büyük görsel olarak sergileyin.
+                              </p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={formData.anasayfada_goster}
+                                onChange={(e) => setFormData({ ...formData, anasayfada_goster: e.target.checked })}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                          </div>
+                          
+                          {formData.anasayfada_goster && (
+                            <div className="grid grid-cols-2 gap-6 pt-4 border-t border-blue-100">
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">Slider Sırası</label>
+                                  <input
+                                    type="number"
+                                    value={formData.sira_no}
+                                    onChange={(e) => setFormData({ ...formData, sira_no: parseInt(e.target.value) || 0 })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white"
+                                    placeholder="0"
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">Küçük numaralar ilk sırada gösterilir.</p>
+                                </div>
+                                <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">Banner Görseli</label>
+                                  <ImageUpload
+                                    maxFiles={1}
+                                    bucketName="banners"
+                                    onUploadComplete={(urls) => setFormData({ ...formData, banner_gorseli: urls[0] || '' })}
+                                    existingImages={formData.banner_gorseli ? [formData.banner_gorseli] : []}
+                                    maxSizeMB={8}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Görünüm Önizlemesi</label>
+                                <div className="aspect-[21/9] w-full rounded-xl bg-gray-200 overflow-hidden relative border border-gray-300 shadow-inner flex items-center justify-center">
+                                  {formData.banner_gorseli ? (
+                                    <>
+                                      <img src={formData.banner_gorseli} alt="Banner" className="w-full h-full object-cover" />
+                                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center p-4">
+                                        <div className="text-white">
+                                          <h5 className="font-bold text-lg">{formData.ad || 'Kampanya Adı'}</h5>
+                                          <p className="text-xs opacity-90 line-clamp-2 max-w-[60%]">{formData.aciklama || 'Açıklama metni burada yer alacak...'}</p>
+                                        </div>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <div className="text-gray-400 flex flex-col items-center">
+                                      <ImageIcon className="w-8 h-8 mb-2 opacity-50" />
+                                      <span className="text-xs font-medium">Görsel Yüklenmedi</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex justify-start pt-4">
+                          <button type="button" onClick={() => setFormTab('kosullar')} className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors">Geri</button>
+                        </div>
+                      </div>
+                    )}
                   </form>
+                </div>
+
+                <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 rounded-b-lg">
+                  <button type="button" onClick={modalKapat} className="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition-colors">
+                    İptal
+                  </button>
+                  <button type="submit" form="kampanya-form" className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center gap-2 font-medium transition-colors shadow-sm hover:shadow">
+                    <Save className="w-5 h-5" />
+                    {duzenlenecekKampanya ? 'Değişiklikleri Kaydet' : 'Kampanyayı Oluştur'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -727,7 +819,7 @@ export default function KampanyalarYonetim() {
         </>
       )}
     </div>
-  )
+  );
 }
 
 function KampanyaKodlari({ kampanyalar }: { kampanyalar: Kampanya[] }) {
