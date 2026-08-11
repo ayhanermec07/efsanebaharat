@@ -420,6 +420,16 @@ export default function Header() {
                   <Link to="/hesabim" onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-100">
                     Hesabım
                   </Link>
+                  {musteriData?.musteri_tipi === 'bayi' && (
+                    <Link to="/bayi-panel" onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-100">
+                      Bayi Paneli
+                    </Link>
+                  )}
+                  {isAdmin && (
+                    <Link to="/admin" onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-amber-800 hover:bg-amber-50">
+                      Admin
+                    </Link>
+                  )}
                   <button type="button" onClick={() => { closeMenus(); signOut() }} className="rounded-lg px-3 py-3 text-left text-sm font-semibold text-zinc-800 hover:bg-zinc-100">
                     Çıkış Yap
                   </button>
