@@ -19,7 +19,7 @@ export default function Urunler() {
   const [kategoriler, setKategoriler] = useState<any[]>([])
   const [markalar, setMarkalar] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [aramaText, setAramaText] = useState('')
+  const [aramaText, setAramaText] = useState(searchParams.get('q') || '')
   const [secilenKategori, setSecilenKategori] = useState(searchParams.get('kategori') || '')
   const [secilenMarka, setSecilenMarka] = useState(searchParams.get('marka') || '')
   const [secilenKampanya, setSecilenKampanya] = useState(searchParams.get('kampanya') || '')
