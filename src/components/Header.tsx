@@ -6,7 +6,6 @@ import { useSepet } from '../contexts/SepetContext'
 import { supabase } from '../lib/supabase'
 import { getImageUrl } from '../utils/imageUtils'
 import {
-  buildProductSearchPostgrestFilter,
   getMatchingBrandIds,
   getMatchingCategoryIds,
   scoreProductRelevance,
@@ -34,7 +33,7 @@ export default function Header() {
   const navigate = useNavigate()
 
   const searchContainerRef = useRef<HTMLDivElement>(null)
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     loadKategoriler()
@@ -57,6 +56,7 @@ export default function Header() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('keydown', handleKeyDown)
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
     }
   }, [])
 
@@ -90,21 +90,46 @@ export default function Header() {
       const matchingBrandIds = getMatchingBrandIds(allBrands || [], searchTerm)
       const categoryNameById = new Map((allCategories || []).map((category) => [category.id, category.kategori_adi]))
 
-      const orFilter = buildProductSearchPostgrestFilter(searchTerm, matchingCategoryIds, matchingBrandIds)
-      if (!orFilter) {
-        setSearchResults([])
-        setSearchLoading(false)
-        return
+      const productFields = 'id, urun_adi, ana_gorsel_url, kategori_id, aciklama'
+      const nameSearch = supabase
+        .from('urunler')
+        .select(productFields)
+        .eq('aktif_durum', true)
+        .ilike('urun_adi', `%${searchTerm}%`)
+        .limit(8)
+
+      const categorySearch = matchingCategoryIds.length > 0
+        ? supabase
+          .from('urunler')
+          .select(productFields)
+          .eq('aktif_durum', true)
+          .in('kategori_id', matchingCategoryIds)
+          .limit(8)
+        : Promise.resolve({ data: [], error: null })
+
+      const brandSearch = matchingBrandIds.length > 0
+        ? supabase
+          .from('urunler')
+          .select(productFields)
+          .eq('aktif_durum', true)
+          .in('marka_id', matchingBrandIds)
+          .limit(8)
+        : Promise.resolve({ data: [], error: null })
+
+      const [nameResult, categoryResult, brandResult] = await Promise.all([nameSearch, categorySearch, brandSearch])
+
+      if (nameResult.error || categoryResult.error || brandResult.error) {
+        console.error('Arama sorgusu hatası:', nameResult.error || categoryResult.error || brandResult.error)
       }
 
-      const { data: urunlerData } = await supabase
-        .from('urunler')
-        .select('id, urun_adi, ana_gorsel_url, kategori_id, aciklama')
-        .eq('aktif_durum', true)
-        .or(orFilter)
-        .limit(20)
+      const uniqueProducts = new Map<string, any>()
+      for (const product of [...(nameResult.data || []), ...(categoryResult.data || []), ...(brandResult.data || [])]) {
+        uniqueProducts.set(product.id, product)
+      }
 
-      if (!urunlerData || urunlerData.length === 0) {
+      const urunlerData = Array.from(uniqueProducts.values())
+
+      if (urunlerData.length === 0) {
         setSearchResults([])
         setSearchLoading(false)
         return
