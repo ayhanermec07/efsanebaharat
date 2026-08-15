@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { PackageSearch, Search, SlidersHorizontal, X } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
+import { publicSupabase } from '../lib/supabase'
 import {
   getMatchingBrandIds,
   getMatchingCategoryIds,
@@ -89,7 +89,7 @@ export default function Urunler() {
   }, [searchParams])
 
   async function loadKategoriler() {
-    const { data } = await supabase
+    const { data } = await publicSupabase
       .from('kategoriler')
       .select('*')
       .eq('aktif_durum', true)
@@ -99,7 +99,7 @@ export default function Urunler() {
   }
 
   async function loadMarkalar() {
-    const { data } = await supabase
+    const { data } = await publicSupabase
       .from('markalar')
       .select('*')
       .eq('aktif_durum', true)
@@ -114,7 +114,7 @@ export default function Urunler() {
 
     setLoading(true)
     setLoadError(null)
-    let query = supabase
+    let query = publicSupabase
       .from('urunler')
       .select('*')
       .eq('aktif_durum', true)
@@ -143,7 +143,7 @@ export default function Urunler() {
 
     try {
       if (secilenKampanya) {
-      const { data: camp } = await supabase
+      const { data: camp } = await publicSupabase
         .from('kampanyalar')
         .select('*')
         .eq('id', secilenKampanya)
@@ -154,7 +154,7 @@ export default function Urunler() {
         setActiveCampaign(camp)
 
         if (camp.kapsam === 'secili_urunler') {
-          const { data: pids } = await supabase
+          const { data: pids } = await publicSupabase
             .from('kampanya_urunler')
             .select('urun_id')
             .eq('kampanya_id', secilenKampanya)
@@ -212,16 +212,16 @@ export default function Urunler() {
       { data: markalarData }
       ] = await Promise.all([
       fetchInBatches(urunIds, ids =>
-        supabase.from('urun_gorselleri').select('*').in('urun_id', ids).order('sira_no')
+        publicSupabase.from('urun_gorselleri').select('*').in('urun_id', ids).order('sira_no')
       ),
       fetchInBatches(urunIds, ids =>
-        supabase.from('urun_stoklari').select('*').in('urun_id', ids).eq('aktif_durum', true)
+        publicSupabase.from('urun_stoklari').select('*').in('urun_id', ids).eq('aktif_durum', true)
       ),
       fetchInBatches(kategoriIds, ids =>
-        supabase.from('kategoriler').select('id, kategori_adi').in('id', ids)
+        publicSupabase.from('kategoriler').select('id, kategori_adi').in('id', ids)
       ),
       fetchInBatches(markaIds, ids =>
-        supabase.from('markalar').select('id, marka_adi').in('id', ids)
+        publicSupabase.from('markalar').select('id, marka_adi').in('id', ids)
       )
       ])
 
