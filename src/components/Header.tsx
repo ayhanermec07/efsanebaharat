@@ -265,9 +265,10 @@ export default function Header() {
               </NavLink>
             )}
             {user && musteriData?.musteri_tipi === 'xml_musteri' && (
-              <NavLink to="/xml-siparis" className="rounded-lg px-3 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-50">
-                XML Sipariş
-              </NavLink>
+              <>
+                <NavLink to="/xml-siparis" className="rounded-lg px-3 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-50">XML Sipariş</NavLink>
+                <NavLink to="/xml-siparislerim" className="rounded-lg px-3 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-50">Siparişlerim</NavLink>
+              </>
             )}
             {isAdmin && (
               <NavLink to="/admin" className="rounded-lg px-3 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-50">
@@ -456,9 +457,10 @@ export default function Header() {
                     </Link>
                   )}
                   {musteriData?.musteri_tipi === 'xml_musteri' && (
-                    <Link to="/xml-siparis" onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-violet-800 hover:bg-violet-50">
-                      XML Sipariş
-                    </Link>
+                    <>
+                      <Link to="/xml-siparis" onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-violet-800 hover:bg-violet-50">XML Sipariş</Link>
+                      <Link to="/xml-siparislerim" onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-violet-800 hover:bg-violet-50">Siparişlerim</Link>
+                    </>
                   )}
                   {isAdmin && (
                     <Link to="/admin" onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-amber-800 hover:bg-amber-50">
