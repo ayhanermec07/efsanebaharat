@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { PackageSearch, Search, SlidersHorizontal, X } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
 import { useAuth } from '../contexts/AuthContext'
-import { publicSupabase } from '../lib/supabase'
+import { loadPublicCatalog, publicSupabase } from '../lib/supabase'
 import {
   getMatchingBrandIds,
   getMatchingCategoryIds,
@@ -142,6 +142,31 @@ export default function Urunler() {
     }
 
     try {
+      const catalog = await loadPublicCatalog(visibleProductLimit)
+      if (!isLatestRequest()) return
+
+      setKategoriler(catalog.kategoriler || [])
+      setMarkalar(catalog.markalar || [])
+      setActiveCampaign(null)
+
+      let catalogProducts = (catalog.urunler || []).filter((urun: any) => (
+        (!secilenKategori || urun.kategori_id === secilenKategori) &&
+        (!secilenMarka || urun.marka_id === secilenMarka) &&
+        (!searchTerm || scoreProductRelevance(urun, searchTerm) > 0 || matchingCategoryIds.includes(urun.kategori_id) || matchingBrandIds.includes(urun.marka_id))
+      ))
+      if (searchTerm) catalogProducts = catalogProducts.sort((a: any, b: any) => scoreProductRelevance(b, searchTerm) - scoreProductRelevance(a, searchTerm))
+
+      const catalogMusteriTipi = musteriData?.musteri_tipi || 'musteri'
+      setUrunler(catalogProducts.map((urun: any) => ({
+        ...urun,
+        urun_gorselleri: (catalog.gorseller || []).filter((gorsel: any) => gorsel.urun_id === urun.id),
+        urun_stoklari: (catalog.stoklar || []).filter((stok: any) => stok.urun_id === urun.id && (!stok.stok_grubu || stok.stok_grubu === 'hepsi' || stok.stok_grubu === catalogMusteriTipi)),
+        kategoriler: (catalog.kategoriler || []).find((kategori: any) => kategori.id === urun.kategori_id),
+        markalar: (catalog.markalar || []).find((marka: any) => marka.id === urun.marka_id)
+      })))
+      setHasMoreProducts(Boolean(catalog.hasMore))
+      return
+
       if (secilenKampanya) {
       const { data: camp } = await publicSupabase
         .from('kampanyalar')
