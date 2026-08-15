@@ -27,3 +27,18 @@ export async function loadPublicCatalog(limit: number) {
   if (!response.ok || body?.error) throw new Error(body?.error || 'Katalog verisi alınamadı')
   return body.data
 }
+
+export async function loadCurrentCustomerProfile(accessToken: string) {
+  const response = await fetch(`${supabaseUrl}/functions/v1/xml-musteri-siparis`, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ action: 'profile' })
+  })
+  const body = await response.json()
+  if (!response.ok || body?.error) throw new Error(body?.error?.message || 'Müşteri profili alınamadı')
+  return body.data
+}
