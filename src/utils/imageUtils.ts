@@ -6,6 +6,11 @@
 export function getImageUrl(url: string | null | undefined): string {
     if (!url) return ''
 
+    // HTTPS sayfalarda HTTP görsel çağrıları tarayıcı tarafından engellenebilir.
+    if (window.location.protocol === 'https:' && url.startsWith('http://')) {
+        url = `https://${url.slice('http://'.length)}`
+    }
+
     // Eğer URL http:// veya https:// ile başlıyorsa
     if (url.startsWith('http')) {
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321'
