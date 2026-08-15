@@ -151,8 +151,7 @@ export default function Urunler() {
 
       let catalogProducts = (catalog.urunler || []).filter((urun: any) => (
         (!secilenKategori || urun.kategori_id === secilenKategori) &&
-        (!secilenMarka || urun.marka_id === secilenMarka) &&
-        (!searchTerm || scoreProductRelevance(urun, searchTerm) > 0 || matchingCategoryIds.includes(urun.kategori_id) || matchingBrandIds.includes(urun.marka_id))
+        (!secilenMarka || urun.marka_id === secilenMarka)
       ))
       if (searchTerm) catalogProducts = catalogProducts.sort((a: any, b: any) => scoreProductRelevance(b, searchTerm) - scoreProductRelevance(a, searchTerm))
 
