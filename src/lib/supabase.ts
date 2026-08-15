@@ -19,8 +19,10 @@ export const publicSupabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 })
 
-export async function loadPublicCatalog(limit: number) {
-  const response = await fetch(`${supabaseUrl}/functions/v1/public-catalog?limit=${limit}`, {
+export async function loadPublicCatalog(limit: number, searchTerm = '') {
+  const query = new URLSearchParams({ limit: String(limit) })
+  if (searchTerm.trim()) query.set('q', searchTerm.trim())
+  const response = await fetch(`${supabaseUrl}/functions/v1/public-catalog?${query.toString()}`, {
     headers: { apikey: supabaseAnonKey }
   })
   const body = await response.json()

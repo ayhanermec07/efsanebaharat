@@ -142,7 +142,7 @@ export default function Urunler() {
     }
 
     try {
-      const catalog = await loadPublicCatalog(visibleProductLimit)
+      const catalog = await loadPublicCatalog(visibleProductLimit, searchTerm)
       if (!isLatestRequest()) return
 
       if (kategoriler.length === 0) setKategoriler(catalog.kategoriler || [])
