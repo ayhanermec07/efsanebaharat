@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import { loadCurrentCustomerProfile, supabase } from '../lib/supabase'
 
 interface AuthContextType {
   user: User | null
@@ -131,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const syncUserState = useCallback(async (activeUser: User | null) => {
+  const syncUserState = useCallback(async (activeUser: User | null, accessToken?: string) => {
     setUser(activeUser)
 
     if (!activeUser) {
@@ -144,12 +144,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const { data: profileResponse, error: profileError } = await supabase.functions.invoke('xml-musteri-siparis', {
-        body: { action: 'profile' }
-      })
-      const profile = profileResponse?.data
-
-      if (!profileError && profile) {
+      if (accessToken) {
+        const profile = await loadCurrentCustomerProfile(accessToken)
         const grupIskonto = Number(profile.fiyat_gruplari?.indirim_orani || 0)
         const ozelIskonto = Number(profile.ozel_iskonto_orani || 0)
         const toplamIskonto = 100 - ((100 - grupIskonto) * (100 - ozelIskonto)) / 100
@@ -211,7 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        await syncUserState(session?.user || null)
+      await syncUserState(session?.user || null, session?.access_token)
       }
     )
 
@@ -222,7 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await supabase.auth.signInWithPassword({ email, password })
 
     if (result.data.user) {
-      await syncUserState(result.data.user)
+      await syncUserState(result.data.user, result.data.session?.access_token)
     }
 
     return result
