@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { PackageSearch, Search, SlidersHorizontal, X } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import {
-  buildProductSearchPostgrestFilter,
   getMatchingBrandIds,
   getMatchingCategoryIds,
+  sanitizePostgrestSearchTerm,
   scoreProductRelevance,
 } from '../utils/categorySearch'
 import { fetchInBatches } from '../utils/supabaseBatch'
@@ -25,6 +25,7 @@ export default function Urunler() {
   const [secilenKampanya, setSecilenKampanya] = useState(searchParams.get('kampanya') || '')
   const [activeCampaign, setActiveCampaign] = useState<any>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const latestLoadRequestRef = useRef(0)
 
   const syncSearchParams = useCallback((nextValues: { q?: string; kategori?: string; marka?: string; kampanya?: string }) => {
     const nextParams = new URLSearchParams(searchParams)
@@ -79,7 +80,7 @@ export default function Urunler() {
     setSecilenKategori(kategoriParam || '')
     setSecilenMarka(markaParam || '')
     setSecilenKampanya(kampanyaParam || '')
-    if (qParam !== null) setAramaText(qParam)
+    setAramaText(qParam || '')
   }, [searchParams])
 
   async function loadKategoriler() {
@@ -103,6 +104,9 @@ export default function Urunler() {
   }
 
   const loadUrunler = useCallback(async () => {
+    const requestId = ++latestLoadRequestRef.current
+    const isLatestRequest = () => latestLoadRequestRef.current === requestId
+
     setLoading(true)
     let query = supabase
       .from('urunler')
@@ -117,10 +121,18 @@ export default function Urunler() {
     if (secilenMarka) query = query.eq('marka_id', secilenMarka)
 
     if (searchTerm) {
-      const orFilter = buildProductSearchPostgrestFilter(searchTerm, matchingCategoryIds, matchingBrandIds)
-      if (orFilter) {
-        query = query.or(orFilter)
+      const safeSearchTerm = sanitizePostgrestSearchTerm(searchTerm)
+      const searchFilters = [`urun_adi.ilike.%${safeSearchTerm}%`]
+
+      if (matchingCategoryIds.length > 0) {
+        searchFilters.push(`kategori_id.in.(${matchingCategoryIds.join(',')})`)
       }
+
+      if (matchingBrandIds.length > 0) {
+        searchFilters.push(`marka_id.in.(${matchingBrandIds.join(',')})`)
+      }
+
+      query = query.or(searchFilters.join(','))
     }
 
     if (secilenKampanya) {
@@ -131,6 +143,7 @@ export default function Urunler() {
         .single()
 
       if (camp) {
+        if (!isLatestRequest()) return
         setActiveCampaign(camp)
 
         if (camp.kapsam === 'secili_urunler') {
@@ -149,11 +162,13 @@ export default function Urunler() {
           query = query.eq('marka_id', camp.marka_id)
         }
       }
-    } else {
+    } else if (isLatestRequest()) {
       setActiveCampaign(null)
     }
 
     let { data } = await query.order('urun_adi')
+
+    if (!isLatestRequest()) return
 
     if (!data || data.length === 0) {
       setUrunler([])
@@ -194,6 +209,8 @@ export default function Urunler() {
         supabase.from('markalar').select('id, marka_adi').in('id', ids)
       )
     ])
+
+    if (!isLatestRequest()) return
 
     if (gorsellerError) console.error('Ürün görselleri yükleme hatası:', gorsellerError)
     if (stoklarError) console.error('Ürün stokları yükleme hatası:', stoklarError)

@@ -32,6 +32,24 @@ export function getMatchingCategoryIds(categories: SearchableCategory[], searchT
   if (searchWords.length === 0) return []
 
   const result = new Set<string>()
+  const childrenByParent = new Map<string, string[]>()
+
+  for (const category of categories) {
+    if (!category.ust_kategori_id) continue
+
+    const children = childrenByParent.get(category.ust_kategori_id) || []
+    children.push(category.id)
+    childrenByParent.set(category.ust_kategori_id, children)
+  }
+
+  function addCategoryAndChildren(categoryId: string) {
+    if (result.has(categoryId)) return
+
+    result.add(categoryId)
+    for (const childId of childrenByParent.get(categoryId) || []) {
+      addCategoryAndChildren(childId)
+    }
+  }
 
   for (const category of categories) {
     const normName = normalizeSearchText(category.kategori_adi || '')
@@ -44,7 +62,7 @@ export function getMatchingCategoryIds(categories: SearchableCategory[], searchT
     })
 
     if (isExact || isWordMatch) {
-      result.add(category.id)
+      addCategoryAndChildren(category.id)
     }
   }
 
@@ -175,4 +193,3 @@ export function scoreProductRelevance(
 
   return 0
 }
-
