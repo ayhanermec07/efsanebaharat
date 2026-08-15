@@ -144,6 +144,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      const { data: profileResponse, error: profileError } = await supabase.functions.invoke('xml-musteri-siparis', {
+        body: { action: 'profile' }
+      })
+      const profile = profileResponse?.data
+
+      if (!profileError && profile) {
+        const grupIskonto = Number(profile.fiyat_gruplari?.indirim_orani || 0)
+        const ozelIskonto = Number(profile.ozel_iskonto_orani || 0)
+        const toplamIskonto = 100 - ((100 - grupIskonto) * (100 - ozelIskonto)) / 100
+
+        setMusteriData(profile)
+        setIsAdmin(profile.musteri_tipi === 'admin')
+        setGrupIskontoOrani(grupIskonto)
+        setOzelIskontoOrani(ozelIskonto)
+        setIskontoOrani(Math.round(toplamIskonto * 100) / 100)
+        return
+      }
+
       const { data: adminData } = await supabase
         .from('admin_users')
         .select('*')
@@ -255,13 +273,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signOut() {
-    await supabase.auth.signOut()
-    setIsAdmin(false)
-    setMusteriData(null)
-    // İskonto oranlarını sıfırla
-    setIskontoOrani(0)
-    setGrupIskontoOrani(0)
-    setOzelIskontoOrani(0)
+    try {
+      await Promise.race([
+        supabase.auth.signOut({ scope: 'local' }),
+        new Promise((resolve) => window.setTimeout(resolve, 5_000))
+      ])
+    } finally {
+      setUser(null)
+      setIsAdmin(false)
+      setMusteriData(null)
+      setIskontoOrani(0)
+      setGrupIskontoOrani(0)
+      setOzelIskontoOrani(0)
+    }
   }
 
   async function updateUser(data: { ad?: string; soyad?: string; telefon?: string; adres?: string }) {
