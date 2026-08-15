@@ -19,6 +19,7 @@ export default function Urunler() {
   const [kategoriler, setKategoriler] = useState<any[]>([])
   const [markalar, setMarkalar] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [aramaText, setAramaText] = useState(searchParams.get('q') || '')
   const [secilenKategori, setSecilenKategori] = useState(searchParams.get('kategori') || '')
   const [secilenMarka, setSecilenMarka] = useState(searchParams.get('marka') || '')
@@ -108,6 +109,7 @@ export default function Urunler() {
     const isLatestRequest = () => latestLoadRequestRef.current === requestId
 
     setLoading(true)
+    setLoadError(null)
     let query = supabase
       .from('urunler')
       .select('*')
@@ -135,7 +137,8 @@ export default function Urunler() {
       query = query.or(searchFilters.join(','))
     }
 
-    if (secilenKampanya) {
+    try {
+      if (secilenKampanya) {
       const { data: camp } = await supabase
         .from('kampanyalar')
         .select('*')
@@ -162,40 +165,42 @@ export default function Urunler() {
           query = query.eq('marka_id', camp.marka_id)
         }
       }
-    } else if (isLatestRequest()) {
-      setActiveCampaign(null)
-    }
+      } else if (isLatestRequest()) {
+        setActiveCampaign(null)
+      }
 
-    let { data } = await query.order('urun_adi')
+      const requestTimeout = new Promise<never>((_, reject) => {
+        window.setTimeout(() => reject(new Error('Ürün listesi zamanında yüklenemedi.')), 20_000)
+      })
+      let { data } = await Promise.race([query.order('urun_adi'), requestTimeout])
 
-    if (!isLatestRequest()) return
+      if (!isLatestRequest()) return
 
-    if (!data || data.length === 0) {
-      setUrunler([])
-      setLoading(false)
-      return
-    }
+      if (!data || data.length === 0) {
+        setUrunler([])
+        return
+      }
 
-    if (searchTerm) {
-      data = data.filter(
-        (p) =>
-          scoreProductRelevance(p, searchTerm) > 0 ||
-          matchingCategoryIds.includes(p.kategori_id) ||
-          matchingBrandIds.includes(p.marka_id)
-      )
-      data.sort((a, b) => scoreProductRelevance(b, searchTerm) - scoreProductRelevance(a, searchTerm))
-    }
+      if (searchTerm) {
+        data = data.filter(
+          (p) =>
+            scoreProductRelevance(p, searchTerm) > 0 ||
+            matchingCategoryIds.includes(p.kategori_id) ||
+            matchingBrandIds.includes(p.marka_id)
+        )
+        data.sort((a, b) => scoreProductRelevance(b, searchTerm) - scoreProductRelevance(a, searchTerm))
+      }
 
-    const urunIds = data.map(u => u.id)
-    const kategoriIds = [...new Set(data.map(u => u.kategori_id).filter(Boolean))]
-    const markaIds = [...new Set(data.map(u => u.marka_id).filter(Boolean))]
+      const urunIds = data.map(u => u.id)
+      const kategoriIds = [...new Set(data.map(u => u.kategori_id).filter(Boolean))]
+      const markaIds = [...new Set(data.map(u => u.marka_id).filter(Boolean))]
 
-    const [
+      const [
       { data: gorseller, error: gorsellerError },
       { data: stoklar, error: stoklarError },
       { data: kategorilerData },
       { data: markalarData }
-    ] = await Promise.all([
+      ] = await Promise.all([
       fetchInBatches(urunIds, ids =>
         supabase.from('urun_gorselleri').select('*').in('urun_id', ids).order('sira_no')
       ),
@@ -208,16 +213,16 @@ export default function Urunler() {
       fetchInBatches(markaIds, ids =>
         supabase.from('markalar').select('id, marka_adi').in('id', ids)
       )
-    ])
+      ])
 
-    if (!isLatestRequest()) return
+      if (!isLatestRequest()) return
 
-    if (gorsellerError) console.error('Ürün görselleri yükleme hatası:', gorsellerError)
-    if (stoklarError) console.error('Ürün stokları yükleme hatası:', stoklarError)
+      if (gorsellerError) console.error('Ürün görselleri yükleme hatası:', gorsellerError)
+      if (stoklarError) console.error('Ürün stokları yükleme hatası:', stoklarError)
 
-    const musteriTipi = musteriData?.musteri_tipi || 'musteri'
+      const musteriTipi = musteriData?.musteri_tipi || 'musteri'
 
-    const urunlerWithData = data.map(urun => {
+      const urunlerWithData = data.map(urun => {
       const urunStoklari = stoklar?.filter(s => s.urun_id === urun.id) || []
       const filtreliStoklar = urunStoklari.filter(s =>
         !s.stok_grubu || s.stok_grubu === 'hepsi' || s.stok_grubu === musteriTipi
@@ -230,10 +235,18 @@ export default function Urunler() {
         kategoriler: kategorilerData?.find(k => k.id === urun.kategori_id),
         markalar: markalarData?.find(m => m.id === urun.marka_id)
       }
-    })
+      })
 
-    setUrunler(urunlerWithData)
-    setLoading(false)
+      setUrunler(urunlerWithData)
+    } catch (error) {
+      console.error('Ürün yükleme hatası:', error)
+      if (isLatestRequest()) {
+        setUrunler([])
+        setLoadError('Ürünler şu anda yüklenemedi. Lütfen tekrar deneyin.')
+      }
+    } finally {
+      if (isLatestRequest()) setLoading(false)
+    }
   }, [aramaText, kategoriler, markalar, musteriData?.musteri_tipi, secilenKampanya, secilenKategori, secilenMarka])
 
   useEffect(() => {
@@ -362,7 +375,7 @@ export default function Urunler() {
         <section className="min-w-0">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm font-bold text-zinc-600">
-              {loading ? 'Ürünler yükleniyor' : `${urunler.length} ürün bulundu`}
+              {loading ? 'Ürünler yükleniyor' : loadError || `${urunler.length} ürün bulundu`}
             </p>
           </div>
 
@@ -371,6 +384,15 @@ export default function Urunler() {
               {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
                 <div key={item} className="h-72 animate-pulse rounded-lg bg-white shadow-sm" />
               ))}
+            </div>
+          ) : loadError ? (
+            <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-red-200 bg-red-50 p-6 text-center">
+              <PackageSearch className="h-12 w-12 text-red-300" />
+              <h2 className="mt-3 text-xl font-bold text-zinc-950">Ürünler yüklenemedi</h2>
+              <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-600">{loadError}</p>
+              <button type="button" onClick={loadUrunler} className="shop-btn-primary mt-5">
+                Tekrar dene
+              </button>
             </div>
           ) : urunler.length === 0 ? (
             <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center">
