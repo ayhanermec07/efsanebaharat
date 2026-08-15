@@ -26,6 +26,45 @@ export default function Urunler() {
   const [activeCampaign, setActiveCampaign] = useState<any>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
 
+  const syncSearchParams = useCallback((nextValues: { q?: string; kategori?: string; marka?: string; kampanya?: string }) => {
+    const nextParams = new URLSearchParams(searchParams)
+
+    if (nextValues.q !== undefined) {
+      const trimmed = nextValues.q.trim()
+      if (trimmed) {
+        nextParams.set('q', trimmed)
+      } else {
+        nextParams.delete('q')
+      }
+    }
+
+    if (nextValues.kategori !== undefined) {
+      if (nextValues.kategori) {
+        nextParams.set('kategori', nextValues.kategori)
+      } else {
+        nextParams.delete('kategori')
+      }
+    }
+
+    if (nextValues.marka !== undefined) {
+      if (nextValues.marka) {
+        nextParams.set('marka', nextValues.marka)
+      } else {
+        nextParams.delete('marka')
+      }
+    }
+
+    if (nextValues.kampanya !== undefined) {
+      if (nextValues.kampanya) {
+        nextParams.set('kampanya', nextValues.kampanya)
+      } else {
+        nextParams.delete('kampanya')
+      }
+    }
+
+    setSearchParams(nextParams, { replace: true })
+  }, [searchParams, setSearchParams])
+
   useEffect(() => {
     loadKategoriler()
     loadMarkalar()
@@ -189,6 +228,7 @@ export default function Urunler() {
     setSecilenMarka('')
     setAramaText('')
     setSecilenKampanya('')
+    syncSearchParams({ q: '', kategori: '', marka: '', kampanya: '' })
   }
 
   return (
@@ -241,7 +281,11 @@ export default function Urunler() {
                   <input
                     type="text"
                     value={aramaText}
-                    onChange={(e) => setAramaText(e.target.value)}
+                    onChange={(e) => {
+                      const nextValue = e.target.value
+                      setAramaText(nextValue)
+                      syncSearchParams({ q: nextValue })
+                    }}
                     placeholder="Ürün veya kategori adı..."
                     className="shop-input pl-9"
                   />
@@ -250,7 +294,15 @@ export default function Urunler() {
 
               <label className="block">
                 <span className="mb-1.5 block text-sm font-bold text-zinc-700">Kategori</span>
-                <select value={secilenKategori} onChange={(e) => setSecilenKategori(e.target.value)} className="shop-input">
+                <select
+                  value={secilenKategori}
+                  onChange={(e) => {
+                    const nextValue = e.target.value
+                    setSecilenKategori(nextValue)
+                    syncSearchParams({ kategori: nextValue })
+                  }}
+                  className="shop-input"
+                >
                   <option value="">Tüm kategoriler</option>
                   {kategoriler.map((kat) => (
                     <option key={kat.id} value={kat.id}>
@@ -262,7 +314,15 @@ export default function Urunler() {
 
               <label className="block">
                 <span className="mb-1.5 block text-sm font-bold text-zinc-700">Marka</span>
-                <select value={secilenMarka} onChange={(e) => setSecilenMarka(e.target.value)} className="shop-input">
+                <select
+                  value={secilenMarka}
+                  onChange={(e) => {
+                    const nextValue = e.target.value
+                    setSecilenMarka(nextValue)
+                    syncSearchParams({ marka: nextValue })
+                  }}
+                  className="shop-input"
+                >
                   <option value="">Tüm markalar</option>
                   {markalar.map((marka) => (
                     <option key={marka.id} value={marka.id}>

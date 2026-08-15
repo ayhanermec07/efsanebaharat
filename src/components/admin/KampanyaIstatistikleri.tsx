@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { TrendingUp, Users, DollarSign, ShoppingCart } from 'lucide-react';
 
@@ -21,24 +21,20 @@ export default function KampanyaIstatistikleri({ kampanyaId }: Props) {
   const [istatistikler, setIstatistikler] = useState<KampanyaIstatistik[]>([]);
   const [yukleniyor, setYukleniyor] = useState(true);
 
-  useEffect(() => {
-    istatistikleriGetir();
-  }, [kampanyaId]);
-
-  const istatistikleriGetir = async () => {
+  const istatistikleriGetir = useCallback(async () => {
     try {
       setYukleniyor(true);
-      
+
       let query = supabase
         .from('kampanya_istatistikleri')
         .select('*');
-      
+
       if (kampanyaId) {
         query = query.eq('id', kampanyaId);
       }
-      
+
       const { data, error } = await query;
-      
+
       if (error) throw error;
       setIstatistikler(data || []);
     } catch (error) {
@@ -46,7 +42,11 @@ export default function KampanyaIstatistikleri({ kampanyaId }: Props) {
     } finally {
       setYukleniyor(false);
     }
-  };
+  }, [kampanyaId]);
+
+  useEffect(() => {
+    istatistikleriGetir();
+  }, [istatistikleriGetir]);
 
   if (yukleniyor) {
     return (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { ImageUpload } from '../../components/ImageUpload'
 import { getImageUrl } from '../../utils/imageUtils'
@@ -80,29 +80,7 @@ export default function AdminKampanyalar() {
   
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadData()
-  }, [activeTab])
-
-  async function loadData() {
-    setLoading(true)
-    try {
-      if (activeTab === 'kampanyalar') {
-        await loadKampanyalar()
-      } else if (activeTab === 'bannerlar') {
-        await loadBannerlar()
-      } else if (activeTab === 'onerilen') {
-        await loadOnerilenUrunler()
-      }
-    } catch (error) {
-      console.error('Veri yükleme hatası:', error)
-      toast.error('Veriler yüklenirken hata oluştu')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function loadKampanyalar() {
+  const loadKampanyalar = useCallback(async () => {
     const { data, error } = await supabase
       .from('kampanyalar')
       .select('*')
@@ -110,7 +88,6 @@ export default function AdminKampanyalar() {
 
     if (error) throw error
 
-    // Kullanım sayılarını al
     if (data && data.length > 0) {
       const kampanyaIds = data.map(k => k.id)
       const { data: kullanimlar } = await supabase
@@ -127,9 +104,9 @@ export default function AdminKampanyalar() {
     } else {
       setKampanyalar([])
     }
-  }
+  }, [])
 
-  async function loadBannerlar() {
+  const loadBannerlar = useCallback(async () => {
     const { data, error } = await supabase
       .from('kampanya_banner')
       .select('*')
@@ -138,11 +115,10 @@ export default function AdminKampanyalar() {
     if (error) throw error
     setBannerlar(data || [])
 
-    // Kampanyaları da yükle (select için)
     await loadKampanyalar()
-  }
+  }, [loadKampanyalar])
 
-  async function loadOnerilenUrunler() {
+  const loadOnerilenUrunler = useCallback(async () => {
     const { data, error } = await supabase
       .from('onerilen_urunler')
       .select('*')
@@ -151,7 +127,6 @@ export default function AdminKampanyalar() {
 
     if (error) throw error
 
-    // Ürün isimlerini al
     if (data && data.length > 0) {
       const urunIds = data.map(o => o.urun_id)
       const { data: urunler } = await supabase
@@ -168,7 +143,6 @@ export default function AdminKampanyalar() {
       setOnerilenUrunler([])
     }
 
-    // Tüm ürünleri yükle (eklemek için)
     const { data: allUrunler } = await supabase
       .from('urunler')
       .select('id, urun_adi, aktif')
@@ -176,7 +150,29 @@ export default function AdminKampanyalar() {
       .order('urun_adi', { ascending: true })
 
     setTumUrunler(allUrunler || [])
-  }
+  }, [])
+
+  const loadData = useCallback(async () => {
+    setLoading(true)
+    try {
+      if (activeTab === 'kampanyalar') {
+        await loadKampanyalar()
+      } else if (activeTab === 'bannerlar') {
+        await loadBannerlar()
+      } else if (activeTab === 'onerilen') {
+        await loadOnerilenUrunler()
+      }
+    } catch (error) {
+      console.error('Veri yükleme hatası:', error)
+      toast.error('Veriler yüklenirken hata oluştu')
+    } finally {
+      setLoading(false)
+    }
+  }, [activeTab, loadBannerlar, loadKampanyalar, loadOnerilenUrunler])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   // Kampanya CRUD
   async function saveKampanya(formData: any) {

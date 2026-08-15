@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -12,7 +12,6 @@ export default function Hesabim() {
   const [loading, setLoading] = useState(true)
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  // Profil düzenleme state'leri
   const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
@@ -71,15 +70,7 @@ export default function Hesabim() {
     )
   }
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/giris')
-    } else if (user && musteriData) {
-      loadSiparisler()
-    }
-  }, [user, authLoading, musteriData])
-
-  async function loadSiparisler() {
+  const loadSiparisler = useCallback(async () => {
     if (!musteriData?.id) {
       console.log('Müşteri ID bulunamadı:', musteriData)
       return
@@ -88,7 +79,6 @@ export default function Hesabim() {
     setLoading(true)
 
     try {
-      // Siparişleri çek
       const { data: siparisData, error: siparisError } = await supabase
         .from('siparisler')
         .select('*')
@@ -98,7 +88,6 @@ export default function Hesabim() {
       if (siparisError) throw siparisError
 
       if (siparisData && siparisData.length > 0) {
-        // Her sipariş için ürünleri manuel olarak çek
         const siparislerWithUrunler = await Promise.all(
           siparisData.map(async (siparis) => {
             const { data: siparisUrunleri } = await supabase
@@ -107,14 +96,12 @@ export default function Hesabim() {
               .eq('siparis_id', siparis.id)
 
             if (siparisUrunleri && siparisUrunleri.length > 0) {
-              // Ürün bilgilerini çek
               const urunIds = [...new Set(siparisUrunleri.map(su => su.urun_id))]
               const { data: urunler } = await supabase
                 .from('urunler')
                 .select('id, urun_adi')
                 .in('id', urunIds)
 
-              // Sipariş ürünlerine ürün adlarını ekle
               const detayliUrunler = siparisUrunleri.map(su => ({
                 ...su,
                 urun_adi: urunler?.find(u => u.id === su.urun_id)?.urun_adi || 'Ürün'
@@ -143,7 +130,15 @@ export default function Hesabim() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [musteriData])
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/giris')
+    } else if (user && musteriData) {
+      loadSiparisler()
+    }
+  }, [user, authLoading, musteriData, navigate, loadSiparisler])
 
   async function copyToClipboard(text: string, id: string) {
     try {
@@ -293,7 +288,11 @@ export default function Hesabim() {
                 <div>
                   <label className="text-sm text-gray-600">Müşteri Tipi</label>
                   <p className="font-medium">
-                    {musteriData?.musteri_tipi === 'bayi' ? 'Bayi' : 'Bireysel Müşteri'}
+                    {musteriData?.musteri_tipi === 'bayi'
+                      ? 'Bayi'
+                      : musteriData?.musteri_tipi === 'xml_musteri'
+                        ? 'XML Müşteri'
+                        : 'Bireysel Müşteri'}
                   </p>
                 </div>
                 {musteriData?.telefon && (

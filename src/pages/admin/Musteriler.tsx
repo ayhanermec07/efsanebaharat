@@ -61,12 +61,14 @@ export default function Musteriler() {
       const telefon = (musteri.telefon || '').toLowerCase()
       const adres = (musteri.adres || '').toLowerCase()
       const fiyatGrubu = (musteri.fiyat_grubu?.grup_adi || '').toLowerCase()
+      const musteriTipi = (musteri.musteri_tipi || '').toLowerCase()
 
       return (
         fullName.includes(lowerQuery) ||
         telefon.includes(lowerQuery) ||
         adres.includes(lowerQuery) ||
-        fiyatGrubu.includes(lowerQuery)
+        fiyatGrubu.includes(lowerQuery) ||
+        musteriTipi.includes(lowerQuery)
       )
     })
 
@@ -162,8 +164,18 @@ export default function Musteriler() {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">{musteri.telefon || '-'}</td>
                   <td className="px-6 py-4 text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs ${musteri.musteri_tipi === 'bayi' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-                      {musteri.musteri_tipi === 'bayi' ? 'Bayi' : 'Müşteri'}
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      musteri.musteri_tipi === 'bayi'
+                        ? 'bg-blue-100 text-blue-800'
+                        : musteri.musteri_tipi === 'xml_musteri'
+                          ? 'bg-violet-100 text-violet-800'
+                          : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {musteri.musteri_tipi === 'bayi'
+                        ? 'Bayi'
+                        : musteri.musteri_tipi === 'xml_musteri'
+                          ? 'XML Müşteri'
+                          : 'Müşteri'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
@@ -219,7 +231,11 @@ export default function Musteriler() {
                   <div>
                     <label className="text-sm font-medium text-gray-500">Müşteri Tipi</label>
                     <p className="text-gray-900">
-                      {secilenMusteri.musteri_tipi === 'bayi' ? 'Bayi' : 'Müşteri'}
+                      {secilenMusteri.musteri_tipi === 'bayi'
+                        ? 'Bayi'
+                        : secilenMusteri.musteri_tipi === 'xml_musteri'
+                          ? 'XML Müşteri'
+                          : 'Müşteri'}
                     </p>
                   </div>
                   <div className="col-span-2">
@@ -274,6 +290,7 @@ export default function Musteriler() {
                   >
                     <option value="musteri">Müşteri</option>
                     <option value="bayi">Bayi</option>
+                    <option value="xml_musteri">XML Müşteri</option>
                   </select>
                 </div>
 

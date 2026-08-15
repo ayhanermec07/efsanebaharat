@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { FileCode, RefreshCw, Download, Copy, Check, Key, Eye, EyeOff, Package, CheckCircle, XCircle, AlertTriangle, Activity, UploadCloud } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -89,15 +89,10 @@ export default function XMLYonetim() {
     const [importing, setImporting] = useState(false)
     const [importResult, setImportResult] = useState<XMLImportResult | null>(null)
 
-    useEffect(() => {
-        loadData()
-    }, [])
-
-    async function loadData() {
+    const loadData = useCallback(async () => {
         setLoading(true)
 
         try {
-            // XML ayarlarını çek
             const { data: settings } = await supabase
                 .from('bayi_xml_settings')
                 .select('*')
@@ -117,7 +112,6 @@ export default function XMLYonetim() {
                 .select('*')
                 .order('created_at', { ascending: true })
 
-            // Migration henüz çalıştırılmadıysa mevcut tek kaynak ayarıyla çalışmaya devam et.
             if (!sourcesError && sources) {
                 setImportSources(sources)
                 const currentSource = sources.find(source => source.id === selectedSourceId) || sources.find(source => source.is_active) || sources[0]
@@ -132,7 +126,6 @@ export default function XMLYonetim() {
                 setUpdateIntervalMinutes(settings.update_interval_minutes || 30)
             }
 
-            // XML'e seçili ürünleri çek
             const { data: stoklar } = await supabase
                 .from('urun_stoklari')
                 .select('id, urun_id, birim_adedi, birim_turu, fiyat, stok_miktari, stok_birimi')
@@ -140,7 +133,6 @@ export default function XMLYonetim() {
                 .eq('aktif_durum', true)
 
             if (stoklar && stoklar.length > 0) {
-                // Ürün detaylarını çek
                 const urunIds = [...new Set(stoklar.map(s => s.urun_id))]
 
                 const [{ data: urunler }, { data: kategoriler }, { data: markalar }, { data: gorseller }] = await Promise.all([
@@ -185,7 +177,11 @@ export default function XMLYonetim() {
         }
 
         setLoading(false)
-    }
+    }, [selectedSourceId])
+
+    useEffect(() => {
+        loadData()
+    }, [loadData])
 
     function addError(message: string, type: 'error' | 'warning') {
         const newError: XMLError = {

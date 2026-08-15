@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 
@@ -27,75 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [grupIskontoOrani, setGrupIskontoOrani] = useState(0)
   const [ozelIskontoOrani, setOzelIskontoOrani] = useState(0)
 
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        setUser(user)
-
-        if (user) {
-          // Admin kontrolü
-          const { data: adminData } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('user_id', user.id)
-            .maybeSingle()
-
-          setIsAdmin(!!adminData)
-
-          // Müşteri bilgilerini al
-          const { data: musteri, error: musteriError } = await supabase
-            .from('musteriler')
-            .select('*')
-            .eq('user_id', user.id)
-            .maybeSingle()
-
-          if (musteriError) {
-            console.error('Müşteri bilgisi yükleme hatası:', musteriError)
-          }
-
-          // Fiyat grubu bilgisini ayrı çek
-          if (musteri && musteri.fiyat_grubu_id) {
-            const { data: fiyatGrubu } = await supabase
-              .from('fiyat_gruplari')
-              .select('*')
-              .eq('id', musteri.fiyat_grubu_id)
-              .maybeSingle()
-
-            setMusteriData({ ...musteri, fiyat_gruplari: fiyatGrubu })
-          } else {
-            setMusteriData(musteri)
-          }
-
-          // İskonto oranını hesapla
-          if (musteri) {
-            await hesaplaIskontoOrani(musteri.id)
-          }
-        } else {
-          setIskontoOrani(0)
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadUser()
-
-    // Auth state değişikliklerini dinle
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user || null)
-        if (!session?.user) {
-          setIsAdmin(false)
-          setMusteriData(null)
-        }
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  async function hesaplaIskontoOrani(musteriId: string) {
+  const hesaplaIskontoOrani = useCallback(async (musteriId: string) => {
     try {
       console.log('🔍 İskonto hesaplanıyor, Müşteri ID:', musteriId)
       const bugun = new Date().toISOString().split('T')[0] // Sadece tarih kısmı
@@ -196,49 +129,82 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('❌ İskonto hesaplama hatası:', error)
       setIskontoOrani(0)
     }
-  }
+  }, [])
 
-  async function signIn(email: string, password: string) {
-    const result = await supabase.auth.signInWithPassword({ email, password })
+  const syncUserState = useCallback(async (activeUser: User | null) => {
+    setUser(activeUser)
 
-    if (result.data.user) {
-      // Admin kontrolü
+    if (!activeUser) {
+      setIsAdmin(false)
+      setMusteriData(null)
+      setIskontoOrani(0)
+      setGrupIskontoOrani(0)
+      setOzelIskontoOrani(0)
+      return
+    }
+
+    try {
       const { data: adminData } = await supabase
         .from('admin_users')
         .select('*')
-        .eq('user_id', result.data.user.id)
+        .eq('user_id', activeUser.id)
         .maybeSingle()
 
-      setIsAdmin(!!adminData)
-
-      // Müşteri bilgilerini al
       const { data: musteri, error: musteriError } = await supabase
         .from('musteriler')
         .select('*')
-        .eq('user_id', result.data.user.id)
+        .eq('user_id', activeUser.id)
         .maybeSingle()
 
       if (musteriError) {
         console.error('Müşteri bilgisi yükleme hatası:', musteriError)
       }
 
-      // Fiyat grubu bilgisini ayrı çek
-      if (musteri && musteri.fiyat_grubu_id) {
-        const { data: fiyatGrubu } = await supabase
-          .from('fiyat_gruplari')
-          .select('*')
-          .eq('id', musteri.fiyat_grubu_id)
-          .maybeSingle()
+      const normalizedMusteri = musteri && musteri.fiyat_grubu_id
+        ? { ...musteri, fiyat_gruplari: (await supabase.from('fiyat_gruplari').select('*').eq('id', musteri.fiyat_grubu_id).maybeSingle()).data }
+        : musteri
 
-        setMusteriData({ ...musteri, fiyat_gruplari: fiyatGrubu })
+      setMusteriData(normalizedMusteri)
+      setIsAdmin(Boolean(adminData) || normalizedMusteri?.musteri_tipi === 'admin')
+
+      if (normalizedMusteri) {
+        await hesaplaIskontoOrani(normalizedMusteri.id)
       } else {
-        setMusteriData(musteri)
+        setIskontoOrani(0)
+        setGrupIskontoOrani(0)
+        setOzelIskontoOrani(0)
       }
+    } catch (error) {
+      console.error('Kullanıcı durumu senkronizasyon hatası:', error)
+      setIsAdmin(false)
+      setMusteriData(null)
+    } finally {
+      setLoading(false)
+    }
+  }, [hesaplaIskontoOrani])
 
-      // İskonto oranını hesapla
-      if (musteri) {
-        await hesaplaIskontoOrani(musteri.id)
+  useEffect(() => {
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      await syncUserState(user)
+    }
+
+    loadUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        await syncUserState(session?.user || null)
       }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [syncUserState])
+
+  async function signIn(email: string, password: string) {
+    const result = await supabase.auth.signInWithPassword({ email, password })
+
+    if (result.data.user) {
+      await syncUserState(result.data.user)
     }
 
     return result

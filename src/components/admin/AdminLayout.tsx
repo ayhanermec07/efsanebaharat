@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet, Link, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import {
   LayoutDashboard,
@@ -33,9 +33,9 @@ export default function AdminLayout() {
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) {
-      navigate('/giris')
+      navigate('/giris', { replace: true })
     }
-  }, [user, isAdmin, loading])
+  }, [user, isAdmin, loading, navigate])
 
   // Sayfa değiştiğinde sidebar'ı kapat (mobilde)
   useEffect(() => {
@@ -50,7 +50,9 @@ export default function AdminLayout() {
     )
   }
 
-  if (!isAdmin) return null
+  if (!isAdmin) {
+    return <Navigate to="/giris" replace />
+  }
 
   const menuItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },

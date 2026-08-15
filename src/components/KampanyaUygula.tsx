@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Tag, X, AlertCircle } from 'lucide-react';
@@ -36,12 +36,7 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
   const [kampanyalarYukleniyor, setKampanyalarYukleniyor] = useState(true);
   const [gosterimModu, setGosterimModu] = useState<'liste' | 'kod'>('liste');
 
-  // Aktif kampanyaları yükle
-  useEffect(() => {
-    aktifKampanyalariYukle();
-  }, [musteriData]);
-
-  const aktifKampanyalariYukle = async () => {
+  const aktifKampanyalariYukle = useCallback(async () => {
     try {
       setKampanyalarYukleniyor(true);
 
@@ -54,7 +49,6 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
         .lte('baslangic_tarihi', simdi)
         .gte('bitis_tarihi', simdi);
 
-      // Hedef grup filtresi
       if (musteriData) {
         if (musteriData.musteri_tipi === 'bayi') {
           query = query.in('hedef_grup', ['bayi', 'hepsi']);
@@ -68,7 +62,6 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
       const { data, error } = await query;
 
       if (!error && data) {
-        // Kullanım limiti kontrolü
         const uygunKampanyalar = data.filter(k =>
           !k.kullanim_limiti || k.kullanim_sayisi < k.kullanim_limiti
         );
@@ -79,7 +72,11 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
     } finally {
       setKampanyalarYukleniyor(false);
     }
-  };
+  }, [musteriData]);
+
+  useEffect(() => {
+    aktifKampanyalariYukle();
+  }, [aktifKampanyalariYukle]);
 
   const kampanyaKontrol = async (kod: string) => {
     try {
