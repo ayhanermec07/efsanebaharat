@@ -88,6 +88,9 @@ export default function XMLYonetim() {
     const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null)
     const [importing, setImporting] = useState(false)
     const [importResult, setImportResult] = useState<XMLImportResult | null>(null)
+    const exportUrl = xmlSettings?.xml_token
+        ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bayi-xml-feed?token=${encodeURIComponent(xmlSettings.xml_token)}`
+        : null
 
     const loadData = useCallback(async () => {
         setLoading(true)
@@ -956,25 +959,31 @@ export default function XMLYonetim() {
                 </h2>
                 
                 <p className="text-sm text-gray-600 mb-4">
-                    Seçili ürünler (toplam {selectedProducts.length} adet) herhangi bir kısıtlama veya token olmadan doğrudan aşağıdaki bağlantıdan çekilebilir. Bu bağlantıyı bayilerinizle veya pazaryerleriyle paylaşabilirsiniz.
+                    Seçili ürünler (toplam {selectedProducts.length} adet) yalnızca aşağıdaki güvenli bağlantı ile çekilebilir. Bağlantıyı sadece yetkilendirdiğiniz XML müşterileriyle paylaşın.
                 </p>
 
                 <div className="flex items-center gap-3">
-                    <div className="flex-1 bg-gray-100 rounded-lg px-4 py-3 font-mono text-sm text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap border border-gray-200" title={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bayi-xml-feed`}>
-                        {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bayi-xml-feed`}
+                    <div className="flex-1 min-w-0 bg-gray-100 rounded-lg px-4 py-3 font-mono text-sm text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap border border-gray-200" title={exportUrl || 'Önce XML anahtarı oluşturun'}>
+                        {exportUrl || 'Önce XML anahtarı oluşturun'}
                     </div>
                     <button
                         onClick={async () => {
-                            const success = await copyToClipboard(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bayi-xml-feed`)
+                            if (!exportUrl) {
+                                toast.error('Önce XML anahtarı oluşturun')
+                                return
+                            }
+                            const success = await copyToClipboard(exportUrl)
                             if (success) toast.success('XML Bağlantısı kopyalandı!')
                         }}
+                        disabled={!exportUrl}
                         className="px-4 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition flex items-center gap-2"
                         title="Kopyala"
                     >
                         <Copy className="w-4 h-4" /> Kopyala
                     </button>
                     <button
-                        onClick={() => window.open(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bayi-xml-feed`, '_blank')}
+                        onClick={() => exportUrl && window.open(exportUrl, '_blank')}
+                        disabled={!exportUrl}
                         className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center gap-2"
                     >
                         <Eye className="w-4 h-4" /> Aç
