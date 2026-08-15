@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ShieldCheck, ShoppingBag, Sparkles, Truck } from 'lucide-react'
 import CanliDestekWidget from '../components/CanliDestekWidget'
 import UrunKart from '../components/UrunKart'
-import { supabase } from '../lib/supabase'
+import { publicSupabase } from '../lib/supabase'
 import { getImageUrl } from '../utils/imageUtils'
 import { fetchInBatches } from '../utils/supabaseBatch'
 import { useAuth } from '../contexts/AuthContext'
@@ -31,7 +31,7 @@ export default function AnaSayfa() {
     if (hasLoadedRef.current) return
 
     async function loadUrunlerByIds(urunIds: string[], setter: Dispatch<SetStateAction<any[]>>) {
-      const { data: urunData } = await supabase
+      const { data: urunData } = await publicSupabase
         .from('urunler')
         .select('*')
         .in('id', urunIds)
@@ -44,16 +44,16 @@ export default function AnaSayfa() {
 
       const [{ data: gorseller }, { data: stoklar }, { data: kategoriler }, { data: markalarData }] = await Promise.all([
         fetchInBatches(urunIds, ids =>
-          supabase.from('urun_gorselleri').select('*').in('urun_id', ids).order('sira_no')
+          publicSupabase.from('urun_gorselleri').select('*').in('urun_id', ids).order('sira_no')
         ),
         fetchInBatches(urunIds, ids =>
-          supabase.from('urun_stoklari').select('*').in('urun_id', ids).eq('aktif_durum', true)
+          publicSupabase.from('urun_stoklari').select('*').in('urun_id', ids).eq('aktif_durum', true)
         ),
         fetchInBatches(kategoriIds, ids =>
-          supabase.from('kategoriler').select('id, kategori_adi').in('id', ids)
+          publicSupabase.from('kategoriler').select('id, kategori_adi').in('id', ids)
         ),
         fetchInBatches(markaIds, ids =>
-          supabase.from('markalar').select('id, marka_adi').in('id', ids)
+          publicSupabase.from('markalar').select('id, marka_adi').in('id', ids)
         )
       ])
 
@@ -73,7 +73,7 @@ export default function AnaSayfa() {
         setLoading(true)
         setError(null)
 
-        const { data: bannerData, error: bannerError } = await supabase
+        const { data: bannerData, error: bannerError } = await publicSupabase
           .from('kampanyalar')
           .select('id, ad, aciklama, banner_gorseli, kapsam, kategori_id, marka_id, kod, hedef_grup')
           .eq('aktif', true)
@@ -84,7 +84,7 @@ export default function AnaSayfa() {
         if (bannerError) console.error('Banner yükleme hatası:', bannerError)
         if (bannerData) setBanners(bannerData)
 
-        const { data: onerilenData } = await supabase
+        const { data: onerilenData } = await publicSupabase
           .from('onerilen_urunler')
           .select('urun_id')
           .eq('manuel_secim', true)
@@ -94,7 +94,7 @@ export default function AnaSayfa() {
         if (onerilenData && onerilenData.length > 0) {
           await loadUrunlerByIds(onerilenData.map(o => o.urun_id), setOneCikanUrunler)
         } else {
-          const { data: fallbackData } = await supabase
+          const { data: fallbackData } = await publicSupabase
             .from('urunler')
             .select('id')
             .eq('aktif_durum', true)
@@ -105,7 +105,7 @@ export default function AnaSayfa() {
           }
         }
 
-        const { data: bestsellerData } = await supabase
+        const { data: bestsellerData } = await publicSupabase
           .from('urunler')
           .select('id')
           .eq('aktif_durum', true)
@@ -116,7 +116,7 @@ export default function AnaSayfa() {
           await loadUrunlerByIds(bestsellerData.map(u => u.id), setEnCokSatanlar)
         }
 
-        const { data: yeniData } = await supabase
+        const { data: yeniData } = await publicSupabase
           .from('urunler')
           .select('id')
           .eq('aktif_durum', true)
@@ -127,7 +127,7 @@ export default function AnaSayfa() {
           await loadUrunlerByIds(yeniData.map(u => u.id), setYeniEklenenler)
         }
 
-        const { data: markaData } = await supabase
+        const { data: markaData } = await publicSupabase
           .from('markalar')
           .select('id, marka_adi, logo_url')
           .eq('aktif_durum', true)
