@@ -3,16 +3,14 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import sourceIdentifierPlugin from 'vite-plugin-source-identifier'
 
-const isProd = process.env.BUILD_MODE === 'prod'
-const isDev = process.env.NODE_ENV === 'development'
-
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     react(),
-    // Development'ta source identifier'ı devre dışı bırak
-    ...(!isDev ? [
+    // Source identifiers assist local development but add significant work
+    // during a production bundle build.
+    ...(command === 'serve' ? [
       sourceIdentifierPlugin({
-        enabled: !isProd,
+        enabled: true,
         attributePrefix: 'data-matrix',
         includeProps: true,
       })
@@ -34,4 +32,4 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
   },
-})
+}))
