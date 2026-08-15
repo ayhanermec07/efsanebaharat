@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment -- Recharts 2.13 JSX types vary across supported React type patches. */
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
@@ -341,13 +342,13 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={dashboardData.enCokSatanlar} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <XAxis type="number" />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <YAxis dataKey="urun_adi" type="category" width={120} />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <Tooltip />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <Bar dataKey="toplam_satis" fill="#3B82F6" name="Satış Adedi" />
                 </BarChart>
               </ResponsiveContainer>
@@ -367,13 +368,13 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={dashboardData.enCokZiyaretEdilen}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <XAxis dataKey="urun_adi" angle={-45} textAnchor="end" height={100} />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <YAxis />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <Tooltip />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <Bar dataKey="ziyaret_sayisi" fill="#F59E0B" name="Ziyaret" />
                 </BarChart>
               </ResponsiveContainer>
@@ -426,15 +427,15 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={dashboardData.gunlukSatislar}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <XAxis dataKey="tarih" />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <YAxis />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <Tooltip formatter={(value) => `${value} TL`} />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <Legend />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <Line type="monotone" dataKey="tutar" stroke="#10B981" strokeWidth={2} name="Satış (TL)" dot={{ fill: '#10B981' }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -454,15 +455,15 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={dashboardData.aylikSatislar}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <XAxis dataKey="ay" />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <YAxis />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <Tooltip formatter={(value) => `${value} TL`} />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <Legend />
-                  {/* @ts-expect-error recharts jsx typing */}
+                  {/* @ts-ignore Recharts React type compatibility */}
                   <Bar dataKey="tutar" fill="#10B981" name="Aylık Satış (TL)" />
                 </BarChart>
               </ResponsiveContainer>
