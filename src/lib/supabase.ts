@@ -17,3 +17,12 @@ export const publicSupabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false
   }
 })
+
+export async function loadPublicCatalog(limit: number) {
+  const response = await fetch(`${supabaseUrl}/functions/v1/public-catalog?limit=${limit}`, {
+    headers: { apikey: supabaseAnonKey }
+  })
+  const body = await response.json()
+  if (!response.ok || body?.error) throw new Error(body?.error || 'Katalog verisi alınamadı')
+  return body.data
+}

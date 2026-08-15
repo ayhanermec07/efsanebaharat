@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ShieldCheck, ShoppingBag, Sparkles, Truck } from 'lucide-react'
 import CanliDestekWidget from '../components/CanliDestekWidget'
 import UrunKart from '../components/UrunKart'
-import { publicSupabase } from '../lib/supabase'
+import { loadPublicCatalog, publicSupabase } from '../lib/supabase'
 import { getImageUrl } from '../utils/imageUtils'
 import { fetchInBatches } from '../utils/supabaseBatch'
 import { useAuth } from '../contexts/AuthContext'
@@ -72,6 +72,22 @@ export default function AnaSayfa() {
       try {
         setLoading(true)
         setError(null)
+
+        const catalog = await loadPublicCatalog(16)
+        const enrichProduct = (urun: any) => ({
+          ...urun,
+          urun_gorselleri: (catalog.gorseller || []).filter((gorsel: any) => gorsel.urun_id === urun.id),
+          urun_stoklari: (catalog.stoklar || []).filter((stok: any) => stok.urun_id === urun.id),
+          kategoriler: (catalog.kategoriler || []).find((kategori: any) => kategori.id === urun.kategori_id),
+          markalar: (catalog.markalar || []).find((marka: any) => marka.id === urun.marka_id)
+        })
+        const products = (catalog.urunler || []).map(enrichProduct)
+        setOneCikanUrunler(products.slice(0, 4))
+        setEnCokSatanlar(products.slice(0, 12))
+        setYeniEklenenler(products)
+        setMarkalar(catalog.markalar || [])
+        hasLoadedRef.current = true
+        return
 
         const { data: bannerData, error: bannerError } = await publicSupabase
           .from('kampanyalar')
