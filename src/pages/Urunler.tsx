@@ -12,6 +12,8 @@ import {
 } from '../utils/categorySearch'
 import { fetchInBatches } from '../utils/supabaseBatch'
 
+const INITIAL_PRODUCT_LIMIT = 48
+
 export default function Urunler() {
   const { musteriData } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -20,6 +22,8 @@ export default function Urunler() {
   const [markalar, setMarkalar] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [visibleProductLimit, setVisibleProductLimit] = useState(INITIAL_PRODUCT_LIMIT)
+  const [hasMoreProducts, setHasMoreProducts] = useState(false)
   const [aramaText, setAramaText] = useState(searchParams.get('q') || '')
   const [secilenKategori, setSecilenKategori] = useState(searchParams.get('kategori') || '')
   const [secilenMarka, setSecilenMarka] = useState(searchParams.get('marka') || '')
@@ -172,14 +176,20 @@ export default function Urunler() {
       const requestTimeout = new Promise<never>((_, reject) => {
         window.setTimeout(() => reject(new Error('Ürün listesi zamanında yüklenemedi.')), 20_000)
       })
-      let { data } = await Promise.race([query.order('urun_adi'), requestTimeout])
+      let { data } = await Promise.race([
+        query.order('urun_adi').limit(visibleProductLimit),
+        requestTimeout
+      ])
 
       if (!isLatestRequest()) return
 
       if (!data || data.length === 0) {
         setUrunler([])
+        setHasMoreProducts(false)
         return
       }
+
+      setHasMoreProducts(data.length === visibleProductLimit)
 
       if (searchTerm) {
         data = data.filter(
@@ -247,13 +257,14 @@ export default function Urunler() {
     } finally {
       if (isLatestRequest()) setLoading(false)
     }
-  }, [aramaText, kategoriler, markalar, musteriData?.musteri_tipi, secilenKampanya, secilenKategori, secilenMarka])
+  }, [aramaText, kategoriler, markalar, musteriData?.musteri_tipi, secilenKampanya, secilenKategori, secilenMarka, visibleProductLimit])
 
   useEffect(() => {
     loadUrunler()
   }, [loadUrunler])
 
   const clearFilters = () => {
+    setVisibleProductLimit(INITIAL_PRODUCT_LIMIT)
     setSecilenKategori('')
     setSecilenMarka('')
     setAramaText('')
@@ -313,6 +324,7 @@ export default function Urunler() {
                     value={aramaText}
                     onChange={(e) => {
                       const nextValue = e.target.value
+                      setVisibleProductLimit(INITIAL_PRODUCT_LIMIT)
                       setAramaText(nextValue)
                       syncSearchParams({ q: nextValue })
                     }}
@@ -328,6 +340,7 @@ export default function Urunler() {
                   value={secilenKategori}
                   onChange={(e) => {
                     const nextValue = e.target.value
+                    setVisibleProductLimit(INITIAL_PRODUCT_LIMIT)
                     setSecilenKategori(nextValue)
                     syncSearchParams({ kategori: nextValue })
                   }}
@@ -348,6 +361,7 @@ export default function Urunler() {
                   value={secilenMarka}
                   onChange={(e) => {
                     const nextValue = e.target.value
+                    setVisibleProductLimit(INITIAL_PRODUCT_LIMIT)
                     setSecilenMarka(nextValue)
                     syncSearchParams({ marka: nextValue })
                   }}
@@ -375,7 +389,7 @@ export default function Urunler() {
         <section className="min-w-0">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm font-bold text-zinc-600">
-              {loading ? 'Ürünler yükleniyor' : loadError || `${urunler.length} ürün bulundu`}
+              {loading ? 'Ürünler yükleniyor' : loadError || `${urunler.length}${hasMoreProducts ? '+' : ''} ürün bulundu`}
             </p>
           </div>
 
@@ -406,10 +420,23 @@ export default function Urunler() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-              {urunler.map((urun) => (
-                <UrunKart key={urun.id} urun={urun} kampanya={activeCampaign} />
-              ))}
+            <div>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+                {urunler.map((urun) => (
+                  <UrunKart key={urun.id} urun={urun} kampanya={activeCampaign} />
+                ))}
+              </div>
+              {hasMoreProducts && (
+                <div className="mt-6 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleProductLimit((current) => current + INITIAL_PRODUCT_LIMIT)}
+                    className="shop-btn-secondary"
+                  >
+                    Daha fazla ürün göster
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </section>
