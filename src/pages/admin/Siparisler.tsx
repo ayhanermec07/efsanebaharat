@@ -64,9 +64,13 @@ export default function Siparisler() {
 
   async function handleDurumGuncelle(siparisId: string, yeniDurum: string) {
     try {
+      const updateData: Record<string, string> = { siparis_durumu: yeniDurum }
+      // XML siparişinde "hazırlanıyor" seçimi, fişin kontrol edilip onaylandığı
+      // anlamına gelir. Böylece müşteri geçmişinde güncel kargo aşamasını görür.
+      if (yeniDurum === 'hazirlaniyor') updateData.odeme_durumu = 'onaylandi'
       const { error } = await supabase
         .from('siparisler')
-        .update({ siparis_durumu: yeniDurum })
+        .update(updateData)
         .eq('id', siparisId)
 
       if (error) throw error
@@ -116,6 +120,25 @@ export default function Siparisler() {
     } catch (error: any) {
       console.error('Detay görüntüleme hatası:', error)
       toast.error('Hata: ' + (error.message || 'Bilinmeyen hata'))
+    }
+  }
+
+  async function handleFisAc(siparisId: string, existingUrl?: string) {
+    try {
+      if (existingUrl?.startsWith('http')) {
+        window.open(existingUrl, '_blank', 'noopener,noreferrer')
+        return
+      }
+      const { data, error } = await supabase.functions.invoke('xml-musteri-siparis', {
+        body: { action: 'receipt', orderId: siparisId }
+      })
+      if (error || data?.error || !data?.data?.receiptUrl) {
+        throw new Error(data?.error?.message || error?.message || 'Fiş açılamadı')
+      }
+      window.open(data.data.receiptUrl, '_blank', 'noopener,noreferrer')
+    } catch (error: any) {
+      console.error('Fiş açma hatası:', error)
+      toast.error(error.message || 'Fiş açılamadı')
     }
   }
 
@@ -179,7 +202,7 @@ export default function Siparisler() {
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <span className={`px-2 py-1 rounded-full text-xs ${siparis.odeme_durumu === 'odendi' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                      {siparis.odeme_durumu === 'odendi' ? 'Ödendi' : 'Bekliyor'}
+                      {siparis.odeme_durumu === 'odendi' ? 'Ödendi' : siparis.odeme_durumu === 'onaylandi' ? 'Onaylandı' : siparis.odeme_durumu === 'fis_kontrol_bekliyor' ? 'Fiş kontrolü' : 'Bekliyor'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm">
@@ -223,14 +246,13 @@ export default function Siparisler() {
                 {secilenSiparis.siparis_fis_url && (
                   <div className="border-b pb-4">
                     <h3 className="font-semibold text-gray-900 mb-2">Sipariş Fişi</h3>
-                    <a
-                      href={secilenSiparis.siparis_fis_url}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => handleFisAc(secilenSiparis.id, secilenSiparis.siparis_fis_url)}
                       className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700"
                     >
                       {secilenSiparis.siparis_fis_adi || 'Fişi aç'}
-                    </a>
+                    </button>
                   </div>
                 )}
 

@@ -1,501 +1,95 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { FileText, PackagePlus, Plus, Search, ShoppingBag, Upload, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { Upload, FileText, X, Plus, ShoppingBag } from 'lucide-react'
 
-interface XmlOrderItem {
-  urun_id: string
-  urun_adi: string
-  birim_turu: string
-  miktar: number
-  birim_fiyat: number
-  toplam_fiyat: number
-  birim_adedi?: number
-  birim_adedi_turu?: string
-}
+interface Stock { id: string; urun_id: string; birim_turu: string; birim_adedi?: number; birim_adedi_turu?: string; fiyat: number; stok_grubu?: string }
+interface Product { id: string; urun_adi: string; urun_kodu?: string; fiyat: number; stoklar: Stock[] }
+interface OrderItem { urun_id: string; urun_adi: string; birim_turu: string; birim_adedi?: number; birim_adedi_turu?: string; miktar: number; birim_fiyat: number }
+
+const stockKey = (stock: Pick<Stock, 'birim_turu' | 'birim_adedi' | 'birim_adedi_turu'>) => `${stock.birim_turu}|${stock.birim_adedi || 100}|${stock.birim_adedi_turu || stock.birim_turu}`
+const itemKey = (item: Pick<OrderItem, 'urun_id' | 'birim_turu' | 'birim_adedi' | 'birim_adedi_turu'>) => `${item.urun_id}|${stockKey(item)}`
 
 export default function XmlMusteriSiparis() {
   const navigate = useNavigate()
   const { user, musteriData, loading: authLoading } = useAuth()
-  const [items, setItems] = useState<XmlOrderItem[]>([])
-  const [products, setProducts] = useState<any[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [items, setItems] = useState<OrderItem[]>([])
+  const [productQuery, setProductQuery] = useState('')
   const [selectedProductId, setSelectedProductId] = useState('')
-  const [selectedUnit, setSelectedUnit] = useState('kg')
+  const [selectedStockKey, setSelectedStockKey] = useState('')
   const [quantity, setQuantity] = useState(1)
-  const [customerName, setCustomerName] = useState('')
   const [receiptFile, setReceiptFile] = useState<File | null>(null)
-  const [receiptPreview, setReceiptPreview] = useState<string>('')
-  const [submitting, setSubmitting] = useState(false)
+  const [receiptPreview, setReceiptPreview] = useState('')
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    if (!authLoading && (!user || musteriData?.musteri_tipi !== 'xml_musteri')) {
-      navigate('/giris')
-      return
-    }
-
-    if (user && musteriData?.musteri_tipi === 'xml_musteri') {
-      loadProducts()
-    }
-  }, [user, authLoading, musteriData, navigate])
+    if (!authLoading && (!user || musteriData?.musteri_tipi !== 'xml_musteri')) { navigate('/giris'); return }
+    if (user && musteriData?.musteri_tipi === 'xml_musteri') void loadProducts()
+  }, [authLoading, musteriData?.musteri_tipi, navigate, user])
 
   async function loadProducts() {
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('urunler')
-        .select('id, urun_adi, urun_kodu, urun_gorselleri, fiyat')
-        .eq('aktif_durum', true)
-        .order('urun_adi', { ascending: true })
-
-      if (error) throw error
-
-      const withStocks = await Promise.all(
-        (data || []).map(async (urun) => {
-          const { data: stoklar } = await supabase
-            .from('urun_stoklari')
-            .select('*')
-            .eq('urun_id', urun.id)
-            .eq('aktif_durum', true)
-            .order('birim_adedi', { ascending: true })
-
-          return { ...urun, stoklar: stoklar || [] }
-        })
-      )
-
-      setProducts(withStocks)
-    } catch (error: any) {
-      console.error('Ürünler yüklenemedi:', error)
-      toast.error(error.message || 'Ürünler yüklenemedi')
-    } finally {
-      setLoading(false)
-    }
+      const [{ data: productRows, error: productError }, { data: stockRows, error: stockError }] = await Promise.all([
+        supabase.from('urunler').select('id, urun_adi, urun_kodu, fiyat').eq('aktif_durum', true).eq('aktif', true).order('urun_adi'),
+        supabase.from('urun_stoklari').select('id, urun_id, birim_turu, birim_adedi, birim_adedi_turu, fiyat, stok_grubu').eq('aktif_durum', true).eq('aktif', true),
+      ])
+      if (productError || stockError) throw productError || stockError
+      const stocks = (stockRows || []).filter((stock) => !stock.stok_grubu || stock.stok_grubu === 'hepsi' || stock.stok_grubu === 'xml_musteri') as Stock[]
+      setProducts((productRows || []).map((product) => ({ ...product, stoklar: stocks.filter((stock) => stock.urun_id === product.id) })).filter((product) => product.stoklar.length > 0))
+    } catch (error: any) { console.error(error); toast.error(error.message || 'Ürünler yüklenemedi') } finally { setLoading(false) }
   }
 
-  const selectedProduct = useMemo(
-    () => products.find((product) => product.id === selectedProductId) || null,
-    [products, selectedProductId]
-  )
+  const matchingProducts = useMemo(() => {
+    const query = productQuery.trim().toLocaleLowerCase('tr-TR')
+    return query ? products.filter((product) => `${product.urun_adi} ${product.urun_kodu || ''}`.toLocaleLowerCase('tr-TR').includes(query)).slice(0, 8) : []
+  }, [productQuery, products])
+  const selectedProduct = useMemo(() => products.find((product) => product.id === selectedProductId) || null, [products, selectedProductId])
+  const selectedStock = useMemo(() => selectedProduct?.stoklar.find((stock) => stockKey(stock) === selectedStockKey) || null, [selectedProduct, selectedStockKey])
+  const total = useMemo(() => items.reduce((sum, item) => sum + item.miktar * item.birim_fiyat, 0), [items])
 
-  useEffect(() => {
-    if (selectedProduct && selectedProduct.stoklar?.length) {
-      const preferred = selectedProduct.stoklar.find((s: any) => s.birim_turu === selectedUnit) || selectedProduct.stoklar[0]
-      setSelectedUnit(preferred?.birim_turu || 'kg')
-    }
-  }, [selectedProduct, selectedUnit])
-
-  function addItemFromSelection() {
-    if (!selectedProductId) {
-      toast.error('Önce ürün seçin')
-      return
-    }
-
-    const product = products.find((p) => p.id === selectedProductId)
-    if (!product) return
-
-    const stockMatch = product.stoklar?.find((stock: any) => stock.birim_turu === selectedUnit) || product.stoklar?.[0]
-    const birimFiyat = Number(stockMatch?.fiyat || product.fiyat || 0)
-
-    if (!birimFiyat) {
-      toast.error('Bu ürün için fiyat bulunamadı')
-      return
-    }
-
-    const itemAlreadyExists = items.find(
-      (item) => item.urun_id === product.id && item.birim_turu === selectedUnit
-    )
-
-    if (itemAlreadyExists) {
-      const updated = items.map((item) => {
-        if (item.urun_id === product.id && item.birim_turu === selectedUnit) {
-          return {
-            ...item,
-            miktar: item.miktar + quantity,
-            toplam_fiyat: Number(((item.miktar + quantity) * birimFiyat).toFixed(2))
-          }
-        }
-        return item
-      })
-      setItems(updated)
-    } else {
-      const orderItem: XmlOrderItem = {
-        urun_id: product.id,
-        urun_adi: product.urun_adi,
-        birim_turu: selectedUnit,
-        miktar: quantity,
-        birim_fiyat: Number(birimFiyat.toFixed(2)),
-        toplam_fiyat: Number((quantity * birimFiyat).toFixed(2)),
-        birim_adedi: stockMatch?.birim_adedi,
-        birim_adedi_turu: stockMatch?.birim_adedi_turu || selectedUnit
-      }
-      setItems((prev) => [...prev, orderItem])
-    }
-
-    setQuantity(1)
-    setSelectedProductId('')
-    setSelectedUnit('kg')
-    toast.success('Ürün sipariş listesine eklendi')
+  function selectProduct(product: Product) { setSelectedProductId(product.id); setSelectedStockKey(stockKey(product.stoklar[0])); setProductQuery(product.urun_adi) }
+  function addItem() {
+    if (!selectedProduct || !selectedStock) return toast.error('Önce bir ürün ve birim seçin')
+    const next: OrderItem = { urun_id: selectedProduct.id, urun_adi: selectedProduct.urun_adi, birim_turu: selectedStock.birim_turu, birim_adedi: selectedStock.birim_adedi, birim_adedi_turu: selectedStock.birim_adedi_turu || selectedStock.birim_turu, miktar: Math.max(1, Math.floor(Number(quantity) || 1)), birim_fiyat: Number(selectedStock.fiyat || selectedProduct.fiyat || 0) }
+    if (next.birim_fiyat <= 0) return toast.error('Bu ürün için geçerli fiyat bulunamadı')
+    setItems((current) => { const index = current.findIndex((item) => itemKey(item) === itemKey(next)); return index < 0 ? [...current, next] : current.map((item, itemIndex) => itemIndex === index ? { ...item, miktar: item.miktar + next.miktar } : item) })
+    setQuantity(1); setProductQuery(''); setSelectedProductId(''); setSelectedStockKey(''); toast.success('Ürün sipariş listesine eklendi')
   }
-
-  function updateItemQuantity(index: number, nextValue: number) {
-    setItems((prev) => prev.map((item, idx) => {
-      if (idx !== index) return item
-      const adjusted = Math.max(1, nextValue)
-      return {
-        ...item,
-        miktar: adjusted,
-        toplam_fiyat: Number((adjusted * item.birim_fiyat).toFixed(2))
-      }
-    }))
-  }
-
-  function removeItem(index: number) {
-    setItems((prev) => prev.filter((_, idx) => idx !== index))
-  }
-
-  async function handleReceiptSelect(file: File | null) {
-    if (!file) {
-      setReceiptFile(null)
-      setReceiptPreview('')
-      return
-    }
-
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Yalnızca JPG, PNG, WEBP veya PDF yükleyebilirsiniz')
-      return
-    }
-
-    if (file.size > 8 * 1024 * 1024) {
-      toast.error('Dosya boyutu en fazla 8 MB olmalıdır')
-      return
-    }
-
+  function changeQuantity(index: number, value: number) { setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, miktar: Math.max(1, Math.floor(value) || 1) } : item)) }
+  function removeReceipt() { setReceiptFile(null); setReceiptPreview('') }
+  function handleReceipt(file: File | null) {
+    if (!file) return removeReceipt()
+    if (!['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].includes(file.type)) return toast.error('Yalnızca JPG, PNG, WEBP veya PDF yükleyebilirsiniz')
+    if (file.size > 8 * 1024 * 1024) return toast.error('Fiş dosyası en fazla 8 MB olabilir')
     setReceiptFile(file)
-
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader()
-      reader.onload = () => setReceiptPreview(String(reader.result))
-      reader.readAsDataURL(file)
-    } else {
-      setReceiptPreview('')
-    }
+    if (file.type.startsWith('image/')) { const reader = new FileReader(); reader.onload = () => setReceiptPreview(String(reader.result || '')); reader.readAsDataURL(file) } else setReceiptPreview('')
   }
-
-  async function uploadReceipt() {
-    if (!receiptFile) {
-      throw new Error('Sipariş fişi ekleyin')
-    }
-
-    const fileBase64 = await toBase64(receiptFile)
-    const result = await supabase.functions.invoke('image-storage-upload', {
-      body: {
-        imageData: fileBase64,
-        bucketName: 'urun-gorselleri',
-        fileName: `xml-siparis-fis-${Date.now()}-${receiptFile.name.replace(/\.[^/.]+$/, '')}`
-      }
-    })
-
-    if (result.error || result.data?.error) {
-      throw new Error(result.data?.error?.message || result.error?.message || 'Fiş yüklenemedi')
-    }
-
-    return {
-      url: result.data?.data?.publicUrl,
-      fileName: result.data?.data?.fileName || receiptFile.name,
-      contentType: result.data?.data?.contentType || receiptFile.type
-    }
-  }
-
   async function createOrder() {
-    if (!user || !musteriData) {
-      toast.error('Önce giriş yapmanız gerekiyor')
-      return
-    }
-
-    if (!customerName.trim()) {
-      toast.error('Müşteri adını yazın')
-      return
-    }
-
-    if (items.length === 0) {
-      toast.error('En az bir ürün ekleyin')
-      return
-    }
-
+    if (!user) return toast.error('Önce giriş yapmanız gerekiyor')
+    if (!items.length) return toast.error('En az bir ürün ekleyin')
+    if (!receiptFile) return toast.error('Sipariş fişi ekleyin')
     setSubmitting(true)
-
     try {
-      let receiptUrl = ''
-      let receiptFileName = ''
-      let receiptType = ''
-
-      if (receiptFile) {
-        const uploaded = await uploadReceipt()
-        receiptUrl = uploaded.url
-        receiptFileName = uploaded.fileName
-        receiptType = uploaded.contentType
-      }
-
-      const orderPayload = {
-        siparis_no: `XML-${Date.now()}`,
-        musteri_id: musteriData.id,
-        toplam_tutar: Number(items.reduce((sum, item) => sum + item.toplam_fiyat, 0).toFixed(2)),
-        siparis_durumu: 'beklemede',
-        odeme_durumu: 'beklemede',
-        adres: musteriData.adres || '',
-        telefon: musteriData.telefon || '',
-        xml_musteri_adi: customerName.trim(),
-        siparis_fis_url: receiptUrl,
-        siparis_fis_adi: receiptFileName,
-        siparis_fis_turu: receiptType
-      }
-
-      const { data: order, error: orderError } = await supabase
-        .from('siparisler')
-        .insert(orderPayload)
-        .select()
-        .single()
-
-      if (orderError) throw orderError
-
-      const siparisUrunleri = items.map((item) => ({
-        siparis_id: order.id,
-        urun_id: item.urun_id,
-        birim_turu: item.birim_turu,
-        birim_adedi: item.birim_adedi,
-        birim_adedi_turu: item.birim_adedi_turu || item.birim_turu,
-        miktar: item.miktar,
-        birim_fiyat: item.birim_fiyat,
-        toplam_fiyat: item.toplam_fiyat
-      }))
-
-      const { error: linesError } = await supabase.from('siparis_urunleri').insert(siparisUrunleri)
-      if (linesError) throw linesError
-
-      toast.success('Siparişiniz başarıyla gönderildi')
-      setItems([])
-      setCustomerName('')
-      setReceiptFile(null)
-      setReceiptPreview('')
-      navigate('/hesabim')
-    } catch (error: any) {
-      console.error('Sipariş oluşturma hatası:', error)
-      toast.error(error.message || 'Sipariş oluşturulurken hata oluştu')
-    } finally {
-      setSubmitting(false)
-    }
+      const { data, error } = await supabase.functions.invoke('xml-musteri-siparis', { body: { action: 'create', items: items.map(({ urun_id, birim_turu, birim_adedi, birim_adedi_turu, miktar }) => ({ urun_id, birim_turu, birim_adedi, birim_adedi_turu, miktar })), receiptData: await toBase64(receiptFile), receiptName: receiptFile.name } })
+      if (error || data?.error) throw new Error(data?.error?.message || error?.message || 'Sipariş gönderilemedi')
+      toast.success(`${data.data.siparisNo} numaralı siparişiniz gönderildi`); navigate('/xml-siparislerim')
+    } catch (error: any) { console.error(error); toast.error(error.message || 'Sipariş gönderilemedi') } finally { setSubmitting(false) }
   }
+  if (authLoading || loading) return <div className="shop-container py-16 text-center"><span className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-violet-700 border-t-transparent" /></div>
 
-  if (authLoading || loading) {
-    return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">XML Sipariş Gönder</h1>
-        <p className="mt-2 text-gray-600">Ürünleri ekleyin, müşteri adını belirtin ve sipariş fişini ekleyin.</p>
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-6 rounded-xl bg-white p-5 shadow-sm">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-medium text-gray-700">Ürün</label>
-              <select
-                value={selectedProductId}
-                onChange={(e) => setSelectedProductId(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5"
-              >
-                <option value="">Ürün seçin</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>{product.urun_adi}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Birim</label>
-              <select
-                value={selectedUnit}
-                onChange={(e) => setSelectedUnit(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5"
-              >
-                {selectedProduct?.stoklar?.length ? (
-                  selectedProduct.stoklar.map((stock: any) => (
-                    <option key={`${stock.urun_id}-${stock.birim_turu}-${stock.birim_adedi || 'na'}`} value={stock.birim_turu}>
-                      {stock.birim_turu}
-                    </option>
-                  ))
-                ) : (
-                  <option value="kg">kg</option>
-                )}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-[120px_1fr_auto] md:items-end">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Miktar</label>
-              <input
-                type="number"
-                min={1}
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5"
-              />
-            </div>
-            <div className="text-sm text-gray-600">
-              {selectedProduct ? (
-                <>
-                  <div className="font-medium">Birim fiyat</div>
-                  <div className="text-lg font-bold text-orange-600">
-                    {Number(
-                      (selectedProduct.stoklar?.find((stock: any) => stock.birim_turu === selectedUnit)?.fiyat || selectedProduct.fiyat || 0)
-                    ).toFixed(2)} ₺
-                  </div>
-                </>
-              ) : (
-                <div className="text-gray-500">Ürün seçerek fiyatı görün</div>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={addItemFromSelection}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 font-semibold text-white hover:bg-violet-700"
-            >
-              <Plus className="h-4 w-4" />
-              Ekle
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            {items.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center text-gray-500">
-                <ShoppingBag className="mx-auto mb-3 h-10 w-10 text-gray-400" />
-                Henüz ürün eklenmedi.
-              </div>
-            ) : (
-              items.map((item, index) => (
-                <div key={`${item.urun_id}-${item.birim_turu}-${index}`} className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="font-semibold text-gray-900">{item.urun_adi}</div>
-                    <div className="text-sm text-gray-600">{item.birim_turu} / {item.birim_fiyat.toFixed(2)} ₺</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => updateItemQuantity(index, item.miktar - 1)}
-                      className="h-9 w-9 rounded-lg border border-gray-300 text-gray-700"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min={1}
-                      value={item.miktar}
-                      onChange={(e) => updateItemQuantity(index, Number(e.target.value) || 1)}
-                      className="w-20 rounded-lg border border-gray-300 px-2 py-2 text-center"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => updateItemQuantity(index, item.miktar + 1)}
-                      className="h-9 w-9 rounded-lg border border-gray-300 text-gray-700"
-                    >
-                      +
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeItem(index)}
-                      className="ml-2 text-red-600 hover:text-red-700"
-                      aria-label="Kaldır"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="font-bold text-gray-900">{item.toplam_fiyat.toFixed(2)} ₺</div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-6 rounded-xl bg-white p-5 shadow-sm">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">Müşteri adı</label>
-            <input
-              type="text"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="Müşteri / firma adı"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">Sipariş fişi</label>
-            <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-violet-300 bg-violet-50 p-5 text-center text-violet-700">
-              <Upload className="h-6 w-6" />
-              <span className="text-sm font-medium">JPG, PNG, WEBP veya PDF yükleyin</span>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
-                className="hidden"
-                onChange={(e) => handleReceiptSelect(e.target.files?.[0] || null)}
-              />
-            </label>
-
-            {receiptFile && (
-              <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-gray-600" />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-gray-900">{receiptFile.name}</div>
-                    <div className="text-xs text-gray-500">{(receiptFile.size / 1024 / 1024).toFixed(2)} MB</div>
-                  </div>
-                  <button type="button" onClick={() => handleReceiptSelect(null)} className="text-gray-500 hover:text-red-600">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                {receiptPreview && (
-                  <img src={receiptPreview} alt="Fiş önizleme" className="mt-3 max-h-48 w-full rounded-lg object-contain" />
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="rounded-xl bg-gray-50 p-4">
-            <div className="text-sm text-gray-600">Toplam</div>
-            <div className="mt-1 text-3xl font-bold text-orange-600">
-              {items.reduce((sum, item) => sum + item.toplam_fiyat, 0).toFixed(2)} ₺
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={createOrder}
-            disabled={submitting}
-            className="w-full rounded-lg bg-violet-600 px-4 py-3 font-semibold text-white hover:bg-violet-700 disabled:opacity-50"
-          >
-            {submitting ? 'Gönderiliyor...' : 'Siparişi Gönder'}
-          </button>
-        </div>
-      </div>
+  return <main className="shop-container py-6 sm:py-8">
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-semibold text-violet-700">XML müşteri alanı</p><h1 className="mt-1 text-2xl font-bold text-zinc-950 sm:text-3xl">Sipariş oluştur</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">Ürünleri ekleyin, sipariş fişinizi yükleyin ve gönderin. Fişte yer alan bilgiler yeterlidir; ayrıca ad veya adres yazmanız gerekmez.</p></div><button type="button" onClick={() => navigate('/xml-siparislerim')} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"><FileText className="h-4 w-4" /> Sipariş geçmişim</button></div>
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+      <section className="min-w-0 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6"><h2 className="text-lg font-bold text-zinc-950">Ürün ekle</h2><div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_11rem_7rem_auto] md:items-end"><div className="relative min-w-0"><label className="mb-1.5 block text-sm font-medium text-zinc-700">Ürün ara</label><Search className="pointer-events-none absolute left-3 top-10 h-5 w-5 text-zinc-400" /><input value={productQuery} onChange={(event) => { setProductQuery(event.target.value); setSelectedProductId(''); setSelectedStockKey('') }} placeholder="Ürün adı veya kodu" className="shop-input pl-10" />{productQuery.trim() && !selectedProduct && <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white p-1 shadow-lg">{matchingProducts.length ? matchingProducts.map((product) => <button key={product.id} type="button" onClick={() => selectProduct(product)} className="block w-full rounded-md px-3 py-3 text-left text-sm hover:bg-violet-50"><span className="block font-semibold text-zinc-900">{product.urun_adi}</span>{product.urun_kodu && <span className="text-xs text-zinc-500">{product.urun_kodu}</span>}</button>) : <p className="px-3 py-3 text-sm text-zinc-500">Ürün bulunamadı.</p>}</div>}</div><div><label className="mb-1.5 block text-sm font-medium text-zinc-700">Birim</label><select value={selectedStockKey} disabled={!selectedProduct} onChange={(event) => setSelectedStockKey(event.target.value)} className="shop-input disabled:cursor-not-allowed disabled:bg-zinc-100"><option value="">Birim seçin</option>{selectedProduct?.stoklar.map((stock) => <option key={stock.id} value={stockKey(stock)}>{stock.birim_adedi ? `${stock.birim_adedi} ${stock.birim_adedi_turu || stock.birim_turu}` : stock.birim_turu}</option>)}</select></div><div><label className="mb-1.5 block text-sm font-medium text-zinc-700">Miktar</label><input type="number" min="1" inputMode="numeric" value={quantity} onChange={(event) => setQuantity(Math.max(1, Number(event.target.value) || 1))} className="shop-input" /></div><button type="button" onClick={addItem} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-violet-700 px-4 py-2 font-semibold text-white hover:bg-violet-800"><Plus className="h-4 w-4" /> Ekle</button></div>{selectedStock && <p className="mt-3 text-sm text-zinc-600">Görünen birim fiyat: <strong className="text-zinc-900">{Number(selectedStock.fiyat).toFixed(2)} TL</strong>. Gönderimde güncel fiyat ve stok tekrar kontrol edilir.</p>}
+        <div className="mt-6 border-t border-zinc-100 pt-5"><h2 className="text-lg font-bold text-zinc-950">Sipariş listesi</h2>{items.length === 0 ? <div className="mt-3 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-10 text-center text-sm text-zinc-500"><ShoppingBag className="mx-auto mb-3 h-8 w-8" />Henüz ürün eklenmedi.</div> : <div className="mt-3 space-y-3">{items.map((item, index) => <article key={itemKey(item)} className="flex flex-col gap-3 rounded-xl border border-zinc-200 p-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><h3 className="break-words font-semibold text-zinc-900">{item.urun_adi}</h3><p className="text-sm text-zinc-600">{item.birim_adedi ? `${item.birim_adedi} ${item.birim_adedi_turu || item.birim_turu}` : item.birim_turu} · {item.birim_fiyat.toFixed(2)} TL</p></div><div className="flex flex-wrap items-center gap-2"><button type="button" onClick={() => changeQuantity(index, item.miktar - 1)} className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-300 text-lg" aria-label="Miktarı azalt">−</button><input type="number" min="1" value={item.miktar} onChange={(event) => changeQuantity(index, Number(event.target.value))} className="h-10 w-16 rounded-lg border border-zinc-300 text-center" /><button type="button" onClick={() => changeQuantity(index, item.miktar + 1)} className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-300 text-lg" aria-label="Miktarı artır">+</button><strong className="ml-1 min-w-24 text-right text-zinc-900">{(item.miktar * item.birim_fiyat).toFixed(2)} TL</strong><button type="button" onClick={() => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="flex h-10 w-10 items-center justify-center rounded-lg text-red-700 hover:bg-red-50 hover:text-red-700" aria-label="Ürünü kaldır"><X className="h-5 w-5" /></button></div></article>)}</div>}</div></section>
+      <aside className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6 lg:sticky lg:top-24"><h2 className="text-lg font-bold text-zinc-950">Fiş ve gönderim</h2><p className="mt-1 text-sm text-zinc-600">Sipariş fişi zorunludur. JPG, PNG, WEBP veya PDF; en fazla 8 MB.</p><label className="mt-4 flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-violet-300 bg-violet-50 p-4 text-center text-violet-800 hover:bg-violet-100"><Upload className="h-6 w-6" /><span className="text-sm font-semibold">Fiş seçmek için dokunun</span><input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={(event) => handleReceipt(event.target.files?.[0] || null)} /></label>{receiptFile && <div className="mt-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3"><div className="flex items-center gap-2"><FileText className="h-5 w-5 shrink-0 text-violet-700" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-zinc-900">{receiptFile.name}</p><p className="text-xs text-zinc-500">{(receiptFile.size / 1024 / 1024).toFixed(2)} MB</p></div><button type="button" onClick={removeReceipt} className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-600 hover:bg-red-50 hover:text-red-700" aria-label="Fişi kaldır"><X className="h-5 w-5" /></button></div>{receiptPreview && <img src={receiptPreview} alt="Fiş önizlemesi" className="mt-3 max-h-56 w-full rounded-lg object-contain" />}</div>}<div className="mt-5 rounded-xl bg-zinc-50 p-4"><span className="text-sm text-zinc-600">Tahmini toplam</span><p className="mt-1 text-2xl font-bold text-zinc-950">{total.toFixed(2)} TL</p><p className="mt-1 text-xs leading-5 text-zinc-500">Kesin tutar, gönderim sırasında geçerli fiyatlar üzerinden hesaplanır.</p></div><button type="button" disabled={submitting || !items.length || !receiptFile} onClick={createOrder} className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-emerald-800 px-4 py-3 font-semibold text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-50"><PackagePlus className="h-5 w-5" />{submitting ? 'Gönderiliyor...' : 'Siparişi gönder'}</button></aside>
     </div>
-  )
+  </main>
 }
 
-async function toBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result || ''))
-    reader.onerror = () => reject(new Error('Dosya okunamadı'))
-    reader.readAsDataURL(file)
-  })
-}
+async function toBase64(file: File) { return new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || '')); reader.onerror = () => reject(new Error('Fiş dosyası okunamadı')); reader.readAsDataURL(file) }) }
