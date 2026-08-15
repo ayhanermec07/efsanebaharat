@@ -151,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const toplamIskonto = 100 - ((100 - grupIskonto) * (100 - ozelIskonto)) / 100
 
         setMusteriData(profile)
-        setIsAdmin(profile.musteri_tipi === 'admin')
+        setIsAdmin(profile.isAdmin === true || profile.musteri_tipi === 'admin')
         setGrupIskontoOrani(grupIskonto)
         setOzelIskontoOrani(ozelIskonto)
         setIskontoOrani(Math.round(toplamIskonto * 100) / 100)
