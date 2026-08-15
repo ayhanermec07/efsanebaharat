@@ -145,8 +145,8 @@ export default function Urunler() {
       const catalog = await loadPublicCatalog(visibleProductLimit)
       if (!isLatestRequest()) return
 
-      setKategoriler(catalog.kategoriler || [])
-      setMarkalar(catalog.markalar || [])
+      if (kategoriler.length === 0) setKategoriler(catalog.kategoriler || [])
+      if (markalar.length === 0) setMarkalar(catalog.markalar || [])
       setActiveCampaign(null)
 
       let catalogProducts = (catalog.urunler || []).filter((urun: any) => (
