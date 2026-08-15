@@ -216,9 +216,23 @@ export default function Siparisler() {
                 <div className="border-b pb-4">
                   <h3 className="font-semibold text-gray-900 mb-2">Müşteri Bilgileri</h3>
                   <p className="text-sm text-gray-600">
-                    {secilenSiparis.musteri?.ad} {secilenSiparis.musteri?.soyad}
+                    {secilenSiparis.xml_musteri_adi || `${secilenSiparis.musteri?.ad || ''} ${secilenSiparis.musteri?.soyad || ''}`.trim() || 'Belirtilmemiş'}
                   </p>
                 </div>
+
+                {secilenSiparis.siparis_fis_url && (
+                  <div className="border-b pb-4">
+                    <h3 className="font-semibold text-gray-900 mb-2">Sipariş Fişi</h3>
+                    <a
+                      href={secilenSiparis.siparis_fis_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700"
+                    >
+                      {secilenSiparis.siparis_fis_adi || 'Fişi aç'}
+                    </a>
+                  </div>
+                )}
 
                 {/* Sipariş Ürünleri */}
                 <div>

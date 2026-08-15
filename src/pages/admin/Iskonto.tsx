@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import {
   Percent,
@@ -65,11 +65,7 @@ export default function Iskonto() {
   })
   const [selectedItems, setSelectedItems] = useState<string[]>([])
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true)
     await Promise.all([
       loadIskontolar(),
@@ -77,7 +73,11 @@ export default function Iskonto() {
       loadBayiler()
     ])
     setLoading(false)
-  }
+  }, [])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   async function loadIskontolar() {
     try {

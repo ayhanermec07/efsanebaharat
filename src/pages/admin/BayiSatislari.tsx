@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { BarChart3, Download, Calendar, Filter, TrendingUp, DollarSign, Package } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -51,74 +51,21 @@ export default function AdminBayiSatislari() {
   const [startDate, setStartDate] = useState<string>('')
   const [endDate, setEndDate] = useState<string>('')
 
-  useEffect(() => {
-    loadInitialData()
-  }, [])
-
-  useEffect(() => {
-    if (!loading) {
-      loadSatislar()
-    }
-  }, [selectedBayi, selectedKategori, startDate, endDate])
-
-  async function loadInitialData() {
+  const loadSatislar = useCallback(async () => {
     try {
-      setLoading(true)
-
-      // Bayiler yükle
-      const { data: bayilerData, error: bayilerError } = await supabase
-        .from('bayiler')
-        .select('id, bayii_kodu, bayi_adi')
-        .eq('aktif', true)
-        .order('bayi_adi')
-
-      if (bayilerError) {
-        console.error('Bayiler yükleme hatası:', bayilerError)
-        // Hata olsa bile devam et
-      }
-      setBayiler(bayilerData || [])
-
-      // Kategoriler yükle
-      const { data: kategorilerData, error: kategorilerError } = await supabase
-        .from('kategoriler')
-        .select('id, kategori_adi')
-        .order('kategori_adi')
-
-      if (kategorilerError) {
-        console.error('Kategoriler yükleme hatası:', kategorilerError)
-        // Hata olsa bile devam et
-      }
-      
-      // Kategori verilerini düzelt
-      const formattedKategoriler = (kategorilerData || []).map(k => ({
-        id: k.id,
-        ad: k.kategori_adi
-      }))
-      setKategoriler(formattedKategoriler)
-
-      await loadSatislar()
-    } catch (error: any) {
-      console.error('Veri yükleme hatası:', error)
-      toast.error('Veriler yüklenemedi')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function loadSatislar() {
-    try {
-      // Gerçek veri yükleme
       let query = supabase
         .from('bayi_satislari')
         .select('*')
         .order('satis_tarihi', { ascending: false })
 
-      // Bayi filtresi
       if (selectedBayi !== 'all') {
         query = query.eq('bayi_id', selectedBayi)
       }
 
-      // Tarih filtreleri
+      if (selectedKategori !== 'all') {
+        query = query.eq('kategori_id', selectedKategori)
+      }
+
       if (startDate) {
         query = query.gte('satis_tarihi', startDate)
       }
@@ -127,14 +74,8 @@ export default function AdminBayiSatislari() {
       }
 
       const { data: satislarData, error: satislarError } = await query
+      if (satislarError) throw satislarError
 
-      if (satislarError) {
-        console.error('Satışlar yükleme hatası:', satislarError)
-        setSatislar([])
-        return
-      }
-
-      // Bayi bilgilerini manuel ekle
       const satislarWithBayi = await Promise.all(
         (satislarData || []).map(async (satis) => {
           const { data: bayiData } = await supabase
@@ -145,16 +86,15 @@ export default function AdminBayiSatislari() {
 
           return {
             ...satis,
-            bayi: bayiData
+            bayi: bayiData || undefined
           }
         })
       )
 
       setSatislar(satislarWithBayi)
 
-      // İstatistikleri hesapla
-      const toplamSatis = satislarWithBayi.reduce((sum, s) => sum + s.toplam_tutar, 0)
-      const toplamUrunAdedi = satislarWithBayi.reduce((sum, s) => sum + s.urun_adedi, 0)
+      const toplamSatis = satislarWithBayi.reduce((sum, s) => sum + Number(s.toplam_tutar || 0), 0)
+      const toplamUrunAdedi = satislarWithBayi.reduce((sum, s) => sum + Number(s.urun_adedi || 0), 0)
 
       setStats({
         toplamSatis,
@@ -162,10 +102,59 @@ export default function AdminBayiSatislari() {
         toplamUrunAdedi
       })
     } catch (error: any) {
-      console.error('Satış yükleme hatası:', error)
+      console.error('Satışlar yüklenemedi:', error)
       toast.error('Satışlar yüklenemedi')
+      setSatislar([])
     }
-  }
+  }, [endDate, selectedBayi, selectedKategori, startDate])
+
+  const loadInitialData = useCallback(async () => {
+    try {
+      setLoading(true)
+
+      const { data: bayilerData, error: bayilerError } = await supabase
+        .from('bayiler')
+        .select('id, bayii_kodu, bayi_adi')
+        .eq('aktif', true)
+        .order('bayi_adi')
+
+      if (bayilerError) {
+        console.error('Bayiler yükleme hatası:', bayilerError)
+      }
+      setBayiler(bayilerData || [])
+
+      const { data: kategorilerData, error: kategorilerError } = await supabase
+        .from('kategoriler')
+        .select('id, kategori_adi')
+        .order('kategori_adi')
+
+      if (kategorilerError) {
+        console.error('Kategoriler yükleme hatası:', kategorilerError)
+      }
+
+      setKategoriler((kategorilerData || []).map(k => ({
+        id: k.id,
+        ad: k.kategori_adi
+      })))
+
+      await loadSatislar()
+    } catch (error: any) {
+      console.error('Veri yükleme hatası:', error)
+      toast.error('Veriler yüklenemedi')
+    } finally {
+      setLoading(false)
+    }
+  }, [loadSatislar])
+
+  useEffect(() => {
+    loadInitialData()
+  }, [loadInitialData])
+
+  useEffect(() => {
+    if (!loading) {
+      loadSatislar()
+    }
+  }, [loading, loadSatislar])
 
   function resetFilters() {
     setSelectedBayi('all')

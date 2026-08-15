@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Plus, Edit, Trash2, Save, X, Package } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -32,21 +32,21 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
     aktif_durum: true
   })
 
-  useEffect(() => {
-    loadStoklar()
-  }, [urunId])
-
-  async function loadStoklar() {
+  const loadStoklar = useCallback(async () => {
     setLoading(true)
     const { data } = await supabase
       .from('urun_stoklari')
       .select('*')
       .eq('urun_id', urunId)
       .order('created_at', { ascending: false })
-    
+
     if (data) setStoklar(data)
     setLoading(false)
-  }
+  }, [urunId])
+
+  useEffect(() => {
+    loadStoklar()
+  }, [loadStoklar])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

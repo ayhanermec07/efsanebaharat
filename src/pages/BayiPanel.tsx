@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -15,18 +15,9 @@ export default function BayiPanel() {
   })
   const [populerUrunler, setPopulerUrunler] = useState<any[]>([])
 
-  useEffect(() => {
-    if (!authLoading && (!user || musteriData?.musteri_tipi !== 'bayi')) {
-      navigate('/giris')
-    } else if (user && musteriData) {
-      loadBayiData()
-    }
-  }, [user, authLoading, musteriData])
-
-  async function loadBayiData() {
+  const loadBayiData = useCallback(async () => {
     if (!musteriData) return
 
-    // Bayi istatistikleri
     const { data: siparisler } = await supabase
       .from('siparisler')
       .select('*')
@@ -40,7 +31,6 @@ export default function BayiPanel() {
       })
     }
 
-    // Popüler ürünler (bayi fiyatları ile)
     const { data: urunler } = await supabase
       .from('urunler')
       .select('*')
@@ -64,7 +54,15 @@ export default function BayiPanel() {
 
       setPopulerUrunler(urunlerWithStok)
     }
-  }
+  }, [musteriData])
+
+  useEffect(() => {
+    if (!authLoading && (!user || musteriData?.musteri_tipi !== 'bayi')) {
+      navigate('/giris')
+    } else if (user && musteriData) {
+      loadBayiData()
+    }
+  }, [user, authLoading, musteriData, navigate, loadBayiData])
 
   if (authLoading) {
     return (

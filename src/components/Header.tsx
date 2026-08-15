@@ -239,6 +239,11 @@ export default function Header() {
                 Bayi Paneli
               </NavLink>
             )}
+            {user && musteriData?.musteri_tipi === 'xml_musteri' && (
+              <NavLink to="/xml-siparis" className="rounded-lg px-3 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-50">
+                XML Sipariş
+              </NavLink>
+            )}
             {isAdmin && (
               <NavLink to="/admin" className="rounded-lg px-3 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-50">
                 Admin
@@ -423,6 +428,11 @@ export default function Header() {
                   {musteriData?.musteri_tipi === 'bayi' && (
                     <Link to="/bayi-panel" onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-100">
                       Bayi Paneli
+                    </Link>
+                  )}
+                  {musteriData?.musteri_tipi === 'xml_musteri' && (
+                    <Link to="/xml-siparis" onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-violet-800 hover:bg-violet-50">
+                      XML Sipariş
                     </Link>
                   )}
                   {isAdmin && (

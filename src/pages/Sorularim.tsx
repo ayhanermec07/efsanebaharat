@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -24,20 +24,7 @@ export default function Sorularim() {
   const [loading, setLoading] = useState(true)
   const [durumFilter, setDurumFilter] = useState<string>('hepsi')
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      toast.error('Bu sayfayı görüntülemek için giriş yapmalısınız')
-      navigate('/giris', { state: { from: '/sorularim' } })
-    }
-  }, [user, authLoading, navigate])
-
-  useEffect(() => {
-    if (user) {
-      loadSorular()
-    }
-  }, [user, durumFilter])
-
-  async function loadSorular() {
+  const loadSorular = useCallback(async () => {
     if (!user) return
 
     try {
@@ -58,7 +45,6 @@ export default function Sorularim() {
       if (error) throw error
 
       if (data && data.length > 0) {
-        // Ürün adlarını al
         const urunIds = [...new Set(data.map(s => s.urun_id).filter(Boolean))]
         let urunler: any[] = []
 
@@ -85,7 +71,20 @@ export default function Sorularim() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [durumFilter, user])
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.error('Bu sayfayı görüntülemek için giriş yapmalısınız')
+      navigate('/giris', { state: { from: '/sorularim' } })
+    }
+  }, [user, authLoading, navigate])
+
+  useEffect(() => {
+    if (user) {
+      loadSorular()
+    }
+  }, [user, loadSorular])
 
   function formatDate(dateStr: string) {
     return new Date(dateStr).toLocaleDateString('tr-TR', {
@@ -158,7 +157,6 @@ export default function Sorularim() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-5xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Sorularım</h1>
             <p className="text-gray-600">
@@ -166,7 +164,6 @@ export default function Sorularim() {
             </p>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-white rounded-lg shadow-sm p-4">
               <div className="flex items-center space-x-3">
@@ -205,7 +202,6 @@ export default function Sorularim() {
             </div>
           </div>
 
-          {/* Filter */}
           <div className="mb-6">
             <div className="flex items-center space-x-2 bg-white rounded-lg shadow-sm p-2">
               <button
@@ -251,7 +247,6 @@ export default function Sorularim() {
             </div>
           </div>
 
-          {/* Sorular Listesi */}
           {loading ? (
             <div className="flex items-center justify-center h-64 bg-white rounded-lg">
               <div className="text-gray-600">Yükleniyor...</div>
@@ -260,10 +255,9 @@ export default function Sorularim() {
             <div className="text-center py-12 bg-white rounded-lg shadow-sm">
               <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 mb-4">
-                {durumFilter === 'hepsi' 
+                {durumFilter === 'hepsi'
                   ? 'Henüz soru sormadınız'
-                  : `${durumFilter === 'beklemede' ? 'Beklemede' : durumFilter === 'cevaplandi' ? 'Cevaplandı' : 'Kapatıldı'} durumunda soru bulunmuyor`
-                }
+                  : `${durumFilter === 'beklemede' ? 'Beklemede' : durumFilter === 'cevaplandi' ? 'Cevaplandı' : 'Kapatıldı'} durumunda soru bulunmuyor`}
               </p>
               <button
                 onClick={() => navigate('/bize-ulasin')}
@@ -281,7 +275,6 @@ export default function Sorularim() {
                 return (
                   <div key={soru.id} className={`bg-white rounded-lg shadow-sm border ${durumInfo.borderColor} overflow-hidden`}>
                     <div className="p-6">
-                      {/* Header */}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
@@ -303,7 +296,6 @@ export default function Sorularim() {
                         </div>
                       </div>
 
-                      {/* Soru */}
                       <div className="mb-4">
                         <p className="text-sm font-medium text-gray-700 mb-2">Sorunuz:</p>
                         <div className="bg-gray-50 rounded-lg p-4">
@@ -311,7 +303,6 @@ export default function Sorularim() {
                         </div>
                       </div>
 
-                      {/* Cevap */}
                       {soru.cevap && (
                         <div>
                           <p className="text-sm font-medium text-gray-700 mb-2">Cevap:</p>
@@ -326,7 +317,6 @@ export default function Sorularim() {
                         </div>
                       )}
 
-                      {/* Beklemede Mesajı */}
                       {soru.durum === 'beklemede' && !soru.cevap && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                           <p className="text-sm text-yellow-800">
@@ -341,7 +331,6 @@ export default function Sorularim() {
             </div>
           )}
 
-          {/* Yeni Soru Sor Butonu */}
           {sorular.length > 0 && (
             <div className="mt-8 text-center">
               <button

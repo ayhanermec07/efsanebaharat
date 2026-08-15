@@ -22,6 +22,7 @@ import AdminUrunler from './pages/admin/UrunlerYonetim'
 import AdminStokAzalan from './pages/admin/StokAzalan'
 import BayiPanel from './pages/BayiPanel'
 import BayiDashboard from './pages/BayiDashboard'
+import XmlMusteriSiparis from './pages/XmlMusteriSiparis'
 import AdminKategoriler from './pages/admin/Kategoriler'
 import AdminMarkalar from './pages/admin/Markalar'
 import AdminSiparisler from './pages/admin/Siparisler'
@@ -55,6 +56,7 @@ function App() {
                 <Route path="/hesabim" element={<Hesabim />} />
                 <Route path="/bayi-panel" element={<BayiPanel />} />
                 <Route path="/bayi-dashboard" element={<BayiDashboard />} />
+                <Route path="/xml-siparis" element={<XmlMusteriSiparis />} />
                 <Route path="/odeme-basarili" element={<OdemeBasarili />} />
                 <Route path="/odeme-basarisiz" element={<OdemeBasarisiz />} />
                 <Route path="/en-cok-satan" element={<EnCokSatan />} />

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 import toast from 'react-hot-toast'
@@ -34,35 +35,163 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
   const [sepetItems, setSepetItems] = useState<SepetItem[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Kullanıcı değiştiğinde sepeti yükle
-  useEffect(() => {
-    loadCart()
-  }, [user, musteriData])
+  const stokKontrolVeRezerve = useCallback(async (
+    urun_id: string,
+    birim_turu: string,
+    miktar: number,
+    birim_adedi?: number,
+    birim_adedi_turu?: string
+  ) => {
+    if (!musteriData) return { success: false, message: 'Giriş yapmalısınız' }
 
-  // Önceki kullanıcı ID'sini takip et
-  const [prevUserId, setPrevUserId] = useState<string | null>(user?.id || null)
+    try {
+      const { data: stoklar, error: stokError } = await supabase
+        .from('urun_stoklari')
+        .select('stok_miktari, aktif_durum, stok_grubu, birim_adedi, birim_adedi_turu')
+        .eq('urun_id', urun_id)
+        .eq('birim_turu', birim_turu)
 
-  // Kullanıcı değiştiğinde (giriş/çıkış) kontrol et
-  useEffect(() => {
-    const currentUserId = user?.id || null
-
-    // Kullanıcı değişti mi?
-    if (prevUserId !== currentUserId) {
-      if (prevUserId && !currentUserId) {
-        // Çıkış yapıldı - sepeti temizle
-        setSepetItems([])
-        localStorage.removeItem('sepet_guest')
+      if (stokError || !stoklar || stoklar.length === 0) {
+        return { success: false, message: 'Stok bilgisi alınamadı' }
       }
-      setPrevUserId(currentUserId)
-    }
-  }, [user])
 
-  // Sepeti veritabanından veya localStorage'dan yükle
-  const loadCart = async () => {
+      const musteriTipi = musteriData.musteri_tipi || 'musteri'
+      const hedefBirimAdedi = Number(birim_adedi || 100)
+      const hedefBirimAdediTuru = birim_adedi_turu || birim_turu
+      const uygunStoklar = stoklar.filter(s =>
+        Number(s.birim_adedi || 100) === hedefBirimAdedi &&
+        (s.birim_adedi_turu || birim_turu) === hedefBirimAdediTuru
+      )
+
+      const stokData = uygunStoklar.find(s => s.stok_grubu === musteriTipi) ||
+        uygunStoklar.find(s => s.stok_grubu === 'hepsi') ||
+        uygunStoklar.find(s => !s.stok_grubu)
+
+      if (!stokData) {
+        return { success: false, message: 'Size uygun stok bulunamadı' }
+      }
+
+      if (!stokData.aktif_durum) {
+        return { success: false, message: 'Bu ürün şu anda satışta değil' }
+      }
+
+      const { data: rezervasyonlar } = await supabase
+        .from('stok_rezervasyonlari')
+        .select('miktar')
+        .eq('urun_id', urun_id)
+        .eq('birim_turu', birim_turu)
+        .eq('birim_adedi', hedefBirimAdedi)
+        .gt('rezervasyon_tarihi', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+
+      const rezerveMiktar = rezervasyonlar?.reduce((sum, r) => sum + Number(r.miktar), 0) || 0
+      const musaitMiktar = Number(stokData.stok_miktari) - rezerveMiktar
+
+      const { data: mevcutRezervasyon } = await supabase
+        .from('stok_rezervasyonlari')
+        .select('miktar')
+        .eq('musteri_id', musteriData.id)
+        .eq('urun_id', urun_id)
+        .eq('birim_turu', birim_turu)
+        .eq('birim_adedi', hedefBirimAdedi)
+        .maybeSingle()
+
+      const mevcutMiktar = mevcutRezervasyon?.miktar || 0
+      const eklenecekMiktar = miktar - mevcutMiktar
+
+      if (musaitMiktar < eklenecekMiktar) {
+        return {
+          success: false,
+          message: `Yeterli stok yok! Müsait: ${musaitMiktar}`
+        }
+      }
+
+      if (mevcutRezervasyon) {
+        await supabase
+          .from('stok_rezervasyonlari')
+          .update({
+            miktar: miktar,
+            rezervasyon_tarihi: new Date().toISOString()
+          })
+          .eq('musteri_id', musteriData.id)
+          .eq('urun_id', urun_id)
+          .eq('birim_turu', birim_turu)
+          .eq('birim_adedi', hedefBirimAdedi)
+      } else {
+        await supabase
+          .from('stok_rezervasyonlari')
+          .insert({
+            musteri_id: musteriData.id,
+            urun_id: urun_id,
+            birim_turu: birim_turu,
+            birim_adedi: hedefBirimAdedi,
+            birim_adedi_turu: hedefBirimAdediTuru,
+            miktar: miktar
+          })
+      }
+
+      return { success: true, message: 'Rezervasyon başarılı' }
+    } catch (error) {
+      console.error('Rezervasyon hatası:', error)
+      return { success: false, message: 'Rezervasyon yapılamadı' }
+    }
+  }, [musteriData])
+
+  // Veritabanına sepet ekleme
+  const sepeteEkleDB = useCallback(async (item: SepetItem) => {
+    if (!musteriData) return
+
+    try {
+      const { data: existing } = await supabase
+        .from('sepet_items')
+        .select('*')
+        .eq('musteri_id', musteriData.id)
+        .eq('urun_id', item.urun_id)
+        .eq('birim_turu', item.birim_turu)
+        .eq('birim_adedi', item.birim_adedi || 100)
+        .maybeSingle()
+
+      const hedefMiktar = Number(existing?.miktar || 0) + Number(item.miktar)
+      const rezervasyonSonuc = await stokKontrolVeRezerve(
+        item.urun_id,
+        item.birim_turu,
+        hedefMiktar,
+        item.birim_adedi,
+        item.birim_adedi_turu
+      )
+
+      if (!rezervasyonSonuc.success) {
+        throw new Error(rezervasyonSonuc.message)
+      }
+
+      if (existing) {
+        await supabase
+          .from('sepet_items')
+          .update({ miktar: hedefMiktar })
+          .eq('id', existing.id)
+      } else {
+        await supabase
+          .from('sepet_items')
+          .insert({
+            musteri_id: musteriData.id,
+            urun_id: item.urun_id,
+            birim_turu: item.birim_turu,
+            birim_adedi: item.birim_adedi,
+            birim_adedi_turu: item.birim_adedi_turu,
+            birim_fiyat: item.birim_fiyat,
+            miktar: item.miktar
+          })
+      }
+    } catch (error) {
+      console.error('Sepete ekleme hatası:', error)
+      throw error
+    }
+  }, [musteriData, stokKontrolVeRezerve])
+
+  // Kullanıcı değiştiğinde sepeti yükle
+  const loadCart = useCallback(async () => {
     setLoading(true)
     try {
       if (user && musteriData) {
-        // Giriş yapmış kullanıcı - veritabanından yükle
         const { data, error } = await supabase
           .from('sepet_items')
           .select(`
@@ -90,7 +219,6 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
 
         setSepetItems(items)
 
-        // localStorage'daki misafir sepetini veritabanına aktar
         const guestCart = localStorage.getItem('sepet_guest')
         if (guestCart) {
           const guestItems: SepetItem[] = JSON.parse(guestCart)
@@ -98,11 +226,9 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
             await sepeteEkleDB(item)
           }
           localStorage.removeItem('sepet_guest')
-          // Sepeti yeniden yükle
           await loadCart()
         }
       } else {
-        // Misafir kullanıcı - sepet boş olmalı
         setSepetItems([])
         localStorage.removeItem('sepet_guest')
       }
@@ -112,7 +238,29 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [musteriData, sepeteEkleDB, user])
+
+  useEffect(() => {
+    loadCart()
+  }, [loadCart])
+
+  // Önceki kullanıcı ID'sini takip et
+  const [prevUserId, setPrevUserId] = useState<string | null>(user?.id || null)
+
+  // Kullanıcı değiştiğinde (giriş/çıkış) kontrol et
+  useEffect(() => {
+    const currentUserId = user?.id || null
+
+    // Kullanıcı değişti mi?
+    if (prevUserId !== currentUserId) {
+      if (prevUserId && !currentUserId) {
+        // Çıkış yapıldı - sepeti temizle
+        setSepetItems([])
+        localStorage.removeItem('sepet_guest')
+      }
+      setPrevUserId(currentUserId)
+    }
+  }, [prevUserId, user])
 
   // Misafir sepetini localStorage'a kaydet
   useEffect(() => {
@@ -120,120 +268,6 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('sepet_guest', JSON.stringify(sepetItems))
     }
   }, [sepetItems, user])
-
-  // Stok kontrolü ve rezervasyon
-  const stokKontrolVeRezerve = async (
-    urun_id: string,
-    birim_turu: string,
-    miktar: number,
-    birim_adedi?: number,
-    birim_adedi_turu?: string
-  ) => {
-    if (!musteriData) return { success: false, message: 'Giriş yapmalısınız' }
-
-    try {
-      // İlgili ürün ve birim türüne ait tüm stokları çek
-      const { data: stoklar, error: stokError } = await supabase
-        .from('urun_stoklari')
-        .select('stok_miktari, aktif_durum, stok_grubu, birim_adedi, birim_adedi_turu')
-        .eq('urun_id', urun_id)
-        .eq('birim_turu', birim_turu)
-
-      if (stokError || !stoklar || stoklar.length === 0) {
-        return { success: false, message: 'Stok bilgisi alınamadı' }
-      }
-
-      // Kullanıcının tipine uygun stoku bul
-      const musteriTipi = musteriData.musteri_tipi || 'musteri'
-      const hedefBirimAdedi = Number(birim_adedi || 100)
-      const hedefBirimAdediTuru = birim_adedi_turu || birim_turu
-      const uygunStoklar = stoklar.filter(s =>
-        Number(s.birim_adedi || 100) === hedefBirimAdedi &&
-        (s.birim_adedi_turu || birim_turu) === hedefBirimAdediTuru
-      )
-
-      // Öncelik sırası:
-      // 1. Tam eşleşen stok grubu (örn: 'bayi' ise 'bayi')
-      // 2. 'hepsi' olan stok grubu
-      // 3. Stok grubu belirtilmemiş olanlar (null/boş)
-      const stokData = uygunStoklar.find(s => s.stok_grubu === musteriTipi) ||
-        uygunStoklar.find(s => s.stok_grubu === 'hepsi') ||
-        uygunStoklar.find(s => !s.stok_grubu)
-
-      if (!stokData) {
-        return { success: false, message: 'Size uygun stok bulunamadı' }
-      }
-
-      // Aktif olmayan stoktan sipariş verilemez
-      if (!stokData.aktif_durum) {
-        return { success: false, message: 'Bu ürün şu anda satışta değil' }
-      }
-
-      // Rezerve edilen miktarı hesapla
-      const { data: rezervasyonlar } = await supabase
-        .from('stok_rezervasyonlari')
-        .select('miktar')
-        .eq('urun_id', urun_id)
-        .eq('birim_turu', birim_turu)
-        .eq('birim_adedi', hedefBirimAdedi)
-        .gt('rezervasyon_tarihi', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-
-      const rezerveMiktar = rezervasyonlar?.reduce((sum, r) => sum + Number(r.miktar), 0) || 0
-      const musaitMiktar = Number(stokData.stok_miktari) - rezerveMiktar
-
-      // Mevcut rezervasyonu kontrol et
-      const { data: mevcutRezervasyon } = await supabase
-        .from('stok_rezervasyonlari')
-        .select('miktar')
-        .eq('musteri_id', musteriData.id)
-        .eq('urun_id', urun_id)
-        .eq('birim_turu', birim_turu)
-        .eq('birim_adedi', hedefBirimAdedi)
-        .maybeSingle()
-
-      const mevcutMiktar = mevcutRezervasyon?.miktar || 0
-      const eklenecekMiktar = miktar - mevcutMiktar
-
-      if (musaitMiktar < eklenecekMiktar) {
-        return {
-          success: false,
-          message: `Yeterli stok yok! Müsait: ${musaitMiktar}`
-        }
-      }
-
-      // Rezervasyon oluştur veya güncelle
-      if (mevcutRezervasyon) {
-        // Mevcut rezervasyonu güncelle
-        await supabase
-          .from('stok_rezervasyonlari')
-          .update({
-            miktar: miktar,
-            rezervasyon_tarihi: new Date().toISOString() // Süreyi yenile
-          })
-          .eq('musteri_id', musteriData.id)
-          .eq('urun_id', urun_id)
-          .eq('birim_turu', birim_turu)
-          .eq('birim_adedi', hedefBirimAdedi)
-      } else {
-        // Yeni rezervasyon oluştur
-        await supabase
-          .from('stok_rezervasyonlari')
-          .insert({
-            musteri_id: musteriData.id,
-            urun_id: urun_id,
-            birim_turu: birim_turu,
-            birim_adedi: hedefBirimAdedi,
-            birim_adedi_turu: hedefBirimAdediTuru,
-            miktar: miktar
-          })
-      }
-
-      return { success: true, message: 'Rezervasyon başarılı' }
-    } catch (error) {
-      console.error('Rezervasyon hatası:', error)
-      return { success: false, message: 'Rezervasyon yapılamadı' }
-    }
-  }
 
   // Rezervasyonu kaldır
   const rezervasyonKaldir = async (urun_id: string, birim_turu: string, birim_adedi?: number) => {
@@ -249,59 +283,6 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
         .eq('birim_adedi', Number(birim_adedi || 100))
     } catch (error) {
       console.error('Rezervasyon kaldırma hatası:', error)
-    }
-  }
-
-  // Veritabanına sepet ekleme
-  const sepeteEkleDB = async (item: SepetItem) => {
-    if (!musteriData) return
-
-    try {
-      const { data: existing } = await supabase
-        .from('sepet_items')
-        .select('*')
-        .eq('musteri_id', musteriData.id)
-        .eq('urun_id', item.urun_id)
-        .eq('birim_turu', item.birim_turu)
-        .eq('birim_adedi', item.birim_adedi || 100) // Default to 100 if null/undefined
-        .maybeSingle()
-
-      const hedefMiktar = Number(existing?.miktar || 0) + Number(item.miktar)
-      const rezervasyonSonuc = await stokKontrolVeRezerve(
-        item.urun_id,
-        item.birim_turu,
-        hedefMiktar,
-        item.birim_adedi,
-        item.birim_adedi_turu
-      )
-
-      if (!rezervasyonSonuc.success) {
-        throw new Error(rezervasyonSonuc.message)
-      }
-
-      if (existing) {
-        // Mevcut ürün - miktarı artır
-        await supabase
-          .from('sepet_items')
-          .update({ miktar: hedefMiktar })
-          .eq('id', existing.id)
-      } else {
-        // Yeni ürün - ekle
-        await supabase
-          .from('sepet_items')
-          .insert({
-            musteri_id: musteriData.id,
-            urun_id: item.urun_id,
-            birim_turu: item.birim_turu,
-            birim_adedi: item.birim_adedi,
-            birim_adedi_turu: item.birim_adedi_turu,
-            birim_fiyat: item.birim_fiyat,
-            miktar: item.miktar
-          })
-      }
-    } catch (error) {
-      console.error('Sepete ekleme hatası:', error)
-      throw error
     }
   }
 

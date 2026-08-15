@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import {
   MessageSquare,
@@ -40,11 +40,7 @@ export default function AdminSorular() {
   const [selectedSorular, setSelectedSorular] = useState<string[]>([])
   const [processingBulk, setProcessingBulk] = useState(false)
 
-  useEffect(() => {
-    loadSorular()
-  }, [activeTab, durumFilter])
-
-  async function loadSorular() {
+  const loadSorular = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -116,7 +112,11 @@ export default function AdminSorular() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [activeTab, durumFilter])
+
+  useEffect(() => {
+    loadSorular()
+  }, [loadSorular])
 
   async function handleCevapla(soru: Soru) {
     setCevapModal(soru)
