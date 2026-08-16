@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Eye, Edit, X } from 'lucide-react'
+import { CheckCircle2, Clock3, Eye, Edit, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AdminSearchBar from '../../components/AdminSearchBar'
 
@@ -16,7 +16,8 @@ export default function Musteriler() {
   const [formData, setFormData] = useState({
     fiyat_grubu_id: '',
     musteri_tipi: 'musteri',
-    ozel_iskonto_orani: 0
+    ozel_iskonto_orani: 0,
+    aktif_durum: false
   })
 
   useEffect(() => {
@@ -60,12 +61,14 @@ export default function Musteriler() {
       const fullName = `${musteri.ad} ${musteri.soyad}`.toLowerCase()
       const telefon = (musteri.telefon || '').toLowerCase()
       const adres = (musteri.adres || '').toLowerCase()
+      const email = (musteri.email || '').toLowerCase()
       const fiyatGrubu = (musteri.fiyat_grubu?.grup_adi || '').toLowerCase()
       const musteriTipi = (musteri.musteri_tipi || '').toLowerCase()
 
       return (
         fullName.includes(lowerQuery) ||
         telefon.includes(lowerQuery) ||
+        email.includes(lowerQuery) ||
         adres.includes(lowerQuery) ||
         fiyatGrubu.includes(lowerQuery) ||
         musteriTipi.includes(lowerQuery)
@@ -87,7 +90,8 @@ export default function Musteriler() {
     setFormData({
       fiyat_grubu_id: musteri.fiyat_grubu_id || '',
       musteri_tipi: musteri.musteri_tipi || 'musteri',
-      ozel_iskonto_orani: musteri.ozel_iskonto_orani || 0
+      ozel_iskonto_orani: musteri.ozel_iskonto_orani || 0,
+      aktif_durum: musteri.aktif_durum !== false
     })
     setDuzenlemeModalOpen(true)
   }
@@ -117,12 +121,20 @@ export default function Musteriler() {
     setDetayModalOpen(true)
   }
 
+  const pendingCount = musteriler.filter((musteri) => musteri.aktif_durum === false).length
+
   return (
     <div>
       <div className="mb-4 sm:mb-6 lg:mb-8">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Müşteri Yönetimi</h1>
+        <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Müşteri Yönetimi</h1>
+            <p className="mt-1 text-sm text-gray-600">Yeni başvuruları buradan müşteri türünü seçerek onaylayın.</p>
+          </div>
+          {pendingCount > 0 && <div className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900"><Clock3 className="h-4 w-4" /> {pendingCount} onay bekleyen başvuru</div>}
+        </div>
         <AdminSearchBar
-          placeholder="Müşteri adı, telefon, adres ile ara..."
+          placeholder="Müşteri adı, e-posta, telefon veya adres ile ara..."
           onSearch={handleSearch}
           onClear={handleClearSearch}
           suggestions={suggestions}
@@ -146,12 +158,13 @@ export default function Musteriler() {
               {filteredMusteriler.length} müşteri gösteriliyor
             </p>
           </div>
-          <table className="w-full min-w-[600px]">
+          <table className="w-full min-w-[720px]">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ad Soyad</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefon</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Müşteri Tipi</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Durum</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fiyat Grubu</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">İşlemler</th>
               </tr>
@@ -177,6 +190,11 @@ export default function Musteriler() {
                           ? 'XML Müşteri'
                           : 'Müşteri'}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    {musteri.aktif_durum === false
+                      ? <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800"><Clock3 className="h-3.5 w-3.5" /> Onay bekliyor</span>
+                      : <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-800"><CheckCircle2 className="h-3.5 w-3.5" /> Aktif</span>}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {musteri.fiyat_grubu?.grup_adi || 'Atanmamış'}
@@ -229,6 +247,10 @@ export default function Musteriler() {
                     <p className="text-gray-900">{secilenMusteri.telefon || '-'}</p>
                   </div>
                   <div>
+                    <label className="text-sm font-medium text-gray-500">E-posta</label>
+                    <p className="break-all text-gray-900">{secilenMusteri.email || '-'}</p>
+                  </div>
+                  <div>
                     <label className="text-sm font-medium text-gray-500">Müşteri Tipi</label>
                     <p className="text-gray-900">
                       {secilenMusteri.musteri_tipi === 'bayi'
@@ -237,6 +259,10 @@ export default function Musteriler() {
                           ? 'XML Müşteri'
                           : 'Müşteri'}
                     </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Onay durumu</label>
+                    <p className="text-gray-900">{secilenMusteri.aktif_durum === false ? 'Onay bekliyor' : 'Aktif'}</p>
                   </div>
                   <div className="col-span-2">
                     <label className="text-sm font-medium text-gray-500">Adres</label>
@@ -281,6 +307,18 @@ export default function Musteriler() {
               </div>
 
               <form onSubmit={handleGuncelle} className="space-y-4">
+                <div className={`rounded-lg border p-4 ${formData.aktif_durum ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}>
+                  <div className="flex items-start gap-3">
+                    {formData.aktif_durum ? <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" /> : <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-gray-900">{formData.aktif_durum ? 'Başvuru onaylandı' : 'Başvuru onay bekliyor'}</p>
+                      <p className="mt-1 text-sm text-gray-700">Onay verirken aşağıdan müşteri türünü ve fiyat grubunu seçin.</p>
+                    </div>
+                    <button type="button" onClick={() => setFormData({ ...formData, aktif_durum: !formData.aktif_durum })} className="shrink-0 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm ring-1 ring-black/5 hover:bg-gray-50">
+                      {formData.aktif_durum ? 'Onayı geri al' : 'Onayla'}
+                    </button>
+                  </div>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Müşteri Tipi</label>
                   <select
@@ -289,7 +327,7 @@ export default function Musteriler() {
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
                   >
                     <option value="musteri">Müşteri</option>
-                    <option value="bayi">Bayi</option>
+                    <option value="bayi">Toptan Müşteri</option>
                     <option value="xml_musteri">XML Müşteri</option>
                   </select>
                 </div>
@@ -375,7 +413,7 @@ export default function Musteriler() {
                     type="submit"
                     className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition"
                   >
-                    Güncelle
+                    {formData.aktif_durum ? 'Kaydet ve Onayla' : 'Taslak Olarak Kaydet'}
                   </button>
                   <button
                     type="button"

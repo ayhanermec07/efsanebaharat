@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Package, User as UserIcon, Truck, Copy, Check, ExternalLink, Pencil, X } from 'lucide-react'
+import { Package, User as UserIcon, Truck, Copy, Check, ExternalLink, Pencil, X, Clock3 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function Hesabim() {
@@ -162,6 +162,13 @@ export default function Hesabim() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Hesabım</h1>
+
+      {musteriData?.aktif_durum === false && (
+        <div className="mb-6 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
+          <Clock3 className="mt-0.5 h-5 w-5 shrink-0" />
+          <div><p className="font-semibold">Başvurunuz onay bekliyor</p><p className="mt-1 text-sm">Yönetici müşteri türünüzü belirleyip hesabınızı onayladığında sipariş verebilirsiniz.</p></div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Profil Bilgileri */}
