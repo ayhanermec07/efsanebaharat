@@ -32,6 +32,11 @@ export default function Sepet() {
       return
     }
 
+    if (musteriData.aktif_durum === false) {
+      toast.error('Hesabınız yönetici onayı bekliyor')
+      return
+    }
+
     if (sepetItems.length === 0) {
       toast.error('Sepetiniz boş')
       return

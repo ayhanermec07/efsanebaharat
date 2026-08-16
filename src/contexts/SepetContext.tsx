@@ -42,7 +42,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
     birim_adedi?: number,
     birim_adedi_turu?: string
   ) => {
-    if (!musteriData?.id) return { success: false, message: 'Giriş yapmalısınız' }
+    if (!musteriData?.id || musteriData.aktif_durum === false) return { success: false, message: 'Hesabınız yönetici onayı bekliyor' }
 
     try {
       const { data: stoklar, error: stokError } = await supabase
@@ -138,7 +138,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
 
   // Veritabanına sepet ekleme
   const sepeteEkleDB = useCallback(async (item: SepetItem) => {
-    if (!musteriData?.id) return
+    if (!musteriData?.id || musteriData.aktif_durum === false) return
 
     try {
       const { data: existing } = await supabase
@@ -191,7 +191,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
   const loadCart = useCallback(async () => {
     setLoading(true)
     try {
-      if (user && musteriData?.id) {
+      if (user && musteriData?.id && musteriData.aktif_durum !== false) {
         const { data, error } = await supabase
           .from('sepet_items')
           .select(`
@@ -271,7 +271,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
 
   // Rezervasyonu kaldır
   const rezervasyonKaldir = async (urun_id: string, birim_turu: string, birim_adedi?: number) => {
-    if (!musteriData?.id) return
+    if (!musteriData?.id || musteriData.aktif_durum === false) return
 
     try {
       await supabase
@@ -287,7 +287,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
   }
 
   const sepeteEkle = async (item: SepetItem) => {
-    if (user && musteriData?.id) {
+    if (user && musteriData?.id && musteriData.aktif_durum !== false) {
       // Giriş yapmış kullanıcı - veritabanına ekle
       try {
         await sepeteEkleDB(item)
@@ -303,7 +303,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
   }
 
   const sepettenCikar = async (urun_id: string, birim_turu: string, birim_adedi?: number) => {
-    if (user && musteriData?.id) {
+    if (user && musteriData?.id && musteriData.aktif_durum !== false) {
       // Giriş yapmış kullanıcı - veritabanından sil
       try {
         // Rezervasyonu kaldır
@@ -338,7 +338,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    if (user && musteriData?.id) {
+    if (user && musteriData?.id && musteriData.aktif_durum !== false) {
       // Giriş yapmış kullanıcı - veritabanında güncelle
       try {
         // Önce stok kontrolü ve rezervasyon güncelle
@@ -373,7 +373,7 @@ export function SepetProvider({ children }: { children: React.ReactNode }) {
   }
 
   const sepetiTemizle = async () => {
-    if (user && musteriData?.id) {
+    if (user && musteriData?.id && musteriData.aktif_durum !== false) {
       // Giriş yapmış kullanıcı - veritabanından temizle
       try {
         // Tüm rezervasyonları kaldır
