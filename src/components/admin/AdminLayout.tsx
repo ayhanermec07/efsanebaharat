@@ -21,6 +21,7 @@ import {
   LifeBuoy,
   Settings,
   FileCode,
+  Boxes,
   Menu,
   X
 } from 'lucide-react'
@@ -66,6 +67,7 @@ export default function AdminLayout() {
     { path: '/admin/musteriler', icon: Users, label: 'Müşteriler' },
     { path: '/admin/iskonto', icon: Percent, label: 'İskonto Grupları' },
     { path: '/admin/xml-yonetim', icon: FileCode, label: 'XML Yönetimi' },
+    { path: '/admin/asorti-stok', icon: Boxes, label: 'Asorti Stok' },
     { path: '/admin/ayarlar', icon: Settings, label: 'Ayarlar' },
     { path: '/admin/kampanyalar', icon: Megaphone, label: 'Kampanya & Banner' },
     { path: '/admin/sorular', icon: MessageSquare, label: 'Sorular' },
@@ -161,4 +163,3 @@ export default function AdminLayout() {
     </div>
   )
 }
-
