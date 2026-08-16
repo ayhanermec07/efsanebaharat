@@ -37,6 +37,7 @@ import AdminCanliDestek from './pages/admin/CanliDestek'
 import AdminIskontoGruplari from './pages/admin/IskontoGruplari'
 import AdminAyarlar from './pages/admin/Ayarlar'
 import AdminXMLYonetim from './pages/admin/XMLYonetim'
+import AdminAsortiStok from './pages/admin/AsortiStok'
 import './App.css'
 
 function App() {
@@ -85,6 +86,7 @@ function App() {
                 <Route path="stok-azalan" element={<AdminStokAzalan />} />
                 <Route path="ayarlar" element={<AdminAyarlar />} />
                 <Route path="xml-yonetim" element={<AdminXMLYonetim />} />
+                <Route path="asorti-stok" element={<AdminAsortiStok />} />
               </Route>
             </Routes>
           </Router>
