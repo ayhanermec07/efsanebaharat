@@ -36,6 +36,8 @@ const gramsFor = (amount: number, unit?: string) => {
 const displayUnit = (stock: Pick<Stock, 'birim_adedi' | 'birim_adedi_turu' | 'birim_turu'>) =>
   `${Number(stock.birim_adedi || 0)} ${String(stock.birim_adedi_turu || stock.birim_turu || '').toUpperCase()}`
 
+const isWeightStock = (stock: Pick<Stock, 'stok_birimi'>) => ['gr', 'gram', 'kg', 'kilogram'].includes(String(stock.stok_birimi || '').toLowerCase())
+
 export default function AdminAsortiStok() {
   const [products, setProducts] = useState<Product[]>([])
   const [stocks, setStocks] = useState<Stock[]>([])
@@ -69,7 +71,8 @@ export default function AdminAsortiStok() {
   useEffect(() => { void loadData() }, [])
 
   const productById = useMemo(() => new Map(products.map((product) => [product.id, product])), [products])
-  const sourceStocks = useMemo(() => stocks.filter((stock) => stock.xml_imported === true), [stocks])
+  const sourceStocks = useMemo(() => stocks.filter((stock) => stock.xml_imported === true && isWeightStock(stock)), [stocks])
+  const unsupportedImportedStockCount = useMemo(() => stocks.filter((stock) => stock.xml_imported === true && !isWeightStock(stock)).length, [stocks])
   const sourceStock = useMemo(() => stocks.find((stock) => stock.id === sourceStockId) || null, [stocks, sourceStockId])
   const assortments = useMemo(() => sourceStock
     ? stocks.filter((stock) => stock.urun_id === sourceStock.urun_id && stock.xml_imported !== true && stock.id !== sourceStock.id)
@@ -126,7 +129,7 @@ export default function AdminAsortiStok() {
       </section>
 
       {!sourceStocks.length ? (
-        <section className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-600">XML’den gelen ham stok bulunamadı. Önce XML Yönetimi alanından ürün stoklarını içe aktarın.</section>
+        <section className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-600">Gram veya kilogram olarak gelen ham stok bulunamadı. Önce XML Yönetimi alanından ürün stoklarını içe aktarın.</section>
       ) : (
         <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="grid gap-4 md:grid-cols-2">
@@ -168,6 +171,10 @@ export default function AdminAsortiStok() {
             </div>
           )}
         </section>
+      )}
+
+      {unsupportedImportedStockCount > 0 && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">Paket veya adet olarak gelen {unsupportedImportedStockCount} eski aktarım stoğu bu ekranda gösterilmez. Bu dönüşüm yalnızca gram/kilogram ana stoklarla kullanılabilir.</p>
       )}
 
       <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
