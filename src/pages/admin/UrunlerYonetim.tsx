@@ -29,27 +29,36 @@ export default function UrunlerYonetim() {
 
   async function loadData() {
     setLoading(true)
+    try {
+      // Manual fetching (no foreign keys - Supabase best practice)
+      const [urunRes, katRes, markaRes] = await Promise.all([
+        supabase.from('urunler').select('*').order('created_at', { ascending: false }),
+        supabase.from('kategoriler').select('*').eq('aktif_durum', true),
+        supabase.from('markalar').select('*').eq('aktif_durum', true)
+      ])
 
-    // Manual fetching (no foreign keys - Supabase best practice)
-    const [urunRes, katRes, markaRes] = await Promise.all([
-      supabase.from('urunler').select('*').order('created_at', { ascending: false }),
-      supabase.from('kategoriler').select('*').eq('aktif_durum', true),
-      supabase.from('markalar').select('*').eq('aktif_durum', true)
-    ])
+      if (urunRes.error) throw urunRes.error
+      if (katRes.error) throw katRes.error
+      if (markaRes.error) throw markaRes.error
 
-    if (urunRes.data && katRes.data && markaRes.data) {
-      // Manual join - Map kategoriler ve markalar
-      const urunlerWithRelations = urunRes.data.map(urun => ({
-        ...urun,
-        kategoriler: katRes.data.find(k => k.id === urun.kategori_id),
-        markalar: markaRes.data.find(m => m.id === urun.marka_id)
-      }))
-      setUrunler(urunlerWithRelations)
+      if (urunRes.data && katRes.data && markaRes.data) {
+        // Manual join - Map kategoriler ve markalar
+        const urunlerWithRelations = urunRes.data.map(urun => ({
+          ...urun,
+          kategoriler: katRes.data.find(k => k.id === urun.kategori_id),
+          markalar: markaRes.data.find(m => m.id === urun.marka_id)
+        }))
+        setUrunler(urunlerWithRelations)
+      }
+
+      if (katRes.data) setKategoriler(katRes.data)
+      if (markaRes.data) setMarkalar(markaRes.data)
+    } catch (error: any) {
+      console.error('Ürün yükleme hatası:', error)
+      toast.error(`Ürünler yüklenemedi: ${error.message || 'Bilinmeyen hata'}`)
+    } finally {
+      setLoading(false)
     }
-
-    if (katRes.data) setKategoriler(katRes.data)
-    if (markaRes.data) setMarkalar(markaRes.data)
-    setLoading(false)
   }
 
   async function handleSubmit(e: React.FormEvent) {
