@@ -295,9 +295,6 @@ export default function AnaSayfa() {
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               <h2 className="text-2xl font-extrabold uppercase tracking-[0.02em] text-zinc-950 sm:text-3xl">GÜVENİLEN SEÇİMLER</h2>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-600">
-                Sık kullanılan marka raflarına logolar üzerinden hızlıca geçin.
-              </p>
             </div>
             <Link to="/urunler" className="shop-btn-secondary min-h-[40px] px-4 py-2 text-sm">
               Tümü
