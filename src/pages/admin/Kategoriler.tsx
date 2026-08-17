@@ -24,13 +24,20 @@ export default function Kategoriler() {
 
   async function loadKategoriler() {
     setLoading(true)
-    const { data } = await supabase
-      .from('kategoriler')
-      .select('*')
-      .order('sira_no', { ascending: true })
+    try {
+      const { data, error } = await supabase
+        .from('kategoriler')
+        .select('*')
+        .order('sira_no', { ascending: true })
 
-    if (data) setKategoriler(data)
-    setLoading(false)
+      if (error) throw error
+      if (data) setKategoriler(data)
+    } catch (error: any) {
+      console.error('Kategori yükleme hatası:', error)
+      toast.error(`Kategoriler yüklenemedi: ${error.message || 'Bilinmeyen hata'}`)
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
