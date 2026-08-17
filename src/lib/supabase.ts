@@ -45,16 +45,24 @@ export async function loadPublicCatalog(limit: number, searchTerm = '') {
 }
 
 export async function loadCurrentCustomerProfile(accessToken: string) {
-  const response = await fetch(`${supabaseUrl}/functions/v1/xml-musteri-siparis`, {
-    method: 'POST',
-    headers: {
-      apikey: supabaseAnonKey,
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ action: 'profile' })
-  })
-  const body = await response.json()
-  if (!response.ok || body?.error) throw new Error(body?.error?.message || 'Müşteri profili alınamadı')
-  return body.data
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), 7_000)
+
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/xml-musteri-siparis`, {
+      method: 'POST',
+      headers: {
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ action: 'profile' }),
+      signal: controller.signal
+    })
+    const body = await response.json()
+    if (!response.ok || body?.error) throw new Error(body?.error?.message || 'Müşteri profili alınamadı')
+    return body.data
+  } finally {
+    window.clearTimeout(timeout)
+  }
 }

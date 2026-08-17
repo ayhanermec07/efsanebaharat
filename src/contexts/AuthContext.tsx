@@ -146,17 +146,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       if (accessToken) {
-        const profile = await loadCurrentCustomerProfile(accessToken)
-        const grupIskonto = Number(profile.fiyat_gruplari?.indirim_orani || 0)
-        const ozelIskonto = Number(profile.ozel_iskonto_orani || 0)
-        const toplamIskonto = 100 - ((100 - grupIskonto) * (100 - ozelIskonto)) / 100
+        try {
+          const profile = await loadCurrentCustomerProfile(accessToken)
+          const grupIskonto = Number(profile.fiyat_gruplari?.indirim_orani || 0)
+          const ozelIskonto = Number(profile.ozel_iskonto_orani || 0)
+          const toplamIskonto = 100 - ((100 - grupIskonto) * (100 - ozelIskonto)) / 100
 
-        setMusteriData(profile)
-        setIsAdmin(profile.isAdmin === true || profile.musteri_tipi === 'admin')
-        setGrupIskontoOrani(grupIskonto)
-        setOzelIskontoOrani(ozelIskonto)
-        setIskontoOrani(Math.round(toplamIskonto * 100) / 100)
-        return
+          setMusteriData(profile)
+          setIsAdmin(profile.isAdmin === true || profile.musteri_tipi === 'admin')
+          setGrupIskontoOrani(grupIskonto)
+          setOzelIskontoOrani(ozelIskonto)
+          setIskontoOrani(Math.round(toplamIskonto * 100) / 100)
+          return
+        } catch (profileError) {
+          // Profil Edge Function geçici olarak yanıt vermezse oturumu kapatma.
+          // Aşağıdaki RLS korumalı sorgular mevcut kullanıcının rolünü güvenle
+          // yükler ve girişin beklemede kalmasını önler.
+          console.warn('Profil hizmeti yanıt vermedi, yedek rol kontrolü kullanılıyor:', profileError)
+        }
       }
 
       const { data: adminData } = await supabase
