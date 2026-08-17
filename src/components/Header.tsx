@@ -207,7 +207,7 @@ export default function Header() {
   const canAccessAdmin = isAdmin || musteriData?.musteri_tipi === 'admin'
 
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-50 relative border-b border-zinc-200 bg-white/95 backdrop-blur">
       <div className="shop-container">
         <div className="flex h-16 min-w-0 items-center gap-2 sm:gap-3">
           <Link to="/" className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3" onClick={closeMenus}>
@@ -446,8 +446,13 @@ export default function Header() {
         )}
 
         {menuOpen && (
-          <div className="border-t border-zinc-100 py-4 lg:hidden">
-            <div className="grid gap-1">
+          <div
+            className="absolute inset-x-0 top-full z-[60] max-h-[calc(100dvh-4rem)] touch-pan-y overflow-y-auto overscroll-contain border-t border-zinc-100 bg-white shadow-xl lg:hidden"
+            role="dialog"
+            aria-label="Mobil menü"
+          >
+            <div className="shop-container py-4">
+              <div className="grid gap-1 pb-6">
               {navLinks.map((link) => (
                 <Link key={link.to} to={link.to} onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-100">
                   {link.label}
@@ -501,6 +506,7 @@ export default function Header() {
                   Giriş Yap
                 </Link>
               )}
+              </div>
             </div>
           </div>
         )}
