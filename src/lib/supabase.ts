@@ -7,7 +7,21 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY tanimli olmali')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Bazı tarayıcılarda önceki sekmeden kalan Web Lock, getSession çağrılarını
+// süresiz bekletebiliyor. Bu durumda Supabase sorguları hiç başlamadan yönetim
+// ekranları yüklenme göstergesinde kalıyordu. Oturum bilgisi yine Supabase Auth
+// tarafından doğrulanır; burada yalnızca tarayıcı kilidi beklemesini kaldırıyoruz.
+const withoutBrowserAuthLock = async <T>(
+  _name: string,
+  _acquireTimeout: number,
+  fn: () => Promise<T>
+): Promise<T> => fn()
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    lock: withoutBrowserAuthLock
+  }
+})
 
 // Herkese açık katalog sorguları, açık bir kullanıcı oturumundan bağımsız çalışır.
 export const publicSupabase = createClient(supabaseUrl, supabaseAnonKey, {
