@@ -200,6 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let aktif = true
+    let oturumDegisimiZamanlayicisi: number | undefined
     const yuklemeZamanAsimi = window.setTimeout(() => {
       if (aktif) {
         setLoading(false)
@@ -225,14 +226,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-      await syncUserState(session?.user || null, session?.access_token)
+      (_event, session) => {
+        // Supabase bu bildirim sırasında oturum deposunu kilitli tutar. Veri
+        // sorgularını doğrudan burada beklemek, yönetim ekranlarının yüklemede
+        // kalmasına yol açabilir. Bildirim tamamlandıktan sonra senkronize et.
+        oturumDegisimiZamanlayicisi = window.setTimeout(() => {
+          if (aktif) {
+            void syncUserState(session?.user || null, session?.access_token)
+          }
+        }, 0)
       }
     )
 
     return () => {
       aktif = false
       window.clearTimeout(yuklemeZamanAsimi)
+      if (oturumDegisimiZamanlayicisi) {
+        window.clearTimeout(oturumDegisimiZamanlayicisi)
+      }
       subscription.unsubscribe()
     }
   }, [syncUserState])
