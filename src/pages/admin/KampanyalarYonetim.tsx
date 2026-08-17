@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Plus, Edit, Trash2, Calendar, Tag, TrendingUp, QrCode, Copy, Check, RefreshCw, Image as ImageIcon, Save, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, Tag, TrendingUp, Copy, Check, RefreshCw, Image as ImageIcon, Save, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ImageUpload } from '../../components/ImageUpload';
 import KampanyaIstatistikleri from '../../components/admin/KampanyaIstatistikleri';
@@ -47,7 +47,7 @@ export default function KampanyalarYonetim() {
   const [kampanyalar, setKampanyalar] = useState<Kampanya[]>([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [modalAcik, setModalAcik] = useState(false);
-  const [activeTab, setActiveTab] = useState<'kampanyalar' | 'istatistikler' | 'kodlar'>('kampanyalar');
+  const [activeTab, setActiveTab] = useState<'kampanyalar' | 'istatistikler'>('kampanyalar');
   const [formTab, setFormTab] = useState<'genel' | 'kosullar' | 'banner'>('genel');
   const [duzenlenecekKampanya, setDuzenlenecekKampanya] = useState<Kampanya | null>(null);
   // Eklentiler: Kategoriler, Markalar, Ürünler
@@ -284,16 +284,6 @@ export default function KampanyalarYonetim() {
             Kampanyalar
           </button>
           <button
-            onClick={() => setActiveTab('kodlar')}
-            className={`min-h-10 shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === 'kodlar'
-              ? 'bg-orange-100 text-orange-700 font-medium'
-              : 'text-gray-600 hover:bg-gray-100'
-              }`}
-          >
-            <QrCode className="w-4 h-4" />
-            Tek Kullanımlık Kodlar
-          </button>
-          <button
             onClick={() => setActiveTab('istatistikler')}
             className={`min-h-10 shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === 'istatistikler'
               ? 'bg-orange-100 text-orange-700 font-medium'
@@ -308,8 +298,6 @@ export default function KampanyalarYonetim() {
 
       {activeTab === 'istatistikler' ? (
         <KampanyaIstatistikleri />
-      ) : activeTab === 'kodlar' ? (
-        <KampanyaKodlari kampanyalar={kampanyalar} />
       ) : (
         <>
           <div className="mb-4 flex flex-col gap-3 rounded-xl border border-orange-100 bg-orange-50/60 p-4 sm:flex-row sm:items-center sm:justify-between">
