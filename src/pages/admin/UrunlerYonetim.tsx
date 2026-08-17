@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { publicSupabase, supabase } from '../../lib/supabase'
 import { Plus, Edit, Trash2, Save, X, ExternalLink } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { ImageUpload } from '../../components/ImageUpload'
@@ -32,9 +32,9 @@ export default function UrunlerYonetim() {
     try {
       // Manual fetching (no foreign keys - Supabase best practice)
       const [urunRes, katRes, markaRes] = await Promise.all([
-        supabase.from('urunler').select('*').order('created_at', { ascending: false }),
-        supabase.from('kategoriler').select('*').eq('aktif_durum', true),
-        supabase.from('markalar').select('*').eq('aktif_durum', true)
+        publicSupabase.from('urunler').select('*').order('created_at', { ascending: false }),
+        publicSupabase.from('kategoriler').select('*').eq('aktif_durum', true),
+        publicSupabase.from('markalar').select('*').eq('aktif_durum', true)
       ])
 
       if (urunRes.error) throw urunRes.error
