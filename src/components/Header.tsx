@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { ChevronDown, Menu, Search, ShoppingCart, Sparkles, User, X } from 'lucide-react'
+import { ChevronDown, LayoutDashboard, LogOut, Menu, Search, ShoppingCart, Sparkles, User, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
@@ -202,16 +202,17 @@ export default function Header() {
 
   const cartCount = toplamAdet || sepetItems.length
   const logoSetting = Math.min(240, Math.max(50, Number(logo.width) || 120))
-  // Yönetici ekranındaki değer, başlığı bozmadan gerçek logo boyutuna dönüştürülür.
-  const logoSize = Math.round(36 + ((logoSetting - 50) / 190) * 20)
+  // Üst menüde başlık ve işlem ikonları her ekranda rahatça sığmalıdır.
+  const logoSize = Math.min(40, Math.round(36 + ((logoSetting - 50) / 190) * 20))
+  const canAccessAdmin = isAdmin || musteriData?.musteri_tipi === 'admin'
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">
       <div className="shop-container">
-        <div className="flex h-16 items-center justify-between gap-3">
-          <Link to="/" className="flex min-w-0 items-center gap-3" onClick={closeMenus}>
+        <div className="flex h-16 min-w-0 items-center gap-2 sm:gap-3">
+          <Link to="/" className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3" onClick={closeMenus}>
             <div
-              className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg text-white shadow-sm ${logo.url ? 'border border-zinc-100 bg-white' : 'h-10 w-10 site-primary-bg'}`}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg text-white shadow-sm ${logo.url ? 'border border-zinc-100 bg-white' : 'site-primary-bg'}`}
               style={logo.url ? { width: logoSize, height: logoSize } : undefined}
             >
               {logo.url ? (
@@ -225,7 +226,7 @@ export default function Header() {
               )}
             </div>
             <div className="min-w-0">
-              <div className="truncate text-lg font-bold tracking-tight text-zinc-950 sm:text-xl">{siteInfo.siteName}</div>
+              <div className="truncate text-base font-bold leading-tight tracking-tight text-zinc-950 sm:text-xl">{siteInfo.siteName}</div>
               <div className="hidden truncate text-xs font-medium text-zinc-500 sm:block">{siteInfo.tagline}</div>
             </div>
           </Link>
@@ -286,21 +287,21 @@ export default function Header() {
                 <NavLink to="/xml-siparislerim" className="rounded-lg px-3 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-50">Siparişlerim</NavLink>
               </>
             )}
-            {isAdmin && (
+            {canAccessAdmin && (
               <NavLink to="/admin" className="rounded-lg px-3 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-50">
                 Admin
               </NavLink>
             )}
           </nav>
 
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
             <button
               type="button"
               onClick={() => {
                 setSearchOpen((value) => !value)
                 setSearchResults([])
               }}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-zinc-700 transition hover:bg-zinc-100"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-zinc-700 transition hover:bg-zinc-100"
               aria-label="Arama"
             >
               <Search className="h-5 w-5" />
@@ -309,7 +310,7 @@ export default function Header() {
             <Link
               to="/sepet"
               onClick={closeMenus}
-              className="relative flex h-10 w-10 items-center justify-center rounded-lg text-zinc-700 transition hover:bg-zinc-100"
+              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-zinc-700 transition hover:bg-zinc-100"
               aria-label="Sepet"
             >
               <ShoppingCart className="h-5 w-5" />
@@ -360,7 +361,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setMenuOpen((value) => !value)}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-zinc-700 transition hover:bg-zinc-100 lg:hidden"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-zinc-700 transition hover:bg-zinc-100 lg:hidden"
               aria-label="Menu"
             >
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -464,9 +465,15 @@ export default function Header() {
               </div>
               {user ? (
                 <>
-                  <Link to="/hesabim" onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-100">
-                    Hesabım
-                  </Link>
+                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-zinc-500">Giriş yapılan hesap</p>
+                      <p className="mt-0.5 truncate text-sm font-semibold text-zinc-900">{user.email}</p>
+                    </div>
+                    <Link to="/hesabim" onClick={closeMenus} className="mt-3 flex min-h-10 items-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-zinc-800 shadow-sm ring-1 ring-zinc-200">
+                      Hesabım
+                    </Link>
+                  </div>
                   {musteriData?.musteri_tipi === 'bayi' && (
                     <Link to="/bayi-panel" onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-100">
                       Bayi Paneli
@@ -478,12 +485,14 @@ export default function Header() {
                       <Link to="/xml-siparislerim" onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-violet-800 hover:bg-violet-50">Siparişlerim</Link>
                     </>
                   )}
-                  {isAdmin && (
-                    <Link to="/admin" onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-amber-800 hover:bg-amber-50">
-                      Admin
+                  {canAccessAdmin && (
+                    <Link to="/admin" onClick={closeMenus} className="flex min-h-11 items-center gap-2 rounded-lg bg-amber-50 px-3 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-100">
+                      <LayoutDashboard className="h-5 w-5" />
+                      Yönetim Paneli
                     </Link>
                   )}
-                  <button type="button" onClick={() => { closeMenus(); signOut() }} className="rounded-lg px-3 py-3 text-left text-sm font-semibold text-zinc-800 hover:bg-zinc-100">
+                  <button type="button" onClick={() => { closeMenus(); void signOut() }} className="flex min-h-11 items-center gap-2 rounded-lg px-3 py-3 text-left text-sm font-semibold text-zinc-800 hover:bg-zinc-100">
+                    <LogOut className="h-5 w-5" />
                     Çıkış Yap
                   </button>
                 </>

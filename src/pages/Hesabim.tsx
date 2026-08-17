@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Package, User as UserIcon, Truck, Copy, Check, ExternalLink, Pencil, X, Clock3 } from 'lucide-react'
+import { Package, User as UserIcon, Truck, Copy, Check, ExternalLink, Pencil, X, Clock3, LayoutDashboard, LogOut } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function Hesabim() {
-  const { user, musteriData, loading: authLoading, updateUser } = useAuth()
+  const { user, musteriData, loading: authLoading, updateUser, isAdmin, signOut } = useAuth()
   const navigate = useNavigate()
   const [siparisler, setSiparisler] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -160,8 +160,29 @@ export default function Hesabim() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Hesabım</h1>
+    <div className="container mx-auto min-w-0 px-4 py-8">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl font-bold text-gray-900">Hesabım</h1>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          {isAdmin && (
+            <Link to="/admin" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-100">
+              <LayoutDashboard className="h-4 w-4" />
+              Yönetim Paneli
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={async () => {
+              await signOut()
+              navigate('/')
+            }}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-800 transition hover:bg-zinc-50"
+          >
+            <LogOut className="h-4 w-4" />
+            Çıkış Yap
+          </button>
+        </div>
+      </div>
 
       {musteriData?.aktif_durum === false && (
         <div className="mb-6 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
