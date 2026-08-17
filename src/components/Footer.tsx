@@ -1,36 +1,44 @@
 import { Link } from 'react-router-dom'
 import { Mail, MapPin, Phone, ShieldCheck, Sparkles, Truck } from 'lucide-react'
+import { useTheme } from '../contexts/ThemeContext'
+import { getImageUrl } from '../utils/imageUtils'
 
 export default function Footer() {
+  const { logo, siteInfo } = useTheme()
+
   return (
     <footer className="mt-auto border-t border-emerald-900/20 bg-zinc-950 text-zinc-300">
       <div className="shop-container py-10 sm:py-12">
         <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="min-w-0">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-700 text-white">
-                <Sparkles className="h-5 w-5" />
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg ${logo.url ? 'bg-white' : 'site-primary-bg text-white'}`}>
+                {logo.url ? (
+                  <img src={getImageUrl(logo.url)} alt={`${siteInfo.siteName} logosu`} className="h-full w-full object-cover object-center" />
+                ) : (
+                  <Sparkles className="h-5 w-5" />
+                )}
               </div>
               <div>
-                <div className="text-xl font-bold text-white">Efsane Baharat</div>
-                <div className="text-xs font-medium text-zinc-500">Premium baharat ve gıda</div>
+                <div className="text-xl font-bold text-white">{siteInfo.siteName}</div>
+                <div className="text-xs font-medium text-zinc-500">{siteInfo.tagline}</div>
               </div>
             </div>
             <p className="max-w-md text-sm leading-6 text-zinc-400">
-              Günlük mutfaktan profesyonel kullanıma kadar taze, seçili ve güvenilir baharat ürünleri.
+              {siteInfo.description}
             </p>
             <div className="mt-5 grid gap-3 text-sm">
               <div className="flex items-center gap-3">
                 <Phone className="site-secondary-text h-4 w-4" />
-                <span>0850 123 45 67</span>
+                <a href={`tel:${siteInfo.phone.replace(/[^+\d]/g, '')}`} className="hover:text-white">{siteInfo.phone}</a>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="site-secondary-text h-4 w-4" />
-                <span>info@efsanebaharat.com</span>
+                <a href={`mailto:${siteInfo.email}`} className="break-all hover:text-white">{siteInfo.email}</a>
               </div>
               <div className="flex items-center gap-3">
                 <MapPin className="site-secondary-text h-4 w-4" />
-                <span>İstanbul, Türkiye</span>
+                <span>{siteInfo.address}</span>
               </div>
             </div>
           </div>

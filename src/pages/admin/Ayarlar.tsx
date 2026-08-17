@@ -16,7 +16,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export default function Ayarlar() {
-    const { theme, logo, updateTheme, updateLogo } = useTheme()
+    const { theme, logo, siteInfo, updateTheme, updateLogo, updateSiteInfo } = useTheme()
     const { user } = useAuth()
 
     const [activeTab, setActiveTab] = useState<'tasarim' | 'yoneticiler'>('tasarim')
@@ -26,6 +26,12 @@ export default function Ayarlar() {
     const [secondaryColor, setSecondaryColor] = useState(theme.secondaryColor)
     const [backgroundColor, setBackgroundColor] = useState(theme.backgroundColor || '#f9fafb')
     const [logoWidth, setLogoWidth] = useState(logo.width)
+    const [siteName, setSiteName] = useState(siteInfo.siteName)
+    const [tagline, setTagline] = useState(siteInfo.tagline)
+    const [siteDescription, setSiteDescription] = useState(siteInfo.description)
+    const [phone, setPhone] = useState(siteInfo.phone)
+    const [email, setEmail] = useState(siteInfo.email)
+    const [address, setAddress] = useState(siteInfo.address)
     const [loading, setLoading] = useState(false)
 
     // Ayarlar uzaktan yüklendiğinde form, kaydedilmiş değerleri göstermelidir.
@@ -38,6 +44,15 @@ export default function Ayarlar() {
     useEffect(() => {
         setLogoWidth(logo.width)
     }, [logo.width])
+
+    useEffect(() => {
+        setSiteName(siteInfo.siteName)
+        setTagline(siteInfo.tagline)
+        setSiteDescription(siteInfo.description)
+        setPhone(siteInfo.phone)
+        setEmail(siteInfo.email)
+        setAddress(siteInfo.address)
+    }, [siteInfo])
 
     // Yönetici form state (Mevcut kullanıcı)
     const [adminEmail, setAdminEmail] = useState('')
@@ -103,6 +118,26 @@ export default function Ayarlar() {
             toast.success('Logo boyutu güncellendi')
         } catch (error) {
             toast.error('Hata oluştu')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleSiteInfoSave = async () => {
+        setLoading(true)
+        try {
+            await updateSiteInfo({
+                siteName,
+                tagline,
+                description: siteDescription,
+                phone,
+                email,
+                address,
+            })
+            toast.success('Site bilgileri kaydedildi')
+        } catch (error) {
+            console.error(error)
+            toast.error('Site bilgileri kaydedilemedi')
         } finally {
             setLoading(false)
         }
@@ -313,6 +348,41 @@ export default function Ayarlar() {
                                         {loading ? 'Kaydediliyor...' : 'Renkleri Kaydet'}
                                     </button>
                                 </div>
+                            </div>
+
+                            <div className="border-t pt-8">
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">Site Bilgileri</h3>
+                                <p className="mb-4 text-sm leading-6 text-gray-600">Bu bilgiler üst menüde ve footer alanında görünür.</p>
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <label className="block sm:col-span-2">
+                                        <span className="mb-1.5 block text-sm font-medium text-gray-700">Site adı</span>
+                                        <input value={siteName} onChange={(event) => setSiteName(event.target.value)} maxLength={80} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+                                    </label>
+                                    <label className="block sm:col-span-2">
+                                        <span className="mb-1.5 block text-sm font-medium text-gray-700">Kısa açıklama</span>
+                                        <input value={tagline} onChange={(event) => setTagline(event.target.value)} maxLength={120} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+                                    </label>
+                                    <label className="block sm:col-span-2">
+                                        <span className="mb-1.5 block text-sm font-medium text-gray-700">Footer açıklaması</span>
+                                        <textarea value={siteDescription} onChange={(event) => setSiteDescription(event.target.value)} maxLength={300} rows={3} className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+                                    </label>
+                                    <label className="block">
+                                        <span className="mb-1.5 block text-sm font-medium text-gray-700">Telefon</span>
+                                        <input value={phone} onChange={(event) => setPhone(event.target.value)} maxLength={40} inputMode="tel" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+                                    </label>
+                                    <label className="block">
+                                        <span className="mb-1.5 block text-sm font-medium text-gray-700">E-posta</span>
+                                        <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} maxLength={160} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+                                    </label>
+                                    <label className="block sm:col-span-2">
+                                        <span className="mb-1.5 block text-sm font-medium text-gray-700">Adres</span>
+                                        <input value={address} onChange={(event) => setAddress(event.target.value)} maxLength={200} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+                                    </label>
+                                </div>
+                                <button onClick={handleSiteInfoSave} disabled={loading} className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-50">
+                                    <Save className="h-4 w-4" />
+                                    {loading ? 'Kaydediliyor...' : 'Site Bilgilerini Kaydet'}
+                                </button>
                             </div>
 
                             <div className="border-t pt-8">

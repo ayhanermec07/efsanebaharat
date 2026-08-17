@@ -22,7 +22,7 @@ const navLinks = [
 
 export default function Header() {
   const { user, isAdmin, musteriData, signOut } = useAuth()
-  const { logo } = useTheme()
+  const { logo, siteInfo } = useTheme()
   const { sepetItems, toplamAdet } = useSepet()
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -217,7 +217,7 @@ export default function Header() {
               {logo.url ? (
                 <img
                   src={getImageUrl(logo.url)}
-                  alt="Efsane Baharat logosu"
+                  alt={`${siteInfo.siteName} logosu`}
                   className="h-full w-full object-cover object-center"
                 />
               ) : (
@@ -225,8 +225,8 @@ export default function Header() {
               )}
             </div>
             <div className="min-w-0">
-              <div className="truncate text-lg font-bold tracking-tight text-zinc-950 sm:text-xl">Efsane Baharat</div>
-              <div className="hidden text-xs font-medium text-zinc-500 sm:block">Premium baharat ve gıda</div>
+              <div className="truncate text-lg font-bold tracking-tight text-zinc-950 sm:text-xl">{siteInfo.siteName}</div>
+              <div className="hidden truncate text-xs font-medium text-zinc-500 sm:block">{siteInfo.tagline}</div>
             </div>
           </Link>
 

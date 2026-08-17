@@ -13,11 +13,22 @@ interface LogoSettings {
     width: number
 }
 
+interface SiteInfoSettings {
+    siteName: string
+    tagline: string
+    description: string
+    phone: string
+    email: string
+    address: string
+}
+
 interface ThemeContextType {
     theme: ThemeSettings
     logo: LogoSettings
+    siteInfo: SiteInfoSettings
     updateTheme: (settings: ThemeSettings) => Promise<void>
     updateLogo: (settings: LogoSettings) => Promise<void>
+    updateSiteInfo: (settings: SiteInfoSettings) => Promise<void>
     loading: boolean
 }
 
@@ -30,6 +41,15 @@ const defaultTheme: ThemeSettings = {
 const defaultLogo: LogoSettings = {
     url: null,
     width: 120,
+}
+
+const defaultSiteInfo: SiteInfoSettings = {
+    siteName: 'Efsane Baharat',
+    tagline: 'Premium baharat ve gıda',
+    description: 'Günlük mutfaktan profesyonel kullanıma kadar taze, seçili ve güvenilir baharat ürünleri.',
+    phone: '0850 123 45 67',
+    email: 'info@efsanebaharat.com',
+    address: 'İstanbul, Türkiye',
 }
 
 const normalizeColor = (value: unknown, fallback: string) =>
@@ -54,11 +74,30 @@ const normalizeLogo = (value: unknown): LogoSettings => {
     }
 }
 
+const normalizeText = (value: unknown, fallback: string, maxLength: number) => {
+    if (typeof value !== 'string') return fallback
+    const normalized = value.trim().slice(0, maxLength)
+    return normalized || fallback
+}
+
+const normalizeSiteInfo = (value: unknown): SiteInfoSettings => {
+    const setting = value && typeof value === 'object' ? value as Partial<SiteInfoSettings> : {}
+    return {
+        siteName: normalizeText(setting.siteName, defaultSiteInfo.siteName, 80),
+        tagline: normalizeText(setting.tagline, defaultSiteInfo.tagline, 120),
+        description: normalizeText(setting.description, defaultSiteInfo.description, 300),
+        phone: normalizeText(setting.phone, defaultSiteInfo.phone, 40),
+        email: normalizeText(setting.email, defaultSiteInfo.email, 160),
+        address: normalizeText(setting.address, defaultSiteInfo.address, 200),
+    }
+}
+
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [theme, setTheme] = useState<ThemeSettings>(defaultTheme)
     const [logo, setLogo] = useState<LogoSettings>(defaultLogo)
+    const [siteInfo, setSiteInfo] = useState<SiteInfoSettings>(defaultSiteInfo)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -96,9 +135,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             if (data) {
                 const themeSetting = data.find(s => s.setting_key === 'theme')
                 const logoSetting = data.find(s => s.setting_key === 'logo')
+                const siteInfoSetting = data.find(s => s.setting_key === 'site_info')
 
                 if (themeSetting) setTheme(normalizeTheme(themeSetting.setting_value))
                 if (logoSetting) setLogo(normalizeLogo(logoSetting.setting_value))
+                if (siteInfoSetting) setSiteInfo(normalizeSiteInfo(siteInfoSetting.setting_value))
             }
         } catch (err) {
             console.error('Beklenmeyen hata:', err)
@@ -143,8 +184,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setLogo(normalizedSettings)
     }
 
+    const updateSiteInfo = async (settings: SiteInfoSettings) => {
+        const normalizedSettings = normalizeSiteInfo(settings)
+        const { error } = await supabase
+            .from('site_settings')
+            .upsert({
+                setting_key: 'site_info',
+                setting_value: normalizedSettings,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'setting_key' })
+
+        if (error) {
+            console.error('Site bilgileri güncellenemedi:', error)
+            throw error
+        }
+
+        setSiteInfo(normalizedSettings)
+    }
+
     return (
-        <ThemeContext.Provider value={{ theme, logo, updateTheme, updateLogo, loading }}>
+        <ThemeContext.Provider value={{ theme, logo, siteInfo, updateTheme, updateLogo, updateSiteInfo, loading }}>
             {children}
         </ThemeContext.Provider>
     )
