@@ -90,9 +90,9 @@ export default function StokAzalan() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center space-x-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
             <AlertTriangle className="w-8 h-8 text-orange-600" />
             <span>Stoğu Azalan Ürünler</span>
           </h1>
@@ -111,8 +111,8 @@ export default function StokAzalan() {
           <p className="text-gray-400 text-sm mt-2">Stoğu 3 birimden az olan ürün bulunmuyor.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+          <table className="w-full min-w-[680px]">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ürün Adı</th>
@@ -183,10 +183,10 @@ export default function StokAzalan() {
 
       {/* Stok Yönetimi Modal */}
       {stokModalOpen && selectedUrun && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-none sm:rounded-lg shadow-xl max-w-6xl w-full min-h-screen sm:min-h-0 max-h-none sm:max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 min-w-0 break-words">
                 {selectedUrun.adi} - Stok Yönetimi
               </h2>
               <button
@@ -195,12 +195,13 @@ export default function StokAzalan() {
                   setSelectedUrun(null)
                   loadStokAzalanUrunler() // Listeyi yenile
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                className="min-h-10 min-w-10 text-gray-400 hover:text-gray-600"
+                aria-label="Stok yönetimini kapat"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <StokYonetimi
                 urunId={selectedUrun.id}
                 urunAdi={selectedUrun.adi}

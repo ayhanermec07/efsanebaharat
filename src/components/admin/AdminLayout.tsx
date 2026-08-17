@@ -81,7 +81,8 @@ export default function AdminLayout() {
         <h1 className="text-lg font-bold text-white">Admin Panel</h1>
         <button
           onClick={() => setSidebarOpen(true)}
-          className="p-2 text-white hover:bg-gray-800 rounded-lg transition-colors"
+          className="min-h-10 min-w-10 p-2 text-white hover:bg-gray-800 rounded-lg transition-colors"
+          aria-label="Yönetim menüsünü aç"
         >
           <Menu className="w-6 h-6" />
         </button>
@@ -102,7 +103,8 @@ export default function AdminLayout() {
           <h1 className="text-2xl font-bold">Admin Panel</h1>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-1 text-gray-400 hover:text-white"
+            className="lg:hidden min-h-10 min-w-10 p-1 text-gray-400 hover:text-white"
+            aria-label="Yönetim menüsünü kapat"
           >
             <X className="w-5 h-5" />
           </button>

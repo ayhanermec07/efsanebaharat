@@ -160,17 +160,17 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-xl font-bold text-gray-900 flex items-center space-x-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div className="min-w-0">
+          <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Package className="w-6 h-6 text-orange-600" />
             <span>Stok Yönetimi</span>
           </h3>
-          <p className="text-gray-600 mt-1">{urunAdi}</p>
+          <p className="text-gray-600 mt-1 break-words">{urunAdi}</p>
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition flex items-center space-x-2"
+          className="w-full sm:w-auto min-h-10 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" />
           <span>Yeni Stok</span>
@@ -188,7 +188,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[720px]">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Birim</th>
@@ -272,14 +272,14 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
 
       {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-0 sm:p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-none sm:rounded-lg max-w-md w-full min-h-screen sm:min-h-0 sm:my-8">
+            <div className="p-4 sm:p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
                   {editingId ? 'Stok Düzenle' : 'Yeni Stok Ekle'}
                 </h2>
-                <button onClick={resetForm} className="text-gray-400 hover:text-gray-600">
+                <button onClick={resetForm} className="min-h-10 min-w-10 text-gray-400 hover:text-gray-600" aria-label="Stok formunu kapat">
                   <X className="w-6 h-6" />
                 </button>
               </div>
@@ -306,7 +306,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Birim Adedi *
@@ -368,7 +368,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Stok Miktarı *
@@ -415,7 +415,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Min. Sipariş Miktarı
