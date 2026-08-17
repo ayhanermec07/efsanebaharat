@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import { supabase } from '../../lib/supabase'
@@ -27,6 +27,17 @@ export default function Ayarlar() {
     const [backgroundColor, setBackgroundColor] = useState(theme.backgroundColor || '#f9fafb')
     const [logoWidth, setLogoWidth] = useState(logo.width)
     const [loading, setLoading] = useState(false)
+
+    // Ayarlar uzaktan yüklendiğinde form, kaydedilmiş değerleri göstermelidir.
+    useEffect(() => {
+        setPrimaryColor(theme.primaryColor)
+        setSecondaryColor(theme.secondaryColor)
+        setBackgroundColor(theme.backgroundColor || '#f9fafb')
+    }, [theme])
+
+    useEffect(() => {
+        setLogoWidth(logo.width)
+    }, [logo.width])
 
     // Yönetici form state (Mevcut kullanıcı)
     const [adminEmail, setAdminEmail] = useState('')
@@ -232,6 +243,7 @@ export default function Ayarlar() {
                         <div className="max-w-xl space-y-8">
                             <div>
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">Renk Teması</h3>
+                                <p className="mb-4 text-sm leading-6 text-gray-600">Ana renk; butonlar, arama ve vurgu alanlarında kullanılır. İkincil renk; küçük vurgularda kullanılır. Arka plan rengi ise sitenin genel zeminini belirler.</p>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -277,6 +289,17 @@ export default function Ayarlar() {
                                             <span className="text-sm text-gray-500 font-mono">{backgroundColor}</span>
                                         </div>
                                         <p className="mt-1 text-xs text-gray-500">Sayfa arka planı.</p>
+                                    </div>
+                                </div>
+                                <div
+                                    className="mt-5 rounded-lg border border-gray-200 p-4"
+                                    style={{ backgroundColor }}
+                                >
+                                    <p className="text-sm font-semibold text-zinc-900">Canlı önizleme</p>
+                                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                                        <span className="rounded-md px-3 py-2 text-sm font-semibold text-white" style={{ backgroundColor: primaryColor }}>Ana renk</span>
+                                        <span className="rounded-md px-3 py-2 text-sm font-semibold text-white" style={{ backgroundColor: secondaryColor }}>İkincil renk</span>
+                                        <span className="text-sm font-medium text-zinc-700">Arka plan</span>
                                     </div>
                                 </div>
                                 <div className="mt-4">
@@ -336,7 +359,7 @@ export default function Ayarlar() {
                                         <input
                                             type="range"
                                             min="50"
-                                            max="300"
+                                            max="180"
                                             value={logoWidth}
                                             onChange={(e) => setLogoWidth(parseInt(e.target.value))}
                                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"

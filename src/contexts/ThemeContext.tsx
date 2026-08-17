@@ -32,6 +32,28 @@ const defaultLogo: LogoSettings = {
     width: 120,
 }
 
+const normalizeColor = (value: unknown, fallback: string) =>
+    typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback
+
+const normalizeTheme = (value: unknown): ThemeSettings => {
+    const setting = value && typeof value === 'object' ? value as Partial<ThemeSettings> : {}
+    return {
+        primaryColor: normalizeColor(setting.primaryColor, defaultTheme.primaryColor),
+        secondaryColor: normalizeColor(setting.secondaryColor, defaultTheme.secondaryColor),
+        backgroundColor: normalizeColor(setting.backgroundColor, defaultTheme.backgroundColor),
+    }
+}
+
+const normalizeLogo = (value: unknown): LogoSettings => {
+    const setting = value && typeof value === 'object' ? value as Partial<LogoSettings> : {}
+    const requestedWidth = Number(setting.width)
+
+    return {
+        url: typeof setting.url === 'string' && setting.url.length > 0 ? setting.url : null,
+        width: Number.isFinite(requestedWidth) ? Math.min(180, Math.max(50, requestedWidth)) : defaultLogo.width,
+    }
+}
+
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -53,10 +75,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         // style={} prop in components. A better approach for global theme with Tailwind
         // is using CSS variables.
 
-        root.style.setProperty('--color-primary', theme.primaryColor)
-        root.style.setProperty('--color-secondary', theme.secondaryColor)
-        root.style.setProperty('--color-background', theme.backgroundColor || '#f9fafb')
-        document.body.style.backgroundColor = theme.backgroundColor || '#f9fafb'
+        root.style.setProperty('--site-primary-color', theme.primaryColor)
+        root.style.setProperty('--site-secondary-color', theme.secondaryColor)
+        root.style.setProperty('--site-background-color', theme.backgroundColor)
+        document.body.style.backgroundColor = theme.backgroundColor
 
     }, [theme])
 
@@ -75,8 +97,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 const themeSetting = data.find(s => s.setting_key === 'theme')
                 const logoSetting = data.find(s => s.setting_key === 'logo')
 
-                if (themeSetting) setTheme(themeSetting.setting_value)
-                if (logoSetting) setLogo(logoSetting.setting_value)
+                if (themeSetting) setTheme(normalizeTheme(themeSetting.setting_value))
+                if (logoSetting) setLogo(normalizeLogo(logoSetting.setting_value))
             }
         } catch (err) {
             console.error('Beklenmeyen hata:', err)
@@ -86,13 +108,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
 
     const updateTheme = async (settings: ThemeSettings) => {
-        setTheme(settings) // Optimistic update
-
+        const normalizedSettings = normalizeTheme(settings)
         const { error } = await supabase
             .from('site_settings')
             .upsert({
                 setting_key: 'theme',
-                setting_value: settings,
+                setting_value: normalizedSettings,
                 updated_at: new Date().toISOString()
             }, { onConflict: 'setting_key' })
 
@@ -100,16 +121,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             console.error('Tema güncellenemedi:', error)
             throw error
         }
+
+        setTheme(normalizedSettings)
     }
 
     const updateLogo = async (settings: LogoSettings) => {
-        setLogo(settings)
-
+        const normalizedSettings = normalizeLogo(settings)
         const { error } = await supabase
             .from('site_settings')
             .upsert({
                 setting_key: 'logo',
-                setting_value: settings,
+                setting_value: normalizedSettings,
                 updated_at: new Date().toISOString()
             }, { onConflict: 'setting_key' })
 
@@ -117,6 +139,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             console.error('Logo güncellenemedi:', error)
             throw error
         }
+
+        setLogo(normalizedSettings)
     }
 
     return (

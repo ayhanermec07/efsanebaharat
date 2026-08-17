@@ -17,6 +17,9 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%
+    --site-primary-color: #ea580c;
+    --site-secondary-color: #dc2626;
+    --site-background-color: #f9fafb;
   }
 
   .dark {
@@ -37,7 +40,7 @@
   }
 
   body {
-    background: #f7f7f4;
+    background: var(--site-background-color);
     color: #18181b;
   }
 }
@@ -45,8 +48,8 @@
 @layer components {
   .shop-shell {
     background:
-      radial-gradient(circle at top left, rgba(34, 95, 72, 0.10), transparent 28rem),
-      linear-gradient(180deg, #fafaf7 0%, #f3f4ef 100%);
+      radial-gradient(circle at top left, color-mix(in srgb, var(--site-primary-color) 12%, transparent), transparent 28rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--site-background-color) 92%, white) 0%, var(--site-background-color) 100%);
   }
 
   .shop-container {
@@ -58,7 +61,12 @@
   }
 
   .shop-btn-primary {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-emerald-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60;
+    background-color: var(--site-primary-color);
+  }
+
+  .shop-btn-primary:hover {
+    filter: brightness(0.88);
   }
 
   .shop-btn-secondary {
@@ -66,12 +74,38 @@
   }
 
   .shop-input {
-    @apply w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/15;
+    @apply w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:ring-2;
+  }
+
+  .shop-input:focus {
+    border-color: var(--site-primary-color);
+    --tw-ring-color: color-mix(in srgb, var(--site-primary-color) 18%, transparent);
   }
 
   .shop-eyebrow {
-    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700;
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em];
+    color: var(--site-secondary-color);
   }
+}
+
+.site-primary-bg {
+  background-color: var(--site-primary-color);
+}
+
+.site-primary-text {
+  color: var(--site-primary-color);
+}
+
+.site-secondary-bg {
+  background-color: var(--site-secondary-color);
+}
+
+.site-secondary-text {
+  color: var(--site-secondary-color);
+}
+
+.site-primary-hover:hover {
+  filter: brightness(0.88);
 }
 
 

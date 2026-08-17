@@ -201,13 +201,17 @@ export default function Header() {
   }
 
   const cartCount = toplamAdet || sepetItems.length
+  const logoWidth = Math.min(180, Math.max(50, Number(logo.width) || 120))
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">
       <div className="shop-container">
         <div className="flex h-16 items-center justify-between gap-3">
           <Link to="/" className="flex min-w-0 items-center gap-3" onClick={closeMenus}>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-800 text-white shadow-sm">
+            <div
+              className={`flex shrink-0 items-center justify-center rounded-lg text-white shadow-sm ${logo.url ? 'h-11' : 'h-10 w-10'} site-primary-bg`}
+              style={logo.url ? { width: `min(${logoWidth}px, 22vw)` } : undefined}
+            >
               {logo.url ? (
                 <img
                   src={getImageUrl(logo.url)}
@@ -308,7 +312,7 @@ export default function Header() {
             >
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-600 px-1 text-[11px] font-bold text-white">
+                <span className="site-secondary-bg absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold text-white">
                   {cartCount}
                 </span>
               )}
@@ -346,7 +350,7 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <Link to="/giris" onClick={closeMenus} className="hidden rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-900 sm:inline-flex">
+              <Link to="/giris" onClick={closeMenus} className="site-primary-bg site-primary-hover hidden rounded-lg px-4 py-2 text-sm font-semibold text-white transition sm:inline-flex">
                 Giriş Yap
               </Link>
             )}
@@ -386,7 +390,7 @@ export default function Header() {
                   <X className="h-5 w-5" />
                 </button>
               )}
-              <button type="submit" className="absolute right-1.5 top-1.5 min-h-0 rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-900">
+              <button type="submit" className="site-primary-bg site-primary-hover absolute right-1.5 top-1.5 min-h-0 rounded-lg px-4 py-2 text-sm font-semibold text-white">
                 Ara
               </button>
 
@@ -410,7 +414,7 @@ export default function Header() {
                             {urun.ana_gorsel_url ? (
                               <img src={getImageUrl(urun.ana_gorsel_url)} alt={urun.urun_adi} className="h-full w-full object-cover" />
                             ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-emerald-800 text-white">{urun.urun_adi.charAt(0)}</div>
+                              <div className="site-primary-bg flex h-full w-full items-center justify-center text-white">{urun.urun_adi.charAt(0)}</div>
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -423,7 +427,7 @@ export default function Header() {
                       <div className="bg-zinc-50 px-4 py-2.5 text-center">
                         <button
                           type="submit"
-                          className="text-xs font-bold text-emerald-800 hover:text-emerald-950"
+                          className="site-primary-text text-xs font-bold hover:opacity-80"
                         >
                           "{searchQuery}" için tüm sonuçları gör &rarr;
                         </button>
