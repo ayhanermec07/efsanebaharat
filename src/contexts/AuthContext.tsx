@@ -199,9 +199,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [hesaplaIskontoOrani])
 
   useEffect(() => {
+    let aktif = true
+    const yuklemeZamanAsimi = window.setTimeout(() => {
+      if (aktif) {
+        setLoading(false)
+      }
+    }, 10_000)
+
     async function loadUser() {
-      const { data: { user } } = await supabase.auth.getUser()
-      await syncUserState(user)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (aktif) {
+          await syncUserState(session?.user || null, session?.access_token)
+        }
+      } catch (error) {
+        console.error('Oturum yükleme hatası:', error)
+        if (aktif) {
+          await syncUserState(null)
+        }
+      } finally {
+        window.clearTimeout(yuklemeZamanAsimi)
+      }
     }
 
     loadUser()
@@ -212,7 +230,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      aktif = false
+      window.clearTimeout(yuklemeZamanAsimi)
+      subscription.unsubscribe()
+    }
   }, [syncUserState])
 
   async function signIn(email: string, password: string) {
