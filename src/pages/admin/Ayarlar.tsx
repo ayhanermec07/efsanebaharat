@@ -51,6 +51,7 @@ export default function Ayarlar() {
     const [newAdminLoading, setNewAdminLoading] = useState(false)
 
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const logoPreviewSize = Math.round(36 + ((Math.min(240, Math.max(50, logoWidth)) - 50) / 190) * 56)
 
     const handleThemeSave = async () => {
         setLoading(true)
@@ -323,8 +324,8 @@ export default function Ayarlar() {
                                             <img
                                                 src={logo.url}
                                                 alt="Site Logo"
-                                                style={{ width: logoWidth, margin: '0 auto' }}
-                                                className="object-contain" // Fixed max height removed to rely on width
+                                                style={{ width: logoPreviewSize, height: logoPreviewSize, margin: '0 auto' }}
+                                                className="rounded-lg border border-gray-200 bg-white object-cover object-center"
                                             />
                                         </div>
                                     ) : (
@@ -353,7 +354,7 @@ export default function Ayarlar() {
 
                                 <div className="mt-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Logo Genişliği (px)
+                                        Logo Boyutu
                                     </label>
                                     <div className="flex items-center gap-4">
                                         <input
@@ -365,9 +366,10 @@ export default function Ayarlar() {
                                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                                         />
                                         <span className="text-sm font-medium text-gray-900 w-16 text-right">
-                                            {logoWidth}px
+                                            {logoWidth}
                                         </span>
                                     </div>
+                                    <p className="mt-2 text-xs text-gray-500">Bu ayar, logonun üst menüdeki gerçek görünür boyutunu değiştirir; menü düzeni bozulmaz.</p>
                                 </div>
 
                                 <div className="mt-4">

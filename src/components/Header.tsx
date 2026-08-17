@@ -201,7 +201,9 @@ export default function Header() {
   }
 
   const cartCount = toplamAdet || sepetItems.length
-  const logoWidth = Math.min(240, Math.max(50, Number(logo.width) || 120))
+  const logoSetting = Math.min(240, Math.max(50, Number(logo.width) || 120))
+  // Yönetici ekranındaki değer, başlığı bozmadan gerçek logo boyutuna dönüştürülür.
+  const logoSize = Math.round(36 + ((logoSetting - 50) / 190) * 20)
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">
@@ -209,14 +211,14 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between gap-3">
           <Link to="/" className="flex min-w-0 items-center gap-3" onClick={closeMenus}>
             <div
-              className={`flex shrink-0 items-center justify-center rounded-lg text-white shadow-sm ${logo.url ? 'h-11' : 'h-10 w-10'} site-primary-bg`}
-              style={logo.url ? { width: `min(${logoWidth}px, 22vw)` } : undefined}
+              className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg text-white shadow-sm ${logo.url ? 'border border-zinc-100 bg-white' : 'h-10 w-10 site-primary-bg'}`}
+              style={logo.url ? { width: logoSize, height: logoSize } : undefined}
             >
               {logo.url ? (
                 <img
                   src={getImageUrl(logo.url)}
                   alt="Efsane Baharat logosu"
-                  className="h-full w-full rounded-lg object-contain bg-white p-1"
+                  className="h-full w-full object-cover object-center"
                 />
               ) : (
                 <Sparkles className="h-5 w-5" />
