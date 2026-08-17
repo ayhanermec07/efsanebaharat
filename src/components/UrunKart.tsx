@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Check, Eye, ShoppingCart, Sparkles } from 'lucide-react'
+import { Check, Eye, ShoppingCart } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
 import { kademeliIskontoUygula } from '../utils/iskonto'
@@ -136,9 +136,8 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
               {urun.urun_adi}
             </h3>
           </Link>
-          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs font-medium text-zinc-500">
-            <Sparkles className="h-3.5 w-3.5 shrink-0 text-orange-500" />
-            <span className="truncate">{urun.markalar?.marka_adi || urun.kategoriler?.kategori_adi || 'Efsane Baharat'}</span>
+          <div className="mt-1 min-w-0 truncate text-xs font-medium text-zinc-500">
+            {urun.markalar?.marka_adi || urun.kategoriler?.kategori_adi || 'Efsane Baharat'}
           </div>
         </div>
 
