@@ -359,7 +359,7 @@ export default function Ayarlar() {
                                         <input
                                             type="range"
                                             min="50"
-                                            max="180"
+                                            max="240"
                                             value={logoWidth}
                                             onChange={(e) => setLogoWidth(parseInt(e.target.value))}
                                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"

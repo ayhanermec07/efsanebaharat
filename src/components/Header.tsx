@@ -201,7 +201,7 @@ export default function Header() {
   }
 
   const cartCount = toplamAdet || sepetItems.length
-  const logoWidth = Math.min(180, Math.max(50, Number(logo.width) || 120))
+  const logoWidth = Math.min(240, Math.max(50, Number(logo.width) || 120))
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">
