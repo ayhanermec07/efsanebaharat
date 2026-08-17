@@ -265,13 +265,12 @@ export default function AnaSayfa() {
       </section>
 
       {oneCikanUrunler.length > 0 && (
-        <ProductRail title="Öne çıkan ürünler" subtitle="Hızlı seçim için önerilen raf" link="/urunler" products={oneCikanUrunler} />
+        <ProductRail title="Öne çıkan ürünler" link="/urunler" products={oneCikanUrunler} />
       )}
 
       {enCokSatanlar.length > 0 && (
         <ProductRail
           title="En çok satanlar"
-          subtitle="Siparişlerde en çok tercih edilenler"
           link="/en-cok-satan"
           products={enCokSatanlar.slice(bestsellerPage * pageSize, (bestsellerPage + 1) * pageSize)}
           total={enCokSatanlar.length}
@@ -283,7 +282,6 @@ export default function AnaSayfa() {
       {yeniEklenenler.length > 0 && (
         <ProductRail
           title="Yeni eklenenler"
-          subtitle="XML ve panel stoklarından güncel ürünler"
           link="/urunler"
           products={yeniEklenenler.slice(newProductsPage * pageSize, (newProductsPage + 1) * pageSize)}
           total={yeniEklenenler.length}
@@ -296,8 +294,7 @@ export default function AnaSayfa() {
         <section className="shop-container py-10">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-700">Markalar</p>
-              <h2 className="mt-2 text-2xl font-bold text-zinc-950 sm:text-3xl">Güvenilen seçimler</h2>
+              <h2 className="text-2xl font-extrabold uppercase tracking-[0.02em] text-zinc-950 sm:text-3xl">GÜVENİLEN SEÇİMLER</h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-600">
                 Sık kullanılan marka raflarına logolar üzerinden hızlıca geçin.
               </p>
@@ -372,7 +369,6 @@ export default function AnaSayfa() {
 
 interface ProductRailProps {
   title: string
-  subtitle: string
   link: string
   products: any[]
   total?: number
@@ -380,15 +376,14 @@ interface ProductRailProps {
   onPageChange?: (page: number) => void
 }
 
-function ProductRail({ title, subtitle, link, products, total, page = 0, onPageChange }: ProductRailProps) {
+function ProductRail({ title, link, products, total, page = 0, onPageChange }: ProductRailProps) {
   const pageCount = Math.ceil((total || products.length) / pageSize)
 
   return (
     <section className="shop-container py-8 sm:py-10">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-700">{subtitle}</p>
-          <h2 className="mt-2 text-2xl font-bold text-zinc-950 sm:text-3xl">{title}</h2>
+          <h2 className="text-2xl font-extrabold uppercase tracking-[0.02em] text-zinc-950 sm:text-3xl">{title.toLocaleUpperCase('tr-TR')}</h2>
         </div>
         <div className="flex items-center gap-2">
           {onPageChange && pageCount > 1 && (
