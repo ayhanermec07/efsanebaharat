@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { publicSupabase, supabase } from '../lib/supabase'
 
 interface ThemeSettings {
     primaryColor: string
@@ -62,7 +62,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     const loadSettings = async () => {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await publicSupabase
                 .from('site_settings')
                 .select('*')
 
@@ -98,7 +98,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
         if (error) {
             console.error('Tema güncellenemedi:', error)
-            // Revert needs to handle logic
+            throw error
         }
     }
 
@@ -115,6 +115,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
         if (error) {
             console.error('Logo güncellenemedi:', error)
+            throw error
         }
     }
 
