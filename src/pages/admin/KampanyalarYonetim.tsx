@@ -966,8 +966,8 @@ function KampanyaKodlari({ kampanyalar }: { kampanyalar: Kampanya[] }) {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+      <div className="bg-white rounded-lg shadow-sm overflow-x-auto border border-gray-200">
+        <div className="min-w-[680px] p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
           <h3 className="font-semibold text-gray-900">Oluşturulan Kodlar</h3>
           <button
             onClick={kodlariGetir}
@@ -988,7 +988,7 @@ function KampanyaKodlari({ kampanyalar }: { kampanyalar: Kampanya[] }) {
             Henüz oluşturulmuş kod bulunmuyor.
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-[680px] w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kod</th>
