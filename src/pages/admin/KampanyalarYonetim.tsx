@@ -264,13 +264,13 @@ export default function KampanyalarYonetim() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Kampanya Yönetimi</h1>
-        <div className="flex gap-3">
+        <div className="flex max-w-full gap-1 overflow-x-auto pb-1 sm:gap-3">
           <button
             onClick={() => setActiveTab('kampanyalar')}
-            className={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'kampanyalar'
+            className={`min-h-10 shrink-0 px-4 py-2 rounded-lg transition-colors ${activeTab === 'kampanyalar'
               ? 'bg-orange-100 text-orange-700 font-medium'
               : 'text-gray-600 hover:bg-gray-100'
               }`}
@@ -279,7 +279,7 @@ export default function KampanyalarYonetim() {
           </button>
           <button
             onClick={() => setActiveTab('kodlar')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === 'kodlar'
+            className={`min-h-10 shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === 'kodlar'
               ? 'bg-orange-100 text-orange-700 font-medium'
               : 'text-gray-600 hover:bg-gray-100'
               }`}
@@ -289,7 +289,7 @@ export default function KampanyalarYonetim() {
           </button>
           <button
             onClick={() => setActiveTab('istatistikler')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === 'istatistikler'
+            className={`min-h-10 shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === 'istatistikler'
               ? 'bg-orange-100 text-orange-700 font-medium'
               : 'text-gray-600 hover:bg-gray-100'
               }`}
@@ -309,7 +309,7 @@ export default function KampanyalarYonetim() {
           <div className="flex justify-end mb-4">
             <button
               onClick={() => modalAc()}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+              className="min-h-10 flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
             >
               <Plus className="w-5 h-5" />
               Yeni Kampanya
@@ -323,8 +323,8 @@ export default function KampanyalarYonetim() {
                   
                   {/* Sol Bölüm: Başlık ve Rozetler */}
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-bold text-gray-900">{kampanya.ad}</h3>
+                    <div className="flex flex-wrap items-center gap-3 mb-2">
+                      <h3 className="text-lg font-bold text-gray-900 break-words">{kampanya.ad}</h3>
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${kampanya.aktif ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                         {kampanya.aktif ? 'Aktif' : 'Pasif'}
                       </span>
@@ -421,42 +421,42 @@ export default function KampanyalarYonetim() {
 
           {/* Modal */}
           {modalAcik && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-                <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-white">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-0 sm:p-4 overflow-y-auto">
+              <div className="bg-white rounded-none sm:rounded-lg max-w-3xl w-full min-h-screen sm:min-h-0 max-h-none sm:max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+                <div className="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center gap-3 bg-white">
                   <h2 className="text-xl font-bold text-gray-900">
                     {duzenlenecekKampanya ? 'Kampanya Düzenle' : 'Yeni Kampanya'}
                   </h2>
-                  <button onClick={modalKapat} className="text-gray-400 hover:text-gray-500 transition-colors">
+                  <button onClick={modalKapat} className="min-h-10 min-w-10 text-gray-400 hover:text-gray-500 transition-colors" aria-label="Kampanya formunu kapat">
                     <X className="w-6 h-6" />
                   </button>
                 </div>
                 
                 {/* Tab Navigasyon */}
-                <div className="flex border-b border-gray-200 px-6 pt-2 bg-gray-50/50">
+                <div className="flex overflow-x-auto border-b border-gray-200 px-4 sm:px-6 pt-2 bg-gray-50/50">
                   <button 
                     type="button" 
                     onClick={() => setFormTab('genel')} 
-                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'genel' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                    className={`min-h-10 shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'genel' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                   >Temel Bilgiler</button>
                   <button 
                     type="button" 
                     onClick={() => setFormTab('kosullar')} 
-                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'kosullar' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                    className={`min-h-10 shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'kosullar' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                   >Koşullar ve Kapsam</button>
                   <button 
                     type="button" 
                     onClick={() => setFormTab('banner')} 
-                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'banner' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                    className={`min-h-10 shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'banner' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                   >Görünüm ve Banner</button>
                 </div>
 
-                <div className="p-6 overflow-y-auto flex-1 bg-white">
+                <div className="p-4 sm:p-6 overflow-y-auto flex-1 bg-white">
                   <form id="kampanya-form" onSubmit={handleSubmit} className="space-y-6">
                     {/* --- TAB 1: TEMEL BİLGİLER --- */}
                     {formTab === 'genel' && (
                       <div className="space-y-5 animate-in fade-in duration-300">
-                        <div className="grid grid-cols-2 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               Kampanya Kodu *
@@ -500,7 +500,7 @@ export default function KampanyalarYonetim() {
                           />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               İndirim Tipi *
@@ -545,7 +545,7 @@ export default function KampanyalarYonetim() {
                     {/* --- TAB 2: KOŞULLAR VE KAPSAM --- */}
                     {formTab === 'kosullar' && (
                       <div className="space-y-6 animate-in fade-in duration-300">
-                        <div className="grid grid-cols-2 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Başlangıç Tarihi *</label>
                             <input
@@ -568,7 +568,7 @@ export default function KampanyalarYonetim() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Min. Sepet (TL) *</label>
                             <input
@@ -610,7 +610,7 @@ export default function KampanyalarYonetim() {
                           <h4 className="font-medium text-orange-900 mb-4 text-sm flex items-center gap-2">
                             <Tag className="w-4 h-4" /> Kapsam ve Hedef Kitle
                           </h4>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">Hedef Grup *</label>
                               <select
@@ -671,7 +671,7 @@ export default function KampanyalarYonetim() {
                           {formData.kapsam === 'secili_urunler' && (
                             <div className="col-span-2 mt-4 bg-white p-3 rounded-lg border border-gray-200">
                               <label className="block text-sm font-medium text-gray-700 mb-2">Ürünleri Seçin</label>
-                              <div className="max-h-48 overflow-y-auto grid grid-cols-2 gap-2 pr-2">
+                              <div className="max-h-48 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2 pr-2">
                                 {urunler.map(urun => (
                                   <div key={urun.id} className="flex items-center text-sm p-1.5 hover:bg-gray-50 rounded">
                                     <input
@@ -747,7 +747,7 @@ export default function KampanyalarYonetim() {
                           </div>
                           
                           {formData.anasayfada_goster && (
-                            <div className="grid grid-cols-2 gap-6 pt-4 border-t border-blue-100">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-blue-100">
                               <div className="space-y-4">
                                 <div>
                                   <label className="block text-sm font-medium text-gray-700 mb-1">Slider Sırası</label>
@@ -804,11 +804,11 @@ export default function KampanyalarYonetim() {
                   </form>
                 </div>
 
-                <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 rounded-b-lg">
-                  <button type="button" onClick={modalKapat} className="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition-colors">
+                <div className="p-4 border-t border-gray-200 bg-gray-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 rounded-b-lg">
+                  <button type="button" onClick={modalKapat} className="min-h-10 px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition-colors">
                     İptal
                   </button>
-                  <button type="submit" form="kampanya-form" className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center gap-2 font-medium transition-colors shadow-sm hover:shadow">
+                  <button type="submit" form="kampanya-form" className="min-h-10 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center justify-center gap-2 font-medium transition-colors shadow-sm hover:shadow">
                     <Save className="w-5 h-5" />
                     {duzenlenecekKampanya ? 'Değişiklikleri Kaydet' : 'Kampanyayı Oluştur'}
                   </button>

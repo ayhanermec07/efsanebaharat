@@ -537,9 +537,9 @@ export default function CanliDestek() {
         </div>
       ) : (
         /* Canlı Destek Ana Ekran */
-        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-250px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 h-auto lg:h-[calc(100vh-250px)]">
           {/* Konuşma Listesi */}
-          <div className="col-span-4 bg-white rounded-lg shadow-sm flex flex-col">
+          <div className="lg:col-span-4 h-[360px] lg:h-auto bg-white rounded-lg shadow-sm flex flex-col min-w-0">
             <div className="p-4 border-b">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -603,18 +603,18 @@ export default function CanliDestek() {
           </div>
 
           {/* Mesaj Alanı */}
-          <div className="col-span-8 bg-white rounded-lg shadow-sm flex flex-col">
+          <div className="lg:col-span-8 h-[560px] lg:h-auto bg-white rounded-lg shadow-sm flex flex-col min-w-0">
             {selectedConv ? (
               <>
                 {/* Konuşma Header */}
-                <div className="p-4 border-b flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="p-4 border-b flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
                       <User className="w-6 h-6 text-orange-600" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="font-semibold text-gray-900">{selectedConv.musteri_adi}</h3>
-                      <p className="text-sm text-gray-500">{selectedConv.musteri_email}</p>
+                      <p className="text-sm text-gray-500 truncate">{selectedConv.musteri_email}</p>
                     </div>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-sm ${selectedConv.durum === 'aktif' ? 'bg-green-100 text-green-700' :
@@ -638,7 +638,7 @@ export default function CanliDestek() {
                             : 'bg-white text-gray-900 shadow-sm'
                           }`}
                       >
-                        <p className="text-sm">{message.mesaj}</p>
+                        <p className="text-sm break-words">{message.mesaj}</p>
                         <div className="flex items-center justify-between gap-2 mt-1">
                           <p className={`text-xs ${message.gonderen === 'admin' ? 'text-orange-100' : 'text-gray-500'
                             }`}>
@@ -660,7 +660,7 @@ export default function CanliDestek() {
 
                 {/* Mesaj Gönderme */}
                 <form onSubmit={handleSendMessage} className="p-4 border-t bg-white">
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="text"
                       value={newMessage}
@@ -671,7 +671,7 @@ export default function CanliDestek() {
                     <button
                       type="submit"
                       disabled={!newMessage.trim()}
-                      className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="w-full sm:w-auto min-h-10 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       <Send className="w-5 h-5" />
                       Gönder

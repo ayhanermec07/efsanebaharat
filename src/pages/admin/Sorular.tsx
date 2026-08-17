@@ -293,7 +293,7 @@ export default function AdminSorular() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Soru Yönetimi</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Soru Yönetimi</h1>
       </div>
 
       {/* Stats */}
@@ -313,10 +313,10 @@ export default function AdminSorular() {
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-2 mb-6 border-b">
+      <div className="flex max-w-full space-x-2 mb-6 border-b overflow-x-auto">
         <button
           onClick={() => setActiveTab('genel')}
-          className={`px-6 py-3 font-medium transition ${activeTab === 'genel'
+          className={`min-h-10 shrink-0 px-6 py-3 font-medium transition ${activeTab === 'genel'
             ? 'border-b-2 border-orange-600 text-orange-600'
             : 'text-gray-600 hover:text-gray-900'
             }`}
@@ -328,7 +328,7 @@ export default function AdminSorular() {
         </button>
         <button
           onClick={() => setActiveTab('urun')}
-          className={`px-6 py-3 font-medium transition ${activeTab === 'urun'
+          className={`min-h-10 shrink-0 px-6 py-3 font-medium transition ${activeTab === 'urun'
             ? 'border-b-2 border-orange-600 text-orange-600'
             : 'text-gray-600 hover:text-gray-900'
             }`}
@@ -371,7 +371,7 @@ export default function AdminSorular() {
       {/* Toplu İşlem Butonları */}
       {filteredSorular.length > 0 && (
         <div className="mb-4 bg-white rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center space-x-4">
               <button
                 onClick={toggleSelectAll}
@@ -391,24 +391,24 @@ export default function AdminSorular() {
             </div>
 
             {selectedSorular.length > 0 && (
-              <div className="flex items-center space-x-2">
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                 <button
                   onClick={() => handleBulkDurumChange('cevaplandi')}
                   disabled={processingBulk}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-300 text-sm"
+                  className="min-h-10 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-300 text-sm"
                 >
                   Cevaplandı Olarak İşaretle
                 </button>
                 <button
                   onClick={() => handleBulkDurumChange('kapatildi')}
                   disabled={processingBulk}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition disabled:bg-gray-300 text-sm"
+                  className="min-h-10 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition disabled:bg-gray-300 text-sm"
                 >
                   Kapat
                 </button>
                 <button
                   onClick={() => setSelectedSorular([])}
-                  className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-sm"
+                  className="min-h-10 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-sm"
                 >
                   Seçimi Temizle
                 </button>
@@ -431,7 +431,7 @@ export default function AdminSorular() {
       ) : (
         <div className="space-y-4">
           {filteredSorular.map((soru) => (
-            <div key={soru.id} className="bg-white rounded-lg shadow-sm p-6">
+            <div key={soru.id} className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
               <div className="flex items-start space-x-4 mb-4">
                 {/* Checkbox */}
                 <button
@@ -446,9 +446,9 @@ export default function AdminSorular() {
                 </button>
 
                 <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDurumBadge(soru.durum)}`}>
                           {getDurumLabel(soru.durum)}
                         </span>
@@ -459,12 +459,12 @@ export default function AdminSorular() {
                         )}
                       </div>
                       <h3 className="font-semibold text-gray-900 mb-1">{soru.konu}</h3>
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-sm text-gray-600 mb-2 break-words">
                         {soru.kullanici_email} • {formatDate(soru.olusturma_tarihi)}
                       </p>
                     </div>
 
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 self-end sm:self-auto">
                       <button
                         onClick={() => handleCevapla(soru)}
                         className="text-blue-600 hover:text-blue-700 p-2"
@@ -511,10 +511,10 @@ export default function AdminSorular() {
 
       {/* Cevap Modal */}
       {cevapModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Soruyu Cevapla</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-none sm:rounded-lg max-w-3xl w-full min-h-screen sm:min-h-0 max-h-none sm:max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6">
+              <h2 className="text-xl sm:text-2xl font-bold mb-4">Soruyu Cevapla</h2>
 
               <div className="mb-6">
                 <p className="text-sm font-medium text-gray-700 mb-2">Kullanıcı:</p>
@@ -546,7 +546,7 @@ export default function AdminSorular() {
                 </p>
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
                 <button
                   onClick={saveCevap}
                   disabled={savingCevap || cevapMetni.trim().length < 10}

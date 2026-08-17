@@ -230,9 +230,9 @@ export default function AdminKargo() {
   }
 
   return (
-    <div className="p-8">
+    <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-3">
           <Truck className="w-8 h-8 text-orange-600" />
           Kargo Yönetimi
         </h1>
@@ -268,9 +268,9 @@ export default function AdminKargo() {
                       key={siparis.id}
                       className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-3 mb-2">
                             <span className="font-semibold text-gray-800">
                               {siparis.siparis_no}
                             </span>
@@ -308,7 +308,7 @@ export default function AdminKargo() {
 
                         <button
                           onClick={() => openKargoModal(siparis)}
-                          className="ml-4 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center gap-2"
+                          className="w-full sm:w-auto sm:ml-4 min-h-10 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center justify-center gap-2"
                         >
                           <Truck className="w-4 h-4" />
                           {siparis.kargo_firmasi ? 'Güncelle' : 'Kargo Bilgisi Gir'}
@@ -325,21 +325,22 @@ export default function AdminKargo() {
 
       {/* Kargo Bilgisi Modal */}
       {kargoModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-none sm:rounded-lg shadow-xl max-w-md w-full min-h-screen sm:min-h-0 max-h-none sm:max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-800">
                 Kargo Bilgisi Gir
               </h3>
               <button
                 onClick={closeKargoModal}
-                className="text-gray-500 hover:text-gray-700"
+                className="min-h-10 min-w-10 text-gray-500 hover:text-gray-700"
+                aria-label="Kargo bilgisini kapat"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               <div className="bg-gray-50 p-3 rounded-lg">
                 <p className="text-sm text-gray-600">Sipariş No:</p>
                 <p className="font-semibold text-gray-800">{kargoModal.siparis_no}</p>
@@ -395,7 +396,7 @@ export default function AdminKargo() {
                 />
               </div>
 
-              <div className="pt-4 flex gap-3">
+              <div className="pt-4 flex flex-col-reverse sm:flex-row gap-3">
                 <button
                   onClick={closeKargoModal}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
