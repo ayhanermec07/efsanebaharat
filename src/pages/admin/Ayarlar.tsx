@@ -70,6 +70,8 @@ export default function Ayarlar() {
                     width: logoWidth
                 })
                 toast.success('Logo güncellendi')
+            } else {
+                throw new Error('Logo dosyası depolama alanına yüklenemedi')
             }
         } catch (error) {
             console.error(error)
