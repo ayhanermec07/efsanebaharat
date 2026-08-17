@@ -57,6 +57,9 @@ export default function Ayarlar() {
     // Yönetici form state (Mevcut kullanıcı)
     const [adminEmail, setAdminEmail] = useState('')
     const [adminLoading, setAdminLoading] = useState(false)
+    const [currentAdminPassword, setCurrentAdminPassword] = useState('')
+    const [currentAdminPasswordConfirm, setCurrentAdminPasswordConfirm] = useState('')
+    const [passwordUpdateLoading, setPasswordUpdateLoading] = useState(false)
 
     // Yeni Admin Oluşturma State
     const [newItemEmail, setNewItemEmail] = useState('')
@@ -162,6 +165,35 @@ export default function Ayarlar() {
             toast.error('İşlem başarısız: ' + (error.message || 'Bilinmeyen hata'))
         } finally {
             setAdminLoading(false)
+        }
+    }
+
+    const handleCurrentAdminPasswordUpdate = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        if (currentAdminPassword.length < 12) {
+            toast.error('Şifre en az 12 karakter olmalıdır')
+            return
+        }
+
+        if (currentAdminPassword !== currentAdminPasswordConfirm) {
+            toast.error('Şifre tekrarı eşleşmiyor')
+            return
+        }
+
+        setPasswordUpdateLoading(true)
+        try {
+            const { error } = await supabase.auth.updateUser({ password: currentAdminPassword })
+            if (error) throw error
+
+            setCurrentAdminPassword('')
+            setCurrentAdminPasswordConfirm('')
+            toast.success('Yönetici şifreniz güncellendi')
+        } catch (error: any) {
+            console.error('Yönetici şifre güncelleme hatası:', error)
+            toast.error(error.message || 'Şifre güncellenemedi')
+        } finally {
+            setPasswordUpdateLoading(false)
         }
     }
 
@@ -458,6 +490,51 @@ export default function Ayarlar() {
 
                     {activeTab === 'yoneticiler' && (
                         <div className="max-w-2xl space-y-12">
+                            <section>
+                                <h3 className="mb-2 border-b pb-2 text-lg font-medium text-gray-900">Kendi Şifremi Değiştir</h3>
+                                <p className="mb-5 text-sm leading-6 text-gray-500">
+                                    Oturumu açık yönetici hesabının şifresini buradan güvenli şekilde değiştirebilirsiniz.
+                                </p>
+                                <form onSubmit={handleCurrentAdminPasswordUpdate} className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-6">
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        <label className="block">
+                                            <span className="mb-1 block text-sm font-medium text-gray-700">Yeni şifre</span>
+                                            <input
+                                                type="password"
+                                                required
+                                                minLength={12}
+                                                autoComplete="new-password"
+                                                value={currentAdminPassword}
+                                                onChange={(event) => setCurrentAdminPassword(event.target.value)}
+                                                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-orange-500 focus:ring-orange-500"
+                                                placeholder="En az 12 karakter"
+                                            />
+                                        </label>
+                                        <label className="block">
+                                            <span className="mb-1 block text-sm font-medium text-gray-700">Yeni şifre tekrarı</span>
+                                            <input
+                                                type="password"
+                                                required
+                                                minLength={12}
+                                                autoComplete="new-password"
+                                                value={currentAdminPasswordConfirm}
+                                                onChange={(event) => setCurrentAdminPasswordConfirm(event.target.value)}
+                                                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-orange-500 focus:ring-orange-500"
+                                                placeholder="Şifreyi tekrar yazın"
+                                            />
+                                        </label>
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={passwordUpdateLoading}
+                                        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2 font-medium text-white transition hover:bg-gray-800 disabled:opacity-50 sm:w-auto"
+                                    >
+                                        <Shield className="h-4 w-4" />
+                                        {passwordUpdateLoading ? 'Güncelleniyor...' : 'Şifremi Güncelle'}
+                                    </button>
+                                </form>
+                            </section>
+
                             {/* Bölüm 1: Yeni Admin Kullanıcısı Oluşturma */}
                             <div>
                                 <h3 className="text-lg font-medium text-gray-900 mb-4 border-b pb-2">Yeni Admin Kullanıcısı Oluştur</h3>
