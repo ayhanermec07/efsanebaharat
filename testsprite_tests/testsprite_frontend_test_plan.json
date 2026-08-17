@@ -1,0 +1,851 @@
+[
+  {
+    "id": "TC001",
+    "title": "Sign in with valid customer credentials",
+    "description": "This verifies that an existing customer can sign in and reach the authenticated account area or next destination.",
+    "category": "Customer account and registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /giris"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the account area or next authenticated destination is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Open a product detail and add it to the cart",
+    "description": "A visitor can open a product detail page, choose a valid variation if needed, and add the product to the cart.",
+    "category": "Shopping cart",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /urunler"
+      },
+      {
+        "type": "action",
+        "description": "Open a product from the catalog"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid product variation"
+      },
+      {
+        "type": "action",
+        "description": "Add the product to the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart updates with the added item"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Update cart quantity and totals",
+    "description": "A customer can change an item quantity in the cart and see the cart totals update accordingly.",
+    "category": "Shopping cart",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /sepet"
+      },
+      {
+        "type": "action",
+        "description": "Change an item quantity to a higher valid value"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart totals update to reflect the new quantity"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "View product detail from the catalogue",
+    "description": "This verifies that a shopper can open a product from the listing and see its images, variations, price, and stock information.",
+    "category": "Product discovery and search",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /urunler"
+      },
+      {
+        "type": "action",
+        "description": "Open a product from the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the product detail page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify product images, variations, price, and stock information are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Build and submit an XML order",
+    "description": "An approved XML customer can add products, enter recipient details, attach an invoice, and submit an XML order successfully.",
+    "category": "XML customer order submission",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /giris"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open XML order submission"
+      },
+      {
+        "type": "action",
+        "description": "Add a product to the XML order"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the recipient name field with a valid recipient name"
+      },
+      {
+        "type": "action",
+        "description": "Attach a valid invoice document"
+      },
+      {
+        "type": "action",
+        "description": "Submit the XML order"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an order submission confirmation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Remove an item from the cart",
+    "description": "A customer can remove a cart item and see the line disappear from the cart.",
+    "category": "Shopping cart",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /sepet"
+      },
+      {
+        "type": "action",
+        "description": "Remove an item from the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart line is removed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Enter the administrator dashboard",
+    "description": "An administrator can sign in and open the admin dashboard with back-office navigation available.",
+    "category": "Administrative operations",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /giris"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the admin dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the admin dashboard is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Open the product catalogue from mobile navigation",
+    "description": "This verifies that a visitor can use the mobile menu to reach the product catalogue and see it load successfully.",
+    "category": "Storefront navigation and responsive mobile menu",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Open the mobile menu"
+      },
+      {
+        "type": "action",
+        "description": "Choose the product catalogue page from the navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the product catalogue is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Browse products from the home page",
+    "description": "An anonymous visitor can move from the home page to the product catalog and see products available for browsing.",
+    "category": "Shopping cart",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the product catalog"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify products are displayed for browsing"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Open the XML order page from the protected route",
+    "description": "An approved XML customer can access the XML order page and see the order submission interface.",
+    "category": "XML customer order submission",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /giris"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open XML order submission"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the XML order interface is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Open a product from search suggestions",
+    "description": "This verifies that a shopper can choose a suggested result and reach the matching product detail page.",
+    "category": "Product discovery and search",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /urunler"
+      },
+      {
+        "type": "action",
+        "description": "Type a product name into the search field"
+      },
+      {
+        "type": "action",
+        "description": "Choose a suggested result"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the matching product detail page is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Navigate between admin management pages",
+    "description": "An administrator can move between key admin management pages and see each selected section load correctly.",
+    "category": "Administrative operations",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /giris"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the admin dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the products management page"
+      },
+      {
+        "type": "action",
+        "description": "Open the campaigns management page"
+      },
+      {
+        "type": "action",
+        "description": "Open the settings page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected admin sections are available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "See the sign-in requirement for cart access",
+    "description": "A signed-out visitor who opens the cart can see that customer cart access requires sign-in.",
+    "category": "Shopping cart",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /sepet"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a sign-in requirement is displayed before cart access"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Search for a product in the catalogue",
+    "description": "This verifies that a shopper can search by keyword and see matching products in the catalogue.",
+    "category": "Product discovery and search",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /urunler"
+      },
+      {
+        "type": "action",
+        "description": "Type a product name into the search field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the search"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify matching products are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Filter products by category and brand",
+    "description": "This verifies that a shopper can narrow the catalogue with category and brand filters and see the product list update.",
+    "category": "Product discovery and search",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /urunler"
+      },
+      {
+        "type": "action",
+        "description": "Apply a category filter"
+      },
+      {
+        "type": "action",
+        "description": "Apply a brand filter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the product list is updated"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "Sign in and reach the account page",
+    "description": "A customer can sign in and land on the account page with account information available.",
+    "category": "Shopping cart",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /giris"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the account page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify account information is available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC017",
+    "title": "Review account information and sign out",
+    "description": "This verifies that a signed-in customer can view account information and return to the public storefront after signing out.",
+    "category": "Customer account and registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /giris"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Open the account area"
+      },
+      {
+        "type": "action",
+        "description": "Sign out from the account controls"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the public storefront is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify account information is no longer displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC018",
+    "title": "Block XML order access for an ordinary customer",
+    "description": "A retail customer who is not approved for XML ordering sees a restricted-access state when opening the XML order page.",
+    "category": "XML customer order submission",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /giris"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open XML order submission"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a restricted-access message is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC019",
+    "title": "Open the sign-in page from mobile navigation",
+    "description": "This verifies that a visitor can use the mobile menu to reach the sign-in page and see the sign-in screen.",
+    "category": "Storefront navigation and responsive mobile menu",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Open the mobile menu"
+      },
+      {
+        "type": "action",
+        "description": "Choose the sign-in page from the navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sign-in screen is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC020",
+    "title": "Search and filter products",
+    "description": "A visitor can search and filter the catalog to narrow results to relevant products.",
+    "category": "Shopping cart",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /urunler"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the search field with a product keyword"
+      },
+      {
+        "type": "action",
+        "description": "Select a category filter"
+      },
+      {
+        "type": "action",
+        "description": "Select a brand filter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the displayed products are narrowed to matching results"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC021",
+    "title": "Register a new customer account",
+    "description": "This verifies that a new customer can complete the registration form and see the account creation request complete.",
+    "category": "Customer account and registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /kayit"
+      },
+      {
+        "type": "action",
+        "description": "Complete the registration form with valid details"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the account creation request is completed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC022",
+    "title": "Sign out and return to the public storefront",
+    "description": "A signed-in customer can sign out and return to the public storefront without account access remaining visible.",
+    "category": "Shopping cart",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /giris"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Open the account menu"
+      },
+      {
+        "type": "action",
+        "description": "Sign out"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the public storefront is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC023",
+    "title": "View submitted XML order history",
+    "description": "An approved XML customer can open their XML order history and review previously submitted orders and statuses.",
+    "category": "XML customer order submission",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /giris"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open XML order history"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify XML order history is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify submitted orders and statuses are visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC024",
+    "title": "Reach a product entry point from the home page",
+    "description": "This verifies that a visitor can scroll the home page and open a product-related destination from featured content.",
+    "category": "Storefront navigation and responsive mobile menu",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Scroll through the home page sections"
+      },
+      {
+        "type": "action",
+        "description": "Open a product-related entry point"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the destination page is displayed at the top"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC025",
+    "title": "Open the campaign page from mobile navigation",
+    "description": "This verifies that a visitor can use the mobile menu to reach the campaign listing and see the page load.",
+    "category": "Storefront navigation and responsive mobile menu",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Open the mobile menu"
+      },
+      {
+        "type": "action",
+        "description": "Choose the campaign page from the navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the campaign listing is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC026",
+    "title": "Use the admin mobile menu to reach a management page",
+    "description": "An administrator can open the mobile admin menu and navigate to a management section successfully.",
+    "category": "Administrative operations",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /giris"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the admin dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the mobile navigation area"
+      },
+      {
+        "type": "action",
+        "description": "Open the mobile admin menu"
+      },
+      {
+        "type": "action",
+        "description": "Select a management section from the mobile menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected admin page is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC027",
+    "title": "View the empty cart state",
+    "description": "A visitor with no cart items can open the cart and see the empty-cart message or state.",
+    "category": "Shopping cart",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /sepet"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an empty-cart state is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC028",
+    "title": "Open the contact page from mobile navigation",
+    "description": "This verifies that a visitor can use the mobile menu to reach the contact page and see the contact information.",
+    "category": "Storefront navigation and responsive mobile menu",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Open the mobile menu"
+      },
+      {
+        "type": "action",
+        "description": "Choose the contact page from the navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the contact information is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC029",
+    "title": "Show validation feedback for invalid sign-in",
+    "description": "This verifies that a user entering invalid credentials sees sign-in validation feedback instead of reaching the account area.",
+    "category": "Customer account and registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /giris"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with an invalid email"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with an invalid password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify sign-in validation feedback is visible"
+      }
+    ],
+    "priority": "Low"
+  }
+]
