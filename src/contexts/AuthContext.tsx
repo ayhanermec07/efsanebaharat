@@ -140,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIskontoOrani(0)
       setGrupIskontoOrani(0)
       setOzelIskontoOrani(0)
+      setLoading(false)
       return
     }
 
