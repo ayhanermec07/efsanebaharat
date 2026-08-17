@@ -21,15 +21,15 @@ export default function Footer() {
             </p>
             <div className="mt-5 grid gap-3 text-sm">
               <div className="flex items-center gap-3">
-                <Phone className="h-4 w-4 text-amber-500" />
+                <Phone className="site-secondary-text h-4 w-4" />
                 <span>0850 123 45 67</span>
               </div>
               <div className="flex items-center gap-3">
-                <Mail className="h-4 w-4 text-amber-500" />
+                <Mail className="site-secondary-text h-4 w-4" />
                 <span>info@efsanebaharat.com</span>
               </div>
               <div className="flex items-center gap-3">
-                <MapPin className="h-4 w-4 text-amber-500" />
+                <MapPin className="site-secondary-text h-4 w-4" />
                 <span>İstanbul, Türkiye</span>
               </div>
             </div>
@@ -59,11 +59,11 @@ export default function Footer() {
             <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-white">Güvence</h3>
             <div className="grid gap-3 text-sm text-zinc-400">
               <div className="flex gap-3">
-                <Truck className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                <Truck className="site-secondary-text mt-0.5 h-4 w-4 shrink-0" />
                 <span>Hızlı kargo ve takip bildirimi</span>
               </div>
               <div className="flex gap-3">
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                <ShieldCheck className="site-secondary-text mt-0.5 h-4 w-4 shrink-0" />
                 <span>Güvenli ödeme altyapısı</span>
               </div>
               <Link to="/bize-ulasin" className="shop-btn-secondary mt-2 border-zinc-700 bg-zinc-900 text-zinc-100 hover:border-amber-500 hover:text-white">
