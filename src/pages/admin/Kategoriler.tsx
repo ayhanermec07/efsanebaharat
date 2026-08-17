@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { publicSupabase, supabase } from '../../lib/supabase'
 import { Plus, Edit, Trash2, Save, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { ImageUpload } from '../../components/ImageUpload'
@@ -25,7 +25,7 @@ export default function Kategoriler() {
   async function loadKategoriler() {
     setLoading(true)
     try {
-      const { data, error } = await supabase
+      const { data, error } = await publicSupabase
         .from('kategoriler')
         .select('*')
         .order('sira_no', { ascending: true })
