@@ -50,7 +50,7 @@ const normalizeLogo = (value: unknown): LogoSettings => {
 
     return {
         url: typeof setting.url === 'string' && setting.url.length > 0 ? setting.url : null,
-        width: Number.isFinite(requestedWidth) ? Math.min(180, Math.max(50, requestedWidth)) : defaultLogo.width,
+        width: Number.isFinite(requestedWidth) ? Math.min(240, Math.max(50, requestedWidth)) : defaultLogo.width,
     }
 }
 
