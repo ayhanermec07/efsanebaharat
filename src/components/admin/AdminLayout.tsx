@@ -69,7 +69,7 @@ export default function AdminLayout() {
     { path: '/admin/xml-yonetim', icon: FileCode, label: 'XML Yönetimi' },
     { path: '/admin/asorti-stok', icon: Boxes, label: 'Asorti Stok' },
     { path: '/admin/ayarlar', icon: Settings, label: 'Ayarlar' },
-    { path: '/admin/kampanyalar', icon: Megaphone, label: 'Kampanya & Banner' },
+    { path: '/admin/kampanyalar', icon: Megaphone, label: 'Kampanyalar' },
     { path: '/admin/sorular', icon: MessageSquare, label: 'Sorular' },
     { path: '/admin/canli-destek', icon: Headphones, label: 'Canlı Destek' }
   ]

@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Dispatch, SetStateAction } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ShieldCheck, ShoppingBag, Sparkles, Truck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ShieldCheck, ShoppingBag, Truck } from 'lucide-react'
 import CanliDestekWidget from '../components/CanliDestekWidget'
 import UrunKart from '../components/UrunKart'
 import { loadPublicCatalog, publicSupabase } from '../lib/supabase'
 import { getImageUrl } from '../utils/imageUtils'
-import { fetchInBatches } from '../utils/supabaseBatch'
 import { useAuth } from '../contexts/AuthContext'
 
 const pageSize = 4
@@ -30,50 +28,24 @@ export default function AnaSayfa() {
   useEffect(() => {
     if (hasLoadedRef.current) return
 
-    async function loadUrunlerByIds(urunIds: string[], setter: Dispatch<SetStateAction<any[]>>) {
-      const { data: urunData } = await publicSupabase
-        .from('urunler')
-        .select('*')
-        .in('id', urunIds)
-        .eq('aktif_durum', true)
-
-      if (!urunData || urunData.length === 0) return
-
-      const kategoriIds = [...new Set(urunData.map(u => u.kategori_id).filter(Boolean))]
-      const markaIds = [...new Set(urunData.map(u => u.marka_id).filter(Boolean))]
-
-      const [{ data: gorseller }, { data: stoklar }, { data: kategoriler }, { data: markalarData }] = await Promise.all([
-        fetchInBatches(urunIds, ids =>
-          publicSupabase.from('urun_gorselleri').select('*').in('urun_id', ids).order('sira_no')
-        ),
-        fetchInBatches(urunIds, ids =>
-          publicSupabase.from('urun_stoklari').select('*').in('urun_id', ids).eq('aktif_durum', true)
-        ),
-        fetchInBatches(kategoriIds, ids =>
-          publicSupabase.from('kategoriler').select('id, kategori_adi').in('id', ids)
-        ),
-        fetchInBatches(markaIds, ids =>
-          publicSupabase.from('markalar').select('id, marka_adi').in('id', ids)
-        )
-      ])
-
-      const urunlerWithData = urunData.map(urun => ({
-        ...urun,
-        urun_gorselleri: gorseller?.filter(g => g.urun_id === urun.id) || [],
-        urun_stoklari: stoklar?.filter(s => s.urun_id === urun.id) || [],
-        kategoriler: kategoriler?.find(k => k.id === urun.kategori_id),
-        markalar: markalarData?.find(m => m.id === urun.marka_id)
-      }))
-
-      setter(urunlerWithData)
-    }
-
     async function loadData() {
       try {
         setLoading(true)
         setError(null)
+        const now = new Date().toISOString()
 
-        const catalog = await loadPublicCatalog(16)
+        const [catalog, campaignResponse] = await Promise.all([
+          loadPublicCatalog(16),
+          publicSupabase
+            .from('kampanyalar')
+            .select('id, ad, aciklama, banner_gorseli, kapsam, kategori_id, marka_id, kod, hedef_grup, sira_no')
+            .eq('aktif', true)
+            .eq('anasayfada_goster', true)
+            .in('hedef_grup', ['hepsi', musteriTipi])
+            .lte('baslangic_tarihi', now)
+            .gte('bitis_tarihi', now)
+            .order('sira_no')
+        ])
         const enrichProduct = (urun: any) => ({
           ...urun,
           urun_gorselleri: (catalog.gorseller || []).filter((gorsel: any) => gorsel.urun_id === urun.id),
@@ -86,71 +58,11 @@ export default function AnaSayfa() {
         setEnCokSatanlar(products.slice(0, 12))
         setYeniEklenenler(products)
         setMarkalar(catalog.markalar || [])
-        hasLoadedRef.current = true
-        return
-
-        const { data: bannerData, error: bannerError } = await publicSupabase
-          .from('kampanyalar')
-          .select('id, ad, aciklama, banner_gorseli, kapsam, kategori_id, marka_id, kod, hedef_grup')
-          .eq('aktif', true)
-          .eq('anasayfada_goster', true)
-          .in('hedef_grup', ['hepsi', musteriTipi])
-          .order('sira_no')
-
-        if (bannerError) console.error('Banner yükleme hatası:', bannerError)
-        if (bannerData) setBanners(bannerData)
-
-        const { data: onerilenData } = await publicSupabase
-          .from('onerilen_urunler')
-          .select('urun_id')
-          .eq('manuel_secim', true)
-          .order('goruntuleme_sirasi')
-          .limit(4)
-
-        if (onerilenData && onerilenData.length > 0) {
-          await loadUrunlerByIds(onerilenData.map(o => o.urun_id), setOneCikanUrunler)
+        if (campaignResponse.error) {
+          console.error('Ana sayfa kampanyaları yüklenemedi:', campaignResponse.error)
         } else {
-          const { data: fallbackData } = await publicSupabase
-            .from('urunler')
-            .select('id')
-            .eq('aktif_durum', true)
-            .limit(4)
-
-          if (fallbackData && fallbackData.length > 0) {
-            await loadUrunlerByIds(fallbackData.map(u => u.id), setOneCikanUrunler)
-          }
+          setBanners(campaignResponse.data || [])
         }
-
-        const { data: bestsellerData } = await publicSupabase
-          .from('urunler')
-          .select('id')
-          .eq('aktif_durum', true)
-          .order('created_at', { ascending: false })
-          .limit(12)
-
-        if (bestsellerData && bestsellerData.length > 0) {
-          await loadUrunlerByIds(bestsellerData.map(u => u.id), setEnCokSatanlar)
-        }
-
-        const { data: yeniData } = await publicSupabase
-          .from('urunler')
-          .select('id')
-          .eq('aktif_durum', true)
-          .order('created_at', { ascending: false })
-          .limit(16)
-
-        if (yeniData && yeniData.length > 0) {
-          await loadUrunlerByIds(yeniData.map(u => u.id), setYeniEklenenler)
-        }
-
-        const { data: markaData } = await publicSupabase
-          .from('markalar')
-          .select('id, marka_adi, logo_url')
-          .eq('aktif_durum', true)
-          .order('marka_adi')
-          .limit(12)
-
-        if (markaData) setMarkalar(markaData)
         hasLoadedRef.current = true
       } catch (err) {
         console.error('Veri yükleme hatası:', err)
@@ -163,10 +75,22 @@ export default function AnaSayfa() {
     loadData()
   }, [musteriTipi])
 
+  useEffect(() => {
+    setCurrentBanner((current) => Math.min(current, Math.max(banners.length - 1, 0)))
+
+    if (banners.length < 2) return
+
+    const interval = window.setInterval(() => {
+      setCurrentBanner((current) => (current + 1) % banners.length)
+    }, 6000)
+
+    return () => window.clearInterval(interval)
+  }, [banners.length])
+
   const activeBanner = banners[currentBanner]
   const heroImage = getImageUrl(activeBanner?.banner_gorseli || oneCikanUrunler[0]?.urun_gorselleri?.[0]?.gorsel_url)
-  const heroTitle = activeBanner?.ad || 'Efsane Baharat'
-  const heroText = activeBanner?.aciklama || 'Seçili baharatlar, kahveler ve gurme ürünler tek ekranda, hızlı sipariş akışıyla.'
+  const heroTitle = activeBanner?.ad || 'Mutfakta fark yaratan lezzetler'
+  const heroText = activeBanner?.aciklama || 'Özenle seçilmiş baharatlar, kahveler ve gurme ürünler tek yerde.'
   
   let heroLink = '/urunler'
   if (activeBanner) {
@@ -218,47 +142,51 @@ export default function AnaSayfa() {
               className="absolute inset-0 h-full w-full object-cover opacity-45"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/82 to-zinc-950/20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/80 to-zinc-950/20" />
 
-          <div className="relative grid min-h-[420px] items-end gap-6 p-5 sm:p-8 lg:min-h-[500px] lg:grid-cols-[1.08fr_0.92fr] lg:p-12">
-            <div className="max-w-2xl pb-2">
-              <div className="shop-eyebrow border-white/20 bg-white/10 text-orange-100">
-                <Sparkles className="h-4 w-4" />
-                Premium baharat ve gurme ürünler
-              </div>
-              <h1 className="mt-4 text-4xl font-bold leading-tight tracking-normal sm:text-5xl lg:text-6xl">
+          <div className="relative flex min-h-[370px] items-end p-5 sm:min-h-[420px] sm:p-8 lg:min-h-[500px] lg:p-12">
+            <div className="max-w-2xl pb-8 sm:pb-7">
+              <p className="text-xs font-extrabold tracking-[0.18em] text-orange-200">
+                {activeBanner ? 'ÖNE ÇIKAN KAMPANYA' : 'EFSANE BAHARAT'}
+              </p>
+              <h1 className="mt-3 text-3xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
                 {heroTitle}
               </h1>
               <p className="mt-4 max-w-xl text-base font-medium leading-7 text-zinc-200 sm:text-lg">
                 {heroText}
               </p>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-7">
                 <Link to={heroLink} className="shop-btn-primary">
-                  Alışverişe başla
-                </Link>
-                <Link to="/kampanyalar" className="shop-btn-secondary border-white/20 bg-white/10 text-white hover:bg-white hover:text-zinc-950">
-                  Kampanyaları gör
+                  {activeBanner ? 'Kampanyayı incele' : 'Ürünleri incele'}
                 </Link>
               </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 rounded-lg bg-white/10 p-2 backdrop-blur lg:self-end">
-              {['Taze stok', 'Güvenli teslimat', 'Bayi fiyatları'].map((item) => (
-                <div key={item} className="rounded-md bg-white/10 p-3 text-center text-xs font-bold text-white">
-                  {item}
-                </div>
-              ))}
             </div>
           </div>
 
           {banners.length > 1 && (
-            <div className="absolute bottom-4 right-4 flex gap-2">
-              <button type="button" onClick={prevBanner} className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-zinc-950 shadow-sm" aria-label="Önceki banner">
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button type="button" onClick={nextBanner} className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-zinc-950 shadow-sm" aria-label="Sonraki banner">
-                <ChevronRight className="h-5 w-5" />
-              </button>
+            <div className="absolute bottom-4 left-5 right-4 flex items-center justify-between gap-3 sm:left-8 lg:left-12">
+              <div className="flex gap-2" aria-label="Kampanya seçimi">
+                {banners.map((banner, index) => (
+                  <button
+                    key={banner.id}
+                  type="button"
+                  onClick={() => setCurrentBanner(index)}
+                    className="grid h-10 w-10 place-items-center"
+                    aria-label={`${index + 1}. kampanyayı göster`}
+                    aria-current={index === currentBanner}
+                  >
+                    <span className={`h-3 min-w-3 rounded-full transition-all ${index === currentBanner ? 'w-8 bg-white' : 'bg-white/50 hover:bg-white/80'}`} />
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button type="button" onClick={prevBanner} className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-zinc-950 shadow-sm" aria-label="Önceki banner">
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button type="button" onClick={nextBanner} className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-zinc-950 shadow-sm" aria-label="Sonraki banner">
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           )}
         </div>
