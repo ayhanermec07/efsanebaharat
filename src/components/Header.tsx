@@ -3,6 +3,7 @@ import { ChevronDown, Menu, Search, ShoppingCart, Sparkles, User, X } from 'luci
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { supabase } from '../lib/supabase'
 import { getImageUrl } from '../utils/imageUtils'
 import {
@@ -21,6 +22,7 @@ const navLinks = [
 
 export default function Header() {
   const { user, isAdmin, musteriData, signOut } = useAuth()
+  const { logo } = useTheme()
   const { sepetItems, toplamAdet } = useSepet()
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -206,7 +208,15 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between gap-3">
           <Link to="/" className="flex min-w-0 items-center gap-3" onClick={closeMenus}>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-800 text-white shadow-sm">
-              <Sparkles className="h-5 w-5" />
+              {logo.url ? (
+                <img
+                  src={getImageUrl(logo.url)}
+                  alt="Efsane Baharat logosu"
+                  className="h-full w-full rounded-lg object-contain bg-white p-1"
+                />
+              ) : (
+                <Sparkles className="h-5 w-5" />
+              )}
             </div>
             <div className="min-w-0">
               <div className="truncate text-lg font-bold tracking-tight text-zinc-950 sm:text-xl">Efsane Baharat</div>
