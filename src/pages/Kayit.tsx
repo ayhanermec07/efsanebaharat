@@ -47,7 +47,7 @@ export default function Kayit() {
     return <div className="shop-container py-8 sm:py-12"><div className="mx-auto max-w-2xl rounded-xl border border-emerald-100 bg-white p-6 text-center shadow-lg sm:p-10">
       <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" />
       <h1 className="mt-4 text-2xl font-bold text-zinc-950">Başvurunuz alındı</h1>
-      <p className="mt-3 text-sm leading-6 text-zinc-600">E-posta adresinize doğrulama bağlantısı gönderildi. Doğrulama sonrasında başvurunuz yönetici onayına düşecek. Hesabınız, müşteri türünüz seçilip onaylandıktan sonra kullanılabilir olacaktır.</p>
+      <p className="mt-3 text-sm leading-6 text-zinc-600">Başvurunuz yönetici onayına gönderildi. Hesabınız, müşteri türünüz seçilip onaylandıktan sonra kullanılabilir olacaktır.</p>
       <Link to="/giris" className="shop-btn-primary mt-6 inline-flex">Giriş sayfasına git</Link>
     </div></div>
   }
