@@ -4,6 +4,14 @@ import { Plus, Edit, Trash2, Save, X, ExternalLink } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { ImageUpload } from '../../components/ImageUpload'
 
+// Canlı veritabanında paket miktar birimi, satış/stok biriminden farklı olarak
+// uzun adlarla tutuluyor. Formdaki kısa değerleri yalnızca kayıt anında çeviririz.
+function veritabaniMiktarBirimi(birim: unknown) {
+  if (birim === 'gr') return 'gram'
+  if (birim === 'kg') return 'kilogram'
+  return birim || 'adet'
+}
+
 export default function UrunlerYonetim() {
   const [urunler, setUrunler] = useState<any[]>([])
   const [kategoriler, setKategoriler] = useState<any[]>([])
@@ -72,7 +80,12 @@ export default function UrunlerYonetim() {
 
         // Stokları güncelle - önce sil, sonra ekle
         await supabase.from('urun_stoklari').delete().eq('urun_id', editingId)
-        const stokData = stoklar.map(s => ({ ...s, urun_id: editingId, aktif_durum: true }))
+        const stokData = stoklar.map(s => ({
+          ...s,
+          birim_adedi_turu: veritabaniMiktarBirimi(s.birim_adedi_turu || s.birim_turu),
+          urun_id: editingId,
+          aktif_durum: true
+        }))
         const { error: stokError } = await supabase.from('urun_stoklari').insert(stokData)
         if (stokError) throw stokError
 
@@ -98,7 +111,12 @@ export default function UrunlerYonetim() {
         if (urunError) throw urunError
 
         if (newUrun) {
-          const stokData = stoklar.map(s => ({ ...s, urun_id: newUrun.id, aktif_durum: true }))
+          const stokData = stoklar.map(s => ({
+            ...s,
+            birim_adedi_turu: veritabaniMiktarBirimi(s.birim_adedi_turu || s.birim_turu),
+            urun_id: newUrun.id,
+            aktif_durum: true
+          }))
           const { error: stokError } = await supabase.from('urun_stoklari').insert(stokData)
           if (stokError) throw stokError
 
