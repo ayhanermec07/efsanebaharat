@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { ArrowRightLeft, Boxes, PackageCheck, RefreshCw } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
@@ -47,6 +47,9 @@ export default function AdminAsortiStok() {
   const [sourceStockId, setSourceStockId] = useState('')
   const [assortmentStockId, setAssortmentStockId] = useState('')
   const [packageQuantity, setPackageQuantity] = useState('')
+  // Ayni kullanici niyeti (ayni stok/asorti/adet) tekrar denendiginde ayni islem anahtari kullanilir;
+  // sunucu saklanan sonucu dondurur ve ikinci stok hareketi olusmaz.
+  const pendingIntent = useRef<{ signature: string; requestId: string } | null>(null)
 
   async function loadData() {
     try {
@@ -94,13 +97,22 @@ export default function AdminAsortiStok() {
       return
     }
 
+    const signature = `${sourceStock.id}|${assortmentStock.id}|${quantity}`
+    if (pendingIntent.current?.signature !== signature) {
+      pendingIntent.current = { signature, requestId: crypto.randomUUID() }
+    }
+    const { requestId } = pendingIntent.current
+
     setSaving(true)
     try {
       const { data, error } = await supabase.functions.invoke('asorti-stok-hazirla', {
-        body: { sourceStockId: sourceStock.id, assortmentStockId: assortmentStock.id, packageQuantity: quantity },
+        body: { sourceStockId: sourceStock.id, assortmentStockId: assortmentStock.id, packageQuantity: quantity, requestId },
       })
       if (error || data?.error) throw new Error(data?.error?.message || error?.message || 'Stok hazirlanamadi')
-      toast.success(`${quantity} paket ${displayUnit(assortmentStock)} asorti stoğuna eklendi`)
+      pendingIntent.current = null
+      toast.success(data?.replayed
+        ? 'Bu hazırlama daha önce kaydedilmişti; stok tekrar düşülmedi'
+        : `${quantity} paket ${displayUnit(assortmentStock)} asorti stoğuna eklendi`)
       setPackageQuantity('')
       await loadData()
     } catch (error: any) {

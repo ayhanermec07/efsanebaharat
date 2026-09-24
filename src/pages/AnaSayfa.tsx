@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ShieldCheck, ShoppingBag, Truck } from 'lucide-react'
 import CanliDestekWidget from '../components/CanliDestekWidget'
 import UrunKart from '../components/UrunKart'
-import { loadPublicCatalog, publicSupabase } from '../lib/supabase'
+import { publicSupabase } from '../lib/supabase'
+import { loadPublicCatalog } from '../lib/catalog'
 import { getImageUrl } from '../utils/imageUtils'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -35,7 +36,7 @@ export default function AnaSayfa() {
         const now = new Date().toISOString()
 
         const [catalog, campaignResponse] = await Promise.all([
-          loadPublicCatalog(16),
+          loadPublicCatalog({ limit: 16, sirala: 'yeni', meta: true }),
           publicSupabase
             .from('kampanyalar')
             .select('id, ad, aciklama, banner_gorseli, kapsam, kategori_id, marka_id, kod, hedef_grup, sira_no')
@@ -46,14 +47,8 @@ export default function AnaSayfa() {
             .gte('bitis_tarihi', now)
             .order('sira_no')
         ])
-        const enrichProduct = (urun: any) => ({
-          ...urun,
-          urun_gorselleri: (catalog.gorseller || []).filter((gorsel: any) => gorsel.urun_id === urun.id),
-          urun_stoklari: (catalog.stoklar || []).filter((stok: any) => stok.urun_id === urun.id),
-          kategoriler: (catalog.kategoriler || []).find((kategori: any) => kategori.id === urun.kategori_id),
-          markalar: (catalog.markalar || []).find((marka: any) => marka.id === urun.marka_id)
-        })
-        const products = (catalog.urunler || []).map(enrichProduct)
+        // DTO ürün, görsel ve yalnız izinli satış satırlarını iç içe döndürür.
+        const products = catalog.urunler
         setOneCikanUrunler(products.slice(0, 4))
         setEnCokSatanlar(products.slice(0, 12))
         setYeniEklenenler(products)

@@ -19,6 +19,7 @@ export default function UrunDetay() {
   const [miktar, setMiktar] = useState(1)
   const [secilenGorsel, setSecilenGorsel] = useState(0)
   const [eklendi, setEklendi] = useState(false)
+  const [ekleniyor, setEkleniyor] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadState, setLoadState] = useState<'ready' | 'not-found' | 'error'>('ready')
   const requestSequence = useRef(0)
@@ -113,18 +114,19 @@ export default function UrunDetay() {
     setMiktar(Math.max(stok.min_siparis_miktari || 1, miktar))
   }
 
-  function handleSepeteEkle() {
+  async function handleSepeteEkle() {
     if (!user) {
       navigate('/giris')
       return
     }
 
-    if (!urun || !secilenStok) return
+    if (!urun || !secilenStok || ekleniyor) return
 
     const gorsel = getImageUrl(urun.urun_gorselleri?.[0]?.gorsel_url)
     const fiyat = iskontoInfo?.varMi ? iskontoInfo.yeniFiyat : Number(secilenStok.fiyat || 0)
 
-    sepeteEkle({
+    setEkleniyor(true)
+    const result = await sepeteEkle({
       stok_varyant_id: secilenStok.id,
       urun_id: urun.id,
       urun_adi: urun.urun_adi,
@@ -136,7 +138,10 @@ export default function UrunDetay() {
       gorsel_url: gorsel,
       min_siparis_miktari: secilenStok.min_siparis_miktari
     })
+    setEkleniyor(false)
 
+    // "Sepete eklendi" yalnız sunucu başarı döndürdüğünde gösterilir.
+    if (!result.ok) return
     setEklendi(true)
     window.setTimeout(() => setEklendi(false), 2000)
   }
@@ -283,8 +288,9 @@ export default function UrunDetay() {
 
             <button
               type="button"
-              onClick={handleSepeteEkle}
-              disabled={!secilenStok}
+              onClick={() => { void handleSepeteEkle() }}
+              disabled={!secilenStok || ekleniyor}
+              aria-busy={ekleniyor}
               className={`mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg px-4 font-bold transition disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500 ${eklendi
                 ? 'bg-emerald-600 text-white'
                 : 'bg-zinc-950 text-white hover:bg-orange-700'

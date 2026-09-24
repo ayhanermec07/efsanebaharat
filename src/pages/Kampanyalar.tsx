@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { AlertCircle, Calendar, PackageSearch, Percent, RotateCcw, Tag } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { AlertCircle, ArrowRight, Calendar, PackageSearch, Percent, RotateCcw, Tag } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
 import { useAuth } from '../contexts/AuthContext'
+import { loadPublicCatalog, type CatalogProduct } from '../lib/catalog'
 import { supabase } from '../lib/supabase'
-import { fetchInBatches } from '../utils/supabaseBatch'
 
 interface Kampanya {
   id: string
@@ -21,11 +22,12 @@ interface Kampanya {
 }
 
 interface KampanyaWithProducts extends Kampanya {
-  urunler: any[]
+  urunler: CatalogProduct[]
+  toplam: number
 }
 
 export default function Kampanyalar() {
-  const { musteriData } = useAuth()
+  const { user, musteriData } = useAuth()
   const [kampanyalar, setKampanyalar] = useState<KampanyaWithProducts[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
@@ -51,84 +53,14 @@ export default function Kampanyalar() {
         return
       }
 
-      const kampanyalarWithProducts: KampanyaWithProducts[] = []
-
-      for (const kampanya of kampanyalarData) {
-        let urunler: any[] = []
-
-        if (kampanya.kapsam === 'kategori' && kampanya.kategori_id) {
-          const { data } = await supabase
-            .from('urunler')
-            .select('*')
-            .eq('aktif_durum', true)
-            .eq('kategori_id', kampanya.kategori_id)
-            .limit(12)
-          if (data) urunler = data
-        } else if (kampanya.kapsam === 'marka' && kampanya.marka_id) {
-          const { data } = await supabase
-            .from('urunler')
-            .select('*')
-            .eq('aktif_durum', true)
-            .eq('marka_id', kampanya.marka_id)
-            .limit(12)
-          if (data) urunler = data
-        } else if (kampanya.kapsam === 'secili_urunler') {
-          const { data: urunIds } = await supabase
-            .from('kampanya_urunler')
-            .select('urun_id')
-            .eq('kampanya_id', kampanya.id)
-
-          const ids = urunIds?.map(u => u.urun_id) || []
-          if (ids.length > 0) {
-            const { data } = await supabase
-              .from('urunler')
-              .select('*')
-              .eq('aktif_durum', true)
-              .in('id', ids)
-              .limit(12)
-            if (data) urunler = data
-          }
-        }
-
-        if (urunler.length === 0) continue
-
-        const urunIds = urunler.map(u => u.id)
-        const kategoriIds = [...new Set(urunler.map(u => u.kategori_id).filter(Boolean))]
-        const markaIds = [...new Set(urunler.map(u => u.marka_id).filter(Boolean))]
-
-        const [{ data: gorseller }, { data: stoklar }, { data: kategoriler }, { data: markalar }] = await Promise.all([
-          fetchInBatches(urunIds, ids =>
-            supabase.from('urun_gorselleri').select('*').in('urun_id', ids).order('sira_no')
-          ),
-          fetchInBatches(urunIds, ids =>
-            supabase.from('urun_stoklari').select('*').in('urun_id', ids).eq('aktif_durum', true)
-          ),
-          fetchInBatches(kategoriIds, ids =>
-            supabase.from('kategoriler').select('id, kategori_adi').in('id', ids)
-          ),
-          fetchInBatches(markaIds, ids =>
-            supabase.from('markalar').select('id, marka_adi').in('id', ids)
-          )
-        ])
-
-        const musteriTipi = musteriData?.musteri_tipi || 'musteri'
-        const urunlerWithData = urunler.map(urun => {
-          const urunStoklari = stoklar?.filter(s => s.urun_id === urun.id) || []
-          const filtreliStoklar = urunStoklari.filter(s =>
-            !s.stok_grubu || s.stok_grubu === 'hepsi' || s.stok_grubu === musteriTipi
-          )
-
-          return {
-            ...urun,
-            urun_gorselleri: gorseller?.filter(g => g.urun_id === urun.id) || [],
-            urun_stoklari: filtreliStoklar,
-            kategoriler: kategoriler?.find(k => k.id === urun.kategori_id),
-            markalar: markalar?.find(m => m.id === urun.marka_id)
-          }
-        })
-
-        kampanyalarWithProducts.push({ ...kampanya, urunler: urunlerWithData })
-      }
+      // Kapsam, satış satırı grubu ve kampanyanın hedef grubu sunucuda uygulanır;
+      // her kampanya için tek katalog isteği yapılır.
+      const pages = await Promise.all(
+        kampanyalarData.map((kampanya) => loadPublicCatalog({ kampanya: kampanya.id, limit: 12 }))
+      )
+      const kampanyalarWithProducts: KampanyaWithProducts[] = kampanyalarData
+        .map((kampanya, index) => ({ ...kampanya, urunler: pages[index].urunler, toplam: pages[index].toplam }))
+        .filter((kampanya, index) => !pages[index].kampanyaGecersiz && kampanya.urunler.length > 0)
 
       setKampanyalar(kampanyalarWithProducts)
     } catch (error) {
@@ -138,11 +70,13 @@ export default function Kampanyalar() {
     } finally {
       setLoading(false)
     }
-  }, [musteriData?.musteri_tipi])
+  }, [])
 
+  // Oturum/müşteri tipi değişince bayi fiyatı yeniden yetkilendirilerek alınır.
+  const viewerKey = `${user?.id || 'anon'}:${musteriData?.musteri_tipi || ''}`
   useEffect(() => {
     loadKampanyalarWithProducts()
-  }, [loadKampanyalarWithProducts])
+  }, [loadKampanyalarWithProducts, viewerKey])
 
   function formatDate(dateString: string) {
     return new Date(dateString).toLocaleDateString('tr-TR', {
@@ -205,9 +139,20 @@ export default function Kampanyalar() {
                     <h2 className="break-words text-2xl font-bold text-zinc-950">{kampanya.ad}</h2>
                     {kampanya.aciklama && <p className="mt-1 text-sm leading-6 text-zinc-600">{kampanya.aciklama}</p>}
                   </div>
-                  <div className="flex min-w-0 items-center gap-2 rounded-lg border border-orange-100 bg-white px-3 py-2 text-xs font-bold text-zinc-600">
-                    <Calendar className="h-4 w-4 shrink-0 text-orange-700" />
-                    <span className="break-words">{formatDate(kampanya.baslangic_tarihi)} - {formatDate(kampanya.bitis_tarihi)}</span>
+                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center md:flex-col md:items-end">
+                    <div className="flex min-w-0 items-center gap-2 rounded-lg border border-orange-100 bg-white px-3 py-2 text-xs font-bold text-zinc-600">
+                      <Calendar className="h-4 w-4 shrink-0 text-orange-700" />
+                      <span className="break-words">{formatDate(kampanya.baslangic_tarihi)} - {formatDate(kampanya.bitis_tarihi)}</span>
+                    </div>
+                    {kampanya.toplam > kampanya.urunler.length && (
+                      <Link
+                        to={`/urunler?kampanya=${kampanya.id}`}
+                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-lg bg-zinc-950 px-3 text-xs font-bold text-white hover:bg-orange-700"
+                      >
+                        Tümünü gör ({kampanya.toplam})
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>

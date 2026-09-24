@@ -1,17 +1,94 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { CreditCard, LockKeyhole, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import { AlertCircle, CreditCard, LockKeyhole, Minus, Plus, RotateCcw, ShoppingBag, Trash2 } from 'lucide-react'
 import KampanyaUygula from '../components/KampanyaUygula'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
+import { CHECKOUT_TERMINAL_CODES, cartVersion, nextCheckoutAttempt, type CheckoutAttempt } from '../lib/cart-commands'
 import { supabase } from '../lib/supabase'
 import { akilliBirimGoster } from '../utils/birimDonusturucu'
 
 const formatPrice = (value: number) => `${Math.max(0, value).toFixed(2)} TL`
+const CHECKOUT_ATTEMPT_KEY = 'efsane-checkout-denemesi'
+const IN_PROGRESS_RETRIES = 5
+
+type PaymentResponse = {
+  token?: string
+  siparis_id?: string
+  error?: { code?: string; message?: string; retryable?: boolean; siparis_id?: string }
+}
+
+function readStoredAttempt(): CheckoutAttempt | null {
+  try {
+    const parsed = JSON.parse(window.sessionStorage.getItem(CHECKOUT_ATTEMPT_KEY) || 'null')
+    return parsed && typeof parsed.key === 'string' ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function storeAttempt(attempt: CheckoutAttempt | null) {
+  try {
+    if (attempt) window.sessionStorage.setItem(CHECKOUT_ATTEMPT_KEY, JSON.stringify(attempt))
+    else window.sessionStorage.removeItem(CHECKOUT_ATTEMPT_KEY)
+  } catch {
+    // Depolama kapalıysa anahtar yalnız bellekte tutulur.
+  }
+}
+
+async function invokePayment(attempt: CheckoutAttempt): Promise<PaymentResponse> {
+  const { data, error } = await supabase.functions.invoke('paytr-payment', {
+    body: { idempotencyKey: attempt.key, cartVersion: attempt.cartVersion, kampanyaKodu: attempt.kampanyaKodu || null },
+  })
+  if (!error) return (data || {}) as PaymentResponse
+  const context = (error as { context?: Response }).context
+  if (context && typeof context.json === 'function') {
+    try {
+      return (await context.json()) as PaymentResponse
+    } catch {
+      // Gövde okunamadıysa ağ hatası gibi ele alınır.
+    }
+  }
+  return { error: { code: 'NETWORK_ERROR', message: 'Bağlantı hatası: ödeme başlatılamadı, tekrar deneyin', retryable: true } }
+}
+
+function QuantityInput({ value, min, disabled, onCommit }: { value: number; min: number; disabled: boolean; onCommit: (next: number) => Promise<{ ok: boolean }> }) {
+  const [draft, setDraft] = useState(String(value))
+  const latestValue = useRef(value)
+  useEffect(() => {
+    latestValue.current = value
+    setDraft(String(value))
+  }, [value])
+  const commit = async () => {
+    const next = Number(draft.replace(',', '.'))
+    if (draft.trim() === '' || Number.isNaN(next) || next === value) {
+      setDraft(String(value))
+      return
+    }
+    const result = await onCommit(next)
+    // Başarısız komutta taslak, sunucudan gelen son miktara döner.
+    if (!result.ok) setDraft(String(latestValue.current))
+  }
+  return (
+    <input
+      type="number"
+      inputMode="decimal"
+      min={min}
+      value={draft}
+      disabled={disabled}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => { void commit() }}
+      onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+      onFocus={(e) => e.target.select()}
+      aria-label="Miktar"
+      className="shop-input w-20 text-center font-bold disabled:opacity-60"
+    />
+  )
+}
 
 export default function Sepet() {
-  const { sepetItems, sepettenCikar, miktarGuncelle, toplamTutar, sepetiTemizle } = useSepet()
+  const { sepetItems, sepettenCikar, miktarGuncelle, toplamTutar, sepetiTemizle, sepetiYenile, sepetHatasi, bekleyenStoklar } = useSepet()
   const { user, musteriData } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -19,11 +96,13 @@ export default function Sepet() {
   const [paymentToken, setPaymentToken] = useState('')
   const [uygulananKampanya, setUygulananKampanya] = useState<any>(null)
   const [kampanyaIndirimi, setKampanyaIndirimi] = useState(0)
+  const checkoutAttempt = useRef<CheckoutAttempt | null>(null)
 
   const kdvOrani = 0.20
   const araToplamTutar = toplamTutar / (1 + kdvOrani)
   const kdvTutari = toplamTutar - araToplamTutar
   const indirimliToplam = Math.max(0, toplamTutar - kampanyaIndirimi)
+  const sepetMesgul = bekleyenStoklar.size > 0
 
   async function handleOdemeYap() {
     if (!user || !musteriData) {
@@ -42,26 +121,53 @@ export default function Sepet() {
       return
     }
 
+    if (sepetMesgul) {
+      toast.error('Sepet güncelleniyor, lütfen bekleyin')
+      return
+    }
+
     setLoading(true)
     try {
-      const { data, error } = await supabase.functions.invoke('paytr-payment', {
-        body: {
-          kampanyaKodu: uygulananKampanya?.kod || null,
-        },
-      })
+      // Aynı sepet sürümü + kampanya için anahtar bir kez üretilir ve her
+      // yeniden denemede (cevap kaybı, iframe kapatma) aynı anahtar gönderilir.
+      const version = await cartVersion(sepetItems)
+      const attempt = nextCheckoutAttempt(
+        checkoutAttempt.current || readStoredAttempt(),
+        version,
+        String(uygulananKampanya?.kod || ''),
+        () => crypto.randomUUID(),
+      )
+      checkoutAttempt.current = attempt
+      storeAttempt(attempt)
 
-      if (error) throw error
-
-      const token = data?.token
-      if (!token) {
-        throw new Error(data?.error?.message || 'Ödeme tokeni alınamadı')
+      let response = await invokePayment(attempt)
+      for (let retry = 0; retry < IN_PROGRESS_RETRIES && response.error?.code === 'CHECKOUT_IN_PROGRESS'; retry++) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1500))
+        response = await invokePayment(attempt)
       }
 
-      setPaymentToken(token)
-      setShowPaymentIframe(true)
+      if (response.token) {
+        setPaymentToken(response.token)
+        setShowPaymentIframe(true)
+        return
+      }
+
+      const code = response.error?.code || ''
+      if (CHECKOUT_TERMINAL_CODES.has(code)) {
+        checkoutAttempt.current = null
+        storeAttempt(null)
+      }
+      if (code === 'CART_VERSION_MISMATCH') await sepetiYenile()
+      if (code === 'ORDER_ALREADY_FINALIZED' && response.error?.siparis_id) {
+        navigate(`/odeme-basarili?order_id=${encodeURIComponent(response.error.siparis_id)}`)
+        return
+      }
+      toast.error(code === 'CHECKOUT_IN_PROGRESS'
+        ? 'Ödeme oturumu hâlâ hazırlanıyor. Birkaç saniye sonra tekrar deneyin.'
+        : response.error?.message || 'Ödeme başlatılamadı')
     } catch (error: any) {
       console.error('Ödeme başlatma hatası:', error)
-      toast.error(error.message || 'Ödeme başlatılamadı')
+      toast.error('Ödeme başlatılamadı, tekrar deneyin')
     } finally {
       setLoading(false)
     }
@@ -120,13 +226,26 @@ export default function Sepet() {
             </p>
           </div>
           {sepetItems.length > 0 && (
-            <button type="button" onClick={sepetiTemizle} className="shop-btn-secondary border-white/20 bg-white/10 text-white hover:bg-white hover:text-zinc-950">
+            <button type="button" onClick={() => { void sepetiTemizle() }} disabled={sepetMesgul} className="shop-btn-secondary border-white/20 bg-white/10 text-white hover:bg-white hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-60">
               <Trash2 className="h-4 w-4" />
               Sepeti temizle
             </button>
           )}
         </div>
       </div>
+
+      {sepetHatasi && (
+        <div role="alert" className="mb-4 flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-2">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span className="break-words">{sepetHatasi}</span>
+          </div>
+          <button type="button" onClick={() => { void sepetiYenile() }} className="flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-3 font-bold text-red-700">
+            <RotateCcw className="h-4 w-4" />
+            Tekrar dene
+          </button>
+        </div>
+      )}
 
       {sepetItems.length === 0 ? (
         <div className="flex min-h-[360px] flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-center shadow-sm">
@@ -144,10 +263,11 @@ export default function Sepet() {
           <section className="min-w-0 space-y-3">
             {sepetItems.map((item) => {
               const minMiktar = item.min_siparis_miktari || 1
-              const itemKey = `${item.urun_id}-${item.birim_turu}-${item.birim_adedi || 'na'}`
+              const stokId = item.stok_varyant_id
+              const bekliyor = bekleyenStoklar.has(stokId) || bekleyenStoklar.has('*')
 
               return (
-                <article key={itemKey} className="rounded-lg border border-zinc-200 bg-white p-3 shadow-sm sm:p-4">
+                <article key={stokId} aria-busy={bekliyor} className="rounded-lg border border-zinc-200 bg-white p-3 shadow-sm sm:p-4">
                   <div className="grid gap-3 sm:grid-cols-[96px_minmax(0,1fr)]">
                     <div className="h-24 w-24 overflow-hidden rounded-lg bg-zinc-100">
                       {item.gorsel_url ? (
@@ -177,30 +297,24 @@ export default function Sepet() {
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => miktarGuncelle(item.urun_id, item.birim_turu, Math.max(minMiktar, item.miktar - 1), item.birim_adedi)}
-                            disabled={item.miktar <= minMiktar}
+                            onClick={() => { void miktarGuncelle(stokId, Math.max(minMiktar, item.miktar - 1)) }}
+                            disabled={bekliyor || item.miktar <= minMiktar}
                             className="grid h-10 w-10 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-800 disabled:opacity-40"
                             aria-label="Miktarı azalt"
                           >
                             <Minus className="h-4 w-4" />
                           </button>
-                          <input
-                            type="number"
-                            min={minMiktar}
+                          <QuantityInput
                             value={item.miktar}
-                            onChange={(e) => {
-                              const val = Number(e.target.value)
-                              if (!Number.isNaN(val) && val >= minMiktar) {
-                                miktarGuncelle(item.urun_id, item.birim_turu, val, item.birim_adedi)
-                              }
-                            }}
-                            onFocus={(e) => e.target.select()}
-                            className="shop-input w-20 text-center font-bold"
+                            min={minMiktar}
+                            disabled={bekliyor}
+                            onCommit={(next) => miktarGuncelle(stokId, next)}
                           />
                           <button
                             type="button"
-                            onClick={() => miktarGuncelle(item.urun_id, item.birim_turu, item.miktar + 1, item.birim_adedi)}
-                            className="grid h-10 w-10 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-800"
+                            onClick={() => { void miktarGuncelle(stokId, item.miktar + 1) }}
+                            disabled={bekliyor}
+                            className="grid h-10 w-10 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-800 disabled:opacity-40"
                             aria-label="Miktarı artır"
                           >
                             <Plus className="h-4 w-4" />
@@ -214,8 +328,9 @@ export default function Sepet() {
                           </div>
                           <button
                             type="button"
-                            onClick={() => sepettenCikar(item.urun_id, item.birim_turu, item.birim_adedi)}
-                            className="grid h-10 w-10 place-items-center rounded-lg border border-red-100 bg-red-50 text-red-600 transition hover:bg-red-100"
+                            onClick={() => { void sepettenCikar(stokId) }}
+                            disabled={bekliyor}
+                            className="grid h-10 w-10 place-items-center rounded-lg border border-red-100 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:opacity-40"
                             aria-label="Sepetten çıkar"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -273,7 +388,7 @@ export default function Sepet() {
                 <button
                   type="button"
                   onClick={handleOdemeYap}
-                  disabled={loading}
+                  disabled={loading || sepetMesgul}
                   className="shop-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? (

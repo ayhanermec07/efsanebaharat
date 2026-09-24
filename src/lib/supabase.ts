@@ -33,17 +33,6 @@ export const publicSupabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 })
 
-export async function loadPublicCatalog(limit: number, searchTerm = '') {
-  const query = new URLSearchParams({ limit: String(limit) })
-  if (searchTerm.trim()) query.set('q', searchTerm.trim())
-  const response = await fetch(`${supabaseUrl}/functions/v1/public-catalog?${query.toString()}`, {
-    headers: { apikey: supabaseAnonKey }
-  })
-  const body = await response.json()
-  if (!response.ok || body?.error) throw new Error(body?.error || 'Katalog verisi alınamadı')
-  return body.data
-}
-
 export async function loadCurrentCustomerProfile(accessToken: string) {
   const controller = new AbortController()
   const timeout = window.setTimeout(() => controller.abort(), 7_000)
