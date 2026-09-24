@@ -54,6 +54,7 @@ interface WhatsappNumber {
 }
 
 export default function CanliDestek() {
+  const supportEnabled = false
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -275,6 +276,15 @@ export default function CanliDestek() {
       </div>
     )
   }
+
+  if (!supportEnabled) return (
+    <div className="flex min-h-[420px] flex-col items-center justify-center rounded-lg border border-dashed border-amber-300 bg-amber-50 p-6 text-center">
+      <MessageCircle className="h-12 w-12 text-amber-700" />
+      <h1 className="mt-4 text-2xl font-bold text-gray-900">Canlı destek kanalı yapılandırılmadı</h1>
+      <p className="mt-2 max-w-lg text-sm leading-6 text-gray-700">Bu ekran, kalıcı konuşma kaydı ve doğrulanmış sağlayıcı teslimat sözleşmesi kurulana kadar mesaj göndermez. Müşteriye gönderildi bilgisi üretmez.</p>
+      <button type="button" disabled className="mt-5 min-h-10 rounded-lg bg-gray-300 px-4 font-semibold text-gray-600">Mesaj gönderimi devre dışı</button>
+    </div>
+  )
 
   return (
     <div className="space-y-6">

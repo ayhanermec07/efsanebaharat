@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Check, Minus, Plus, ShoppingCart, Sparkles } from 'lucide-react'
+import { AlertCircle, Check, Minus, Plus, RotateCcw, ShoppingCart, Sparkles } from 'lucide-react'
 import UrunSoruModul from '../components/UrunSoruModul'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
@@ -19,6 +19,9 @@ export default function UrunDetay() {
   const [miktar, setMiktar] = useState(1)
   const [secilenGorsel, setSecilenGorsel] = useState(0)
   const [eklendi, setEklendi] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [loadState, setLoadState] = useState<'ready' | 'not-found' | 'error'>('ready')
+  const requestSequence = useRef(0)
 
   const iskontoInfo = useMemo(() => {
     if (!secilenStok) return null
@@ -39,22 +42,45 @@ export default function UrunDetay() {
   }, [id, user?.id])
 
   const loadUrun = useCallback(async () => {
-    const { data } = await supabase
+    const requestId = ++requestSequence.current
+    setLoading(true)
+    setLoadState('ready')
+    setUrun(null)
+    setSecilenStok(null)
+    setSecilenGorsel(0)
+    const { data, error } = await supabase
       .from('urunler')
       .select('*')
       .eq('id', id)
       .maybeSingle()
 
-    if (!data) return
+    if (requestId !== requestSequence.current) return
+    if (error) {
+      setLoadState('error')
+      setLoading(false)
+      return
+    }
+    if (!data) {
+      setLoadState('not-found')
+      setLoading(false)
+      return
+    }
 
     const musteriTipi = musteriData?.musteri_tipi || 'musteri'
 
-    const [{ data: gorseller }, { data: stoklar }, { data: kategori }, { data: marka }] = await Promise.all([
+    const results = await Promise.all([
       supabase.from('urun_gorselleri').select('*').eq('urun_id', data.id).order('sira_no'),
       supabase.from('urun_stoklari').select('*').eq('urun_id', data.id).eq('aktif_durum', true),
       supabase.from('kategoriler').select('*').eq('id', data.kategori_id).maybeSingle(),
       supabase.from('markalar').select('*').eq('id', data.marka_id).maybeSingle()
     ])
+    if (requestId !== requestSequence.current) return
+    const [{ data: gorseller, error: gorsellerError }, { data: stoklar, error: stoklarError }, { data: kategori, error: kategoriError }, { data: marka, error: markaError }] = results
+    if (gorsellerError || stoklarError || kategoriError || markaError) {
+      setLoadState('error')
+      setLoading(false)
+      return
+    }
 
     const filtreliStoklar = stoklar?.filter(s =>
       !s.stok_grubu || s.stok_grubu === 'hepsi' || s.stok_grubu === musteriTipi
@@ -72,6 +98,7 @@ export default function UrunDetay() {
       setSecilenStok(filtreliStoklar[0])
       setMiktar(filtreliStoklar[0].min_siparis_miktari || 1)
     }
+    setLoading(false)
   }, [id, musteriData?.musteri_tipi])
 
   useEffect(() => {
@@ -98,6 +125,7 @@ export default function UrunDetay() {
     const fiyat = iskontoInfo?.varMi ? iskontoInfo.yeniFiyat : Number(secilenStok.fiyat || 0)
 
     sepeteEkle({
+      stok_varyant_id: secilenStok.id,
       urun_id: urun.id,
       urun_adi: urun.urun_adi,
       birim_turu: secilenStok.birim_turu,
@@ -113,13 +141,16 @@ export default function UrunDetay() {
     window.setTimeout(() => setEklendi(false), 2000)
   }
 
-  if (!urun) {
+  if (loading) {
     return (
       <div className="shop-container py-16">
         <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-orange-600 border-t-transparent" />
       </div>
     )
   }
+
+  if (loadState === 'not-found') return <div className="shop-container py-16 text-center"><h1 className="text-2xl font-bold text-zinc-950">Ürün bulunamadı</h1><p className="mt-2 text-zinc-600">Ürün kaldırılmış veya bağlantı geçersiz olabilir.</p><button type="button" onClick={() => navigate('/urunler')} className="mt-5 min-h-10 rounded-lg bg-zinc-950 px-4 text-white">Ürünlere dön</button></div>
+  if (loadState === 'error') return <div className="shop-container py-16 text-center"><AlertCircle className="mx-auto h-10 w-10 text-red-600" /><h1 className="mt-3 text-2xl font-bold text-zinc-950">Ürün yüklenemedi</h1><p className="mt-2 text-zinc-600">Bağlantıyı kontrol edip tekrar deneyin.</p><button type="button" onClick={loadUrun} className="mx-auto mt-5 flex min-h-10 items-center gap-2 rounded-lg bg-zinc-950 px-4 text-white"><RotateCcw className="h-4 w-4" />Tekrar dene</button></div>
 
   const gorseller = urun.urun_gorselleri || []
   const fiyat = iskontoInfo?.varMi ? iskontoInfo.yeniFiyat : Number(secilenStok?.fiyat || 0)

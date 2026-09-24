@@ -165,41 +165,31 @@ export default function AdminKargo() {
     setSaving(true)
 
     try {
-      // Sipariş güncelle
-      const updateData: any = {
-        kargo_firmasi: formData.kargo_firmasi,
-        kargo_takip_no: formData.kargo_takip_no.trim(),
-        kargo_durumu: 'kargoda',
-        siparis_durumu: 'Kargoya Verildi',
-        kargoya_verilme_tarihi: new Date().toISOString(),
-        guncelleme_tarihi: new Date().toISOString()
-      }
+      const { data: shipment, error: shipmentError } = await supabase.functions.invoke('admin-order-shipment', {
+        body: {
+          orderId: kargoModal.id,
+          company: formData.kargo_firmasi,
+          trackingNumber: formData.kargo_takip_no.trim(),
+          estimatedDeliveryAt: formData.tahmini_teslimat_tarihi
+            ? new Date(formData.tahmini_teslimat_tarihi).toISOString()
+            : null,
+        },
+      })
+      if (shipmentError) throw shipmentError
 
-      if (formData.tahmini_teslimat_tarihi) {
-        updateData.tahmini_teslimat_tarihi = new Date(formData.tahmini_teslimat_tarihi).toISOString()
-      }
-
-      const { error: updateError } = await supabase
-        .from('siparisler')
-        .update(updateData)
-        .eq('id', kargoModal.id)
-
-      if (updateError) throw updateError
-
-      // Email bildirim gönder (Edge Function)
-      try {
-        const { error: emailError } = await supabase.functions.invoke('kargo-bildirim', {
-          body: { orderId: kargoModal.id }
-        })
-
-        if (emailError) {
-          console.warn('Email gönderilemedi:', emailError)
+      if (shipment?.isNew) {
+        try {
+          const { error: emailError } = await supabase.functions.invoke('kargo-bildirim', {
+            body: { orderId: kargoModal.id }
+          })
+          if (emailError) console.warn('Email gönderilemedi:', emailError)
+        } catch (emailError) {
+          console.warn('Email gönderimi başarısız:', emailError)
         }
-      } catch (emailError) {
-        console.warn('Email gönderimi başarısız:', emailError)
+        toast.success('Kargo bilgisi kaydedildi')
+      } else {
+        toast.success('Bu kargo geçişi zaten kaydedilmiş')
       }
-
-      toast.success('Kargo bilgisi kaydedildi ve müşteriye email gönderildi')
       closeKargoModal()
       loadMusterilerVeSiparisler()
     } catch (error: any) {

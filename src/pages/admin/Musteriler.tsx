@@ -3,6 +3,8 @@ import { supabase } from '../../lib/supabase'
 import { CheckCircle2, Clock3, Eye, Edit, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AdminSearchBar from '../../components/AdminSearchBar'
+import { validateCustomerUpdate, type CustomerUpdateInput } from '../../lib/customer-management'
+import AccessibleModal from '../../components/admin/AccessibleModal'
 
 export default function Musteriler() {
   const [musteriler, setMusteriler] = useState<any[]>([])
@@ -13,12 +15,14 @@ export default function Musteriler() {
   const [duzenlemeModalOpen, setDuzenlemeModalOpen] = useState(false)
   const [secilenMusteri, setSecilenMusteri] = useState<any>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CustomerUpdateInput>({
     fiyat_grubu_id: '',
     musteri_tipi: 'musteri',
     ozel_iskonto_orani: 0,
     aktif_durum: false
   })
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -87,6 +91,7 @@ export default function Musteriler() {
 
   async function handleDuzenle(musteri: any) {
     setSecilenMusteri(musteri)
+    setFormErrors({})
     setFormData({
       fiyat_grubu_id: musteri.fiyat_grubu_id || '',
       musteri_tipi: musteri.musteri_tipi || 'musteri',
@@ -98,11 +103,17 @@ export default function Musteriler() {
 
   async function handleGuncelle(e: React.FormEvent) {
     e.preventDefault()
+    if (saving || !secilenMusteri) return
 
+    const result = validateCustomerUpdate(formData)
+    setFormErrors(result.errors)
+    if (!result.data) return
+
+    setSaving(true)
     try {
       const { error } = await supabase
         .from('musteriler')
-        .update(formData)
+        .update(result.data)
         .eq('id', secilenMusteri.id)
 
       if (error) throw error
@@ -113,6 +124,8 @@ export default function Musteriler() {
     } catch (error: any) {
       console.error('Güncelleme hatası:', error)
       toast.error('Hata: ' + (error.message || 'Bilinmeyen hata'))
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -293,18 +306,7 @@ export default function Musteriler() {
       )}
 
       {/* Düzenleme Modal */}
-      {duzenlemeModalOpen && secilenMusteri && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-0 sm:p-4 z-50 overflow-y-auto">
-          <div className="bg-white sm:rounded-lg w-full max-w-lg min-h-screen sm:min-h-0 my-0 sm:my-8">
-            <div className="p-4 sm:p-6 sm:max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Müşteri Düzenle: {secilenMusteri.ad} {secilenMusteri.soyad}
-                </h2>
-                <button onClick={() => setDuzenlemeModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
+      {secilenMusteri && <AccessibleModal open={duzenlemeModalOpen} onClose={() => { if (!saving) setDuzenlemeModalOpen(false) }} title={`Müşteri Düzenle: ${secilenMusteri.ad} ${secilenMusteri.soyad}`} className="max-w-lg">
 
               <form onSubmit={handleGuncelle} className="space-y-4">
                 <div className={`rounded-lg border p-4 ${formData.aktif_durum ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}>
@@ -314,7 +316,7 @@ export default function Musteriler() {
                       <p className="font-semibold text-gray-900">{formData.aktif_durum ? 'Başvuru onaylandı' : 'Başvuru onay bekliyor'}</p>
                       <p className="mt-1 text-sm text-gray-700">Onay verirken aşağıdan müşteri türünü ve fiyat grubunu seçin.</p>
                     </div>
-                    <button type="button" onClick={() => setFormData({ ...formData, aktif_durum: !formData.aktif_durum })} className="shrink-0 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm ring-1 ring-black/5 hover:bg-gray-50">
+                    <button type="button" onClick={() => setFormData({ ...formData, aktif_durum: !formData.aktif_durum })} disabled={saving} className="shrink-0 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm ring-1 ring-black/5 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
                       {formData.aktif_durum ? 'Onayı geri al' : 'Onayla'}
                     </button>
                   </div>
@@ -323,7 +325,11 @@ export default function Musteriler() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Müşteri Tipi</label>
                   <select
                     value={formData.musteri_tipi}
-                    onChange={(e) => setFormData({ ...formData, musteri_tipi: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, musteri_tipi: e.target.value })
+                      setFormErrors((errors) => ({ ...errors, musteri_tipi: '' }))
+                    }}
+                    disabled={saving}
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
                   >
                     <option value="musteri">Müşteri</option>
@@ -336,18 +342,23 @@ export default function Musteriler() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">İskonto Grubu</label>
                   <select
                     value={formData.fiyat_grubu_id}
-                    onChange={(e) => setFormData({ ...formData, fiyat_grubu_id: e.target.value })}
-                    required
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    onChange={(e) => {
+                      setFormData({ ...formData, fiyat_grubu_id: e.target.value })
+                      setFormErrors((errors) => ({ ...errors, fiyat_grubu_id: '' }))
+                    }}
+                    disabled={saving}
+                    aria-invalid={Boolean(formErrors.fiyat_grubu_id)}
+                    aria-describedby={formErrors.fiyat_grubu_id ? 'fiyat-grubu-hatasi' : undefined}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 ${formErrors.fiyat_grubu_id ? 'border-red-500' : ''}`}
                   >
-                    <option value="">Seçiniz</option>
+                    <option value="">Atanmamış</option>
                     {fiyatGruplari.map(fg => (
                       <option key={fg.id} value={fg.id}>
                         {fg.grup_adi} (İndirim: %{fg.indirim_orani})
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">Müşterinin iskonto grubu</p>
+                  {formErrors.fiyat_grubu_id ? <p id="fiyat-grubu-hatasi" className="mt-1 text-xs text-red-600">{formErrors.fiyat_grubu_id}</p> : <p className="text-xs text-gray-500 mt-1">Müşterinin iskonto grubu (atanmamış bırakılabilir)</p>}
                 </div>
 
                 <div>
@@ -357,15 +368,21 @@ export default function Musteriler() {
                   <input
                     type="number"
                     value={formData.ozel_iskonto_orani}
-                    onChange={(e) => setFormData({ ...formData, ozel_iskonto_orani: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, ozel_iskonto_orani: e.target.value })
+                      setFormErrors((errors) => ({ ...errors, ozel_iskonto_orani: '' }))
+                    }}
                     min="0"
                     max="100"
                     step="0.01"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    disabled={saving}
+                    aria-invalid={Boolean(formErrors.ozel_iskonto_orani)}
+                    aria-describedby={formErrors.ozel_iskonto_orani ? 'ozel-iskonto-hatasi' : undefined}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 ${formErrors.ozel_iskonto_orani ? 'border-red-500' : ''}`}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  {formErrors.ozel_iskonto_orani ? <p id="ozel-iskonto-hatasi" className="mt-1 text-xs text-red-600">{formErrors.ozel_iskonto_orani}</p> : <p className="text-xs text-gray-500 mt-1">
                     Grup iskontosuna ek olarak uygulanır (0 = ek iskonto yok)
-                  </p>
+                  </p>}
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -373,7 +390,7 @@ export default function Musteriler() {
                   <div className="text-xs text-blue-700 space-y-1">
                     {(() => {
                       const grupIskonto = fiyatGruplari.find(fg => fg.id === formData.fiyat_grubu_id)?.indirim_orani || 0
-                      const ozelIskonto = formData.ozel_iskonto_orani || 0
+                      const ozelIskonto = Number(formData.ozel_iskonto_orani) || 0
 
                       // Örnek hesaplama: 100 TL üzerinden
                       const ornekFiyat = 100
@@ -411,23 +428,22 @@ export default function Musteriler() {
                 <div className="flex space-x-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition"
+                    disabled={saving}
+                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {formData.aktif_durum ? 'Kaydet ve Onayla' : 'Taslak Olarak Kaydet'}
+                    {saving ? 'Kaydediliyor...' : formData.aktif_durum ? 'Kaydet ve Onayla' : 'Taslak Olarak Kaydet'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setDuzenlemeModalOpen(false)}
-                    className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition"
+                    disabled={saving}
+                    className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     İptal
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        </div>
-      )}
+      </AccessibleModal>}
     </div>
   )
 }

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Plus, Edit, Trash2, Calendar, Tag, TrendingUp, Copy, Check, RefreshCw, Image as ImageIcon, Save, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, Tag, TrendingUp, Copy, Check, RefreshCw, Image as ImageIcon, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ImageUpload } from '../../components/ImageUpload';
 import KampanyaIstatistikleri from '../../components/admin/KampanyaIstatistikleri';
 import { getImageUrl } from '../../utils/imageUtils';
+import AccessibleModal from '../../components/admin/AccessibleModal';
 
 interface Kampanya {
   id: string;
@@ -181,6 +182,18 @@ export default function KampanyalarYonetim() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.baslangic_tarihi || !formData.bitis_tarihi) {
+      setFormTab('kosullar');
+      toast.error('Kampanyanın başlangıç ve bitiş tarihlerini girin');
+      return;
+    }
+
+    if (new Date(formData.baslangic_tarihi) > new Date(formData.bitis_tarihi)) {
+      setFormTab('kosullar');
+      toast.error('Bitiş tarihi başlangıç tarihinden önce olamaz');
+      return;
+    }
 
     try {
       const kampanyaData = {
@@ -425,17 +438,7 @@ export default function KampanyalarYonetim() {
           </div>
 
           {/* Modal */}
-          {modalAcik && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-0 sm:p-4 overflow-y-auto">
-              <div className="bg-white rounded-none sm:rounded-lg max-w-3xl w-full min-h-screen sm:min-h-0 max-h-none sm:max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-                <div className="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center gap-3 bg-white">
-                  <h2 className="text-xl font-bold text-gray-900">
-                    {duzenlenecekKampanya ? 'Kampanya Düzenle' : 'Yeni Kampanya'}
-                  </h2>
-                  <button onClick={modalKapat} className="min-h-10 min-w-10 text-gray-400 hover:text-gray-500 transition-colors" aria-label="Kampanya formunu kapat">
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
+          <AccessibleModal open={modalAcik} onClose={modalKapat} title={duzenlenecekKampanya ? 'Kampanya Düzenle' : 'Yeni Kampanya'} className="max-w-3xl">
                 
                 {/* Tab Navigasyon */}
                 <div className="flex overflow-x-auto border-b border-gray-200 px-4 sm:px-6 pt-2 bg-gray-50/50">
@@ -818,9 +821,7 @@ export default function KampanyalarYonetim() {
                     {duzenlenecekKampanya ? 'Değişiklikleri Kaydet' : 'Kampanyayı Oluştur'}
                   </button>
                 </div>
-              </div>
-            </div>
-          )}
+          </AccessibleModal>
         </>
       )}
     </div>

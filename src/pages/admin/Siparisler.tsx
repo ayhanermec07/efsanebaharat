@@ -9,6 +9,7 @@ export default function Siparisler() {
   const [loading, setLoading] = useState(true)
   const [detayModalOpen, setDetayModalOpen] = useState(false)
   const [secilenSiparis, setSecilenSiparis] = useState<any>(null)
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
 
   useEffect(() => {
     loadSiparisler()
@@ -63,23 +64,34 @@ export default function Siparisler() {
   }
 
   async function handleDurumGuncelle(siparisId: string, yeniDurum: string) {
+    if (updatingOrderId) return
+    const siparis = siparisler.find(item => item.id === siparisId)
+    if (!siparis) return
+    setUpdatingOrderId(siparisId)
     try {
-      const updateData: Record<string, string> = { siparis_durumu: yeniDurum }
-      // XML siparişinde "hazırlanıyor" seçimi, fişin kontrol edilip onaylandığı
-      // anlamına gelir. Böylece müşteri geçmişinde güncel kargo aşamasını görür.
-      if (yeniDurum === 'hazirlaniyor') updateData.odeme_durumu = 'onaylandi'
-      const { error } = await supabase
-        .from('siparisler')
-        .update(updateData)
-        .eq('id', siparisId)
-
-      if (error) throw error
+      if (siparis.odeme_durumu === 'fis_kontrol_bekliyor' ||
+        (siparis.odeme_durumu === 'onaylandi' && yeniDurum === 'iptal_edildi')) {
+        const decision = siparis.odeme_durumu === 'onaylandi' ? 'cancel'
+          : yeniDurum === 'hazirlaniyor' ? 'approve' : yeniDurum === 'iptal_edildi' ? 'reject' : null
+        if (!decision) throw new Error('Fis kontrolundeki siparis yalnizca onaylanabilir veya reddedilebilir')
+        const { data, error } = await supabase.functions.invoke('admin-order-event', {
+          body: { orderId: siparisId, decision }
+        })
+        if (error || data?.error) throw new Error(data?.error?.message || error?.message || 'Fis karari kaydedilemedi')
+      } else {
+        const { data, error } = await supabase.functions.invoke('admin-order-status', {
+          body: { orderId: siparisId, status: yeniDurum }
+        })
+        if (error || data?.error) throw new Error(data?.error?.message || error?.message || 'Durum gecisi kaydedilemedi')
+      }
 
       await loadSiparisler()
       toast.success('Sipariş durumu güncellendi!')
     } catch (error: any) {
       console.error('Durum güncelleme hatası:', error)
       toast.error('Hata: ' + (error.message || 'Bilinmeyen hata'))
+    } finally {
+      setUpdatingOrderId(null)
     }
   }
 
@@ -149,6 +161,18 @@ export default function Siparisler() {
     'teslim_edildi': 'bg-green-100 text-green-800',
     'iptal_edildi': 'bg-red-100 text-red-800'
   }
+  const durumEtiketleri: Record<string, string> = {
+    beklemede: 'Beklemede', hazirlaniyor: 'Hazırlanıyor', kargoda: 'Kargoda',
+    teslim_edildi: 'Teslim Edildi', iptal_edildi: 'İptal Edildi'
+  }
+  const izinliDurumlar = (siparis: any) => {
+    const durumlar = [siparis.siparis_durumu]
+    if (siparis.odeme_durumu === 'fis_kontrol_bekliyor') durumlar.push('hazirlaniyor', 'iptal_edildi')
+    else if (siparis.odeme_durumu === 'onaylandi' && siparis.siparis_durumu !== 'iptal_edildi') durumlar.push('iptal_edildi')
+    else if (['odendi', 'onaylandi'].includes(siparis.odeme_durumu) && siparis.siparis_durumu === 'beklemede') durumlar.push('hazirlaniyor')
+    else if (['odendi', 'onaylandi'].includes(siparis.odeme_durumu) && siparis.siparis_durumu === 'kargoda') durumlar.push('teslim_edildi')
+    return [...new Set(durumlar)]
+  }
 
   return (
     <div>
@@ -188,17 +212,18 @@ export default function Siparisler() {
                     {siparis.toplam_tutar?.toFixed(2)} ₺
                   </td>
                   <td className="px-6 py-4 text-sm">
-                    <select
-                      value={siparis.siparis_durumu}
-                      onChange={(e) => handleDurumGuncelle(siparis.id, e.target.value)}
-                      className={`px-2 py-1 rounded-full text-xs border-0 ${durum_renkleri[siparis.siparis_durumu] || 'bg-gray-100 text-gray-800'}`}
-                    >
-                      <option value="beklemede">Beklemede</option>
-                      <option value="hazirlaniyor">Hazırlanıyor</option>
-                      <option value="kargoda">Kargoda</option>
-                      <option value="teslim_edildi">Teslim Edildi</option>
-                      <option value="iptal_edildi">İptal Edildi</option>
-                    </select>
+                    {(() => {
+                      const durumlar = izinliDurumlar(siparis)
+                      return <select
+                        value={siparis.siparis_durumu}
+                        onChange={(e) => handleDurumGuncelle(siparis.id, e.target.value)}
+                        disabled={updatingOrderId !== null || durumlar.length === 1}
+                        aria-label={`Siparis ${siparis.siparis_no} durumu`}
+                        className={`px-2 py-1 rounded-full text-xs border-0 ${durum_renkleri[siparis.siparis_durumu] || 'bg-gray-100 text-gray-800'}`}
+                      >
+                        {durumlar.map(durum => <option key={durum} value={durum}>{durumEtiketleri[durum] || durum}</option>)}
+                      </select>
+                    })()}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <span className={`px-2 py-1 rounded-full text-xs ${siparis.odeme_durumu === 'odendi' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>

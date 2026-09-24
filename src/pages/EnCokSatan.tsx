@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { PackageSearch, Star, TrendingUp } from 'lucide-react'
+import { AlertCircle, PackageSearch, RotateCcw, Star, TrendingUp } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -10,6 +10,7 @@ export default function EnCokSatan() {
   const [urunler, setUrunler] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [siralama, setSiralama] = useState<'otomatik' | 'manuel'>('otomatik')
+  const [loadError, setLoadError] = useState(false)
 
   const fetchProductDetails = useCallback(async (
     urunIds: string[],
@@ -73,6 +74,7 @@ export default function EnCokSatan() {
   const loadProducts = useCallback(async () => {
     try {
       setLoading(true)
+      setLoadError(false)
 
       if (siralama === 'manuel') {
         const { data: onerilen, error: onerilenError } = await supabase
@@ -89,20 +91,15 @@ export default function EnCokSatan() {
         }
       } else {
         const { data: satislar, error: satisError } = await supabase
-          .from('siparis_urunleri')
-          .select('urun_id, miktar')
+          .rpc('popular_product_summary', { p_limit: 12 })
 
         if (satisError) throw satisError
 
         const satisSayilari: { [key: string]: number } = {}
         satislar?.forEach(satis => {
-          satisSayilari[satis.urun_id] = (satisSayilari[satis.urun_id] || 0) + Number(satis.miktar || 0)
+          satisSayilari[satis.urun_id] = Number(satis.satis_sayisi || 0)
         })
-
-        const enCokSatanIds = Object.entries(satisSayilari)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 12)
-          .map(entry => entry[0])
+        const enCokSatanIds = satislar?.map(satis => satis.urun_id) || []
 
         if (enCokSatanIds.length > 0) {
           await fetchProductDetails(enCokSatanIds, satisSayilari)
@@ -123,6 +120,7 @@ export default function EnCokSatan() {
     } catch (error) {
       console.error('Ürünler yüklenirken hata:', error)
       setUrunler([])
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -172,6 +170,13 @@ export default function EnCokSatan() {
           {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
             <div key={item} className="h-72 animate-pulse rounded-lg bg-white shadow-sm" />
           ))}
+        </div>
+      ) : loadError ? (
+        <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-red-200 bg-white p-6 text-center">
+          <AlertCircle className="h-12 w-12 text-red-600" />
+          <h2 className="mt-3 text-xl font-bold text-zinc-950">Ürünler yüklenemedi</h2>
+          <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">Bağlantıyı kontrol edip tekrar deneyin.</p>
+          <button type="button" onClick={loadProducts} className="mt-5 flex min-h-10 items-center gap-2 rounded-lg bg-zinc-950 px-4 text-white"><RotateCcw className="h-4 w-4" />Tekrar dene</button>
         </div>
       ) : urunler.length === 0 ? (
         <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center">

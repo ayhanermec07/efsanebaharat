@@ -80,6 +80,7 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
     if (!secilenStok) return
 
     sepeteEkle({
+      stok_varyant_id: secilenStok.id,
       urun_id: urun.id,
       urun_adi: urun.urun_adi,
       birim_turu: secilenStok.birim_turu,

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Calendar, PackageSearch, Percent, Tag } from 'lucide-react'
+import { AlertCircle, Calendar, PackageSearch, Percent, RotateCcw, Tag } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -28,10 +28,12 @@ export default function Kampanyalar() {
   const { musteriData } = useAuth()
   const [kampanyalar, setKampanyalar] = useState<KampanyaWithProducts[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   const loadKampanyalarWithProducts = useCallback(async () => {
     try {
       setLoading(true)
+      setLoadError(false)
 
       const now = new Date().toISOString()
       const { data: kampanyalarData, error: kampanyalarError } = await supabase
@@ -132,6 +134,7 @@ export default function Kampanyalar() {
     } catch (error) {
       console.error('Kampanyalar yüklenirken hata:', error)
       setKampanyalar([])
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -167,6 +170,13 @@ export default function Kampanyalar() {
           {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
             <div key={item} className="h-72 animate-pulse rounded-lg bg-white shadow-sm" />
           ))}
+        </div>
+      ) : loadError ? (
+        <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-red-200 bg-white p-6 text-center">
+          <AlertCircle className="h-12 w-12 text-red-600" />
+          <h2 className="mt-3 text-xl font-bold text-zinc-950">Kampanyalar yüklenemedi</h2>
+          <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">Bağlantıyı kontrol edip tekrar deneyin.</p>
+          <button type="button" onClick={loadKampanyalarWithProducts} className="mt-5 flex min-h-10 items-center gap-2 rounded-lg bg-zinc-950 px-4 text-white"><RotateCcw className="h-4 w-4" />Tekrar dene</button>
         </div>
       ) : kampanyalar.length === 0 ? (
         <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center">

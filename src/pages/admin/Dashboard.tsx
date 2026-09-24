@@ -136,28 +136,21 @@ export default function Dashboard() {
         supabase.from('onerilen_urunler').select('*', { count: 'exact', head: true })
       ])
 
-      // Toplam gelir hesapla
-      const { data: siparisler } = await supabase
-        .from('siparisler')
-        .select('toplam_tutar')
-
-      const toplamGelir = siparisler?.reduce((sum, s) => sum + (s.toplam_tutar || 0), 0) || 0
-
-      // Kargo bekleyen siparişler
-      const { count: kargoBekleyen } = await supabase
-        .from('siparisler')
-        .select('*', { count: 'exact', head: true })
-        .eq('siparis_durumu', 'Hazırlanıyor')
+      const { data: orderSummary, error: orderSummaryError } = await supabase
+        .rpc('admin_order_status_summary')
+      if (orderSummaryError) throw orderSummaryError
+      const orderStats = orderSummary?.[0]
+      if (!orderStats) throw new Error('Sipariş özeti alınamadı')
 
       const stats: Stats = {
         toplamUrun: toplamUrun || 0,
-        toplamSiparis: toplamSiparis || 0,
+        toplamSiparis: Number(orderStats.toplam_siparis || 0),
         toplamMusteri: toplamMusteri || 0,
-        toplamGelir: toplamGelir,
+        toplamGelir: Number(orderStats.toplam_gelir || 0),
         bekleyenSorular: bekleyenSorular || 0,
         aktifKampanyalar: aktifKampanyalar || 0,
         aktifBayiler: aktifBayiler || 0,
-        kargoBekleyen: kargoBekleyen || 0,
+        kargoBekleyen: Number(orderStats.kargo_bekleyen || 0),
         bannerSayisi: bannerSayisi || 0,
         onerilenUrunler: onerilenUrunler || 0
       }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { publicSupabase, supabase } from '../../lib/supabase'
-import { Plus, Edit, Trash2, Save, X, ExternalLink } from 'lucide-react'
+import { Plus, Edit, Trash2, Save, ExternalLink } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { ImageUpload } from '../../components/ImageUpload'
+import AccessibleModal from '../../components/admin/AccessibleModal'
 
 // Canlı veritabanında paket miktar birimi, satış/stok biriminden farklı olarak
 // uzun adlarla tutuluyor. Formdaki kısa değerleri yalnızca kayıt anında çeviririz.
@@ -322,18 +323,7 @@ export default function UrunlerYonetim() {
       )}
 
       {/* Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-0 sm:p-4 z-50 overflow-y-auto">
-          <div className="bg-white sm:rounded-lg w-full max-w-2xl min-h-screen sm:min-h-0 sm:max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {editingId ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'}
-                </h2>
-                <button onClick={resetForm} className="text-gray-400 hover:text-gray-600">
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
+      <AccessibleModal open={modalOpen} onClose={resetForm} title={editingId ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'} className="max-w-2xl">
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -610,10 +600,7 @@ export default function UrunlerYonetim() {
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        </div>
-      )}
+      </AccessibleModal>
     </div>
   )
 }

@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:test": "node scripts/start-test-server.mjs",
+    "test:db:reset": "node scripts/reset-test-database.mjs",
+    "test:functions": "node ../supabase/scripts/start-test-functions.mjs",
     "dev:functions": "npx -y supabase@latest functions serve --workdir .. --env-file ../supabase/.env.local",
     "dev:local": "concurrently \"npm run dev:functions\" \"npm run dev\"",
     "upload-server": "node upload-server.cjs",
@@ -12,6 +15,8 @@
     "build": "node -e \"require('fs').rmSync('node_modules/.vite-temp',{recursive:true,force:true})\" && tsc -b && vite build",
     "build:prod": "node -e \"require('fs').rmSync('node_modules/.vite-temp',{recursive:true,force:true})\" && tsc -b && vite build --mode production",
     "lint": "eslint .",
+    "test:preflight": "node --test tests/preflight.test.mjs",
+    "test:environment": "node scripts/verify-test-environment.mjs",
     "preview": "vite preview",
     "install-deps": "pnpm install --prefer-offline",
     "clean": "node -e \"const fs=require('fs'); ['node_modules','.pnpm-store','pnpm-lock.yaml'].forEach(p=>fs.rmSync(p,{recursive:true,force:true}))\" && pnpm store prune"
@@ -91,7 +96,6 @@
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.15.0",
     "vite": "^6.0.1",
-    "vite-plugin-pwa": "^1.1.0",
     "vite-plugin-source-identifier": "1.1.2"
   }
 }

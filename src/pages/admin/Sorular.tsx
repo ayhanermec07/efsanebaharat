@@ -146,14 +146,23 @@ export default function AdminSorular() {
 
       if (error) throw error
 
+      let emailSent = false
+      let emailProcessing = false
       // Email bildirimi gönder (Edge Function)
       try {
-        const { error: emailError } = await supabase.functions.invoke('soru-cevap-email', {
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('soru-cevap-email', {
           body: { soruId: cevapModal.id }
         })
 
         if (emailError) {
           console.warn('Email gönderilemedi:', emailError)
+          toast('Cevap kaydedildi; e-posta bildirimi gönderilemedi.', { icon: 'ℹ️' })
+        } else if (emailData?.success) {
+          emailSent = true
+          toast.success('Cevap kaydedildi ve e-posta gönderildi')
+        } else if (emailData?.status === 'sending') {
+          emailProcessing = true
+          toast('Cevap kaydedildi; e-posta teslimatı hâlen işleniyor.', { icon: 'ℹ️' })
         }
 
         // Email gönderimi başarısız olsa bile devam et
@@ -161,7 +170,7 @@ export default function AdminSorular() {
         console.warn('Email gönderilemedi:', emailError)
       }
 
-      toast.success('Cevap başarıyla kaydedildi ve email gönderildi')
+      if (!emailSent && !emailProcessing) toast.success('Cevap başarıyla kaydedildi')
       setCevapModal(null)
       setCevapMetni('')
       loadSorular()

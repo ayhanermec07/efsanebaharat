@@ -1,448 +1,124 @@
-import React, { useState, useRef } from 'react';
-import { Upload, X, Image as ImageIcon, Link, Smartphone, Clipboard } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { supabase } from '../lib/supabase';
-import { getImageUrl } from '../utils/imageUtils';
+import React, { useEffect, useRef, useState } from 'react'
+import { Clipboard, Image as ImageIcon, Link, Smartphone, Upload, X } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { supabase } from '../lib/supabase'
+import { getImageUrl } from '../utils/imageUtils'
 
 interface ImageUploadProps {
-  maxFiles?: number; // Maksimum dosya sayısı (default: 1)
-  bucketName: string; // Supabase storage bucket adı
-  onUploadComplete: (urls: string[]) => void; // Upload tamamlandığında çağrılacak callback
-  existingImages?: string[]; // Mevcut görseller (düzenleme modunda)
-  accept?: string; // Kabul edilecek dosya tipleri
-  maxSizeMB?: number; // Maksimum dosya boyutu (MB)
+  maxFiles?: number
+  bucketName: string
+  onUploadComplete: (urls: string[]) => void
+  existingImages?: string[]
+  accept?: string
+  maxSizeMB?: number
 }
 
-export const ImageUpload: React.FC<ImageUploadProps> = ({
-  maxFiles = 1,
-  bucketName,
-  onUploadComplete,
-  existingImages = [],
-  accept = 'image/*',
-  maxSizeMB = 8
-}) => {
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>(existingImages);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [activeTab, setActiveTab] = useState<'device' | 'url'>('device');
-  const [urlInput, setUrlInput] = useState('');
-  const [addingFromUrl, setAddingFromUrl] = useState(false);
+type UploadStatus = 'pending' | 'uploading' | 'success' | 'error'
+type UploadItem = { id: string; previewUrl: string; file?: File; remoteUrl?: string; status: UploadStatus; error?: string }
+const newId = () => crypto.randomUUID()
+const EMPTY_IMAGES: string[] = []
 
-  // Mevcut görseller yüklendiğinde previewUrls'i güncelle
-  React.useEffect(() => {
-    if (existingImages.length > 0) {
-      setPreviewUrls(existingImages);
-    }
-  }, [existingImages]);
+export const ImageUpload: React.FC<ImageUploadProps> = ({ maxFiles = 1, bucketName, onUploadComplete, existingImages = EMPTY_IMAGES, accept = 'image/*', maxSizeMB = 8 }) => {
+  const [items, setItems] = useState<UploadItem[]>(() => existingImages.map((remoteUrl) => ({ id: newId(), previewUrl: remoteUrl, remoteUrl, status: 'success' })))
+  const [isDragging, setIsDragging] = useState(false)
+  const [activeTab, setActiveTab] = useState<'device' | 'url'>('device')
+  const [urlInput, setUrlInput] = useState('')
+  const [addingFromUrl, setAddingFromUrl] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const lastPublishedUrls = useRef<string[] | null>(null)
 
-  // Clipboard'dan yapıştırma
-  const handlePaste = async () => {
-    try {
-      // Clipboard API'sini dene
-      if (navigator.clipboard && navigator.clipboard.readText) {
-        const text = await navigator.clipboard.readText()
-        if (text) {
-          setUrlInput(text.trim())
-          toast.success('URL clipboard\'dan başarıyla yapıştırıldı')
-          return
-        }
-      }
-      
-      // Alternatif: Input'u seç ve kullanıcının manuel yapıştırmasını bekle
-      const inputElement = document.querySelector('input[type="url"]') as HTMLInputElement
-      if (inputElement) {
-        inputElement.focus()
-        inputElement.select()
-        toast('Input alanı seçildi, URL\'yi yapıştırmak için Ctrl+V tuşlarına basın', { icon: 'ℹ️' })
-      }
-    } catch (error) {
-      toast.error('Clipboard erişimi başarısız. URL\'yi manuel olarak girin.')
-    }
-  };
+  useEffect(() => {
+    if (lastPublishedUrls.current && sameUrls(existingImages, lastPublishedUrls.current)) return
+    setItems(existingImages.map((remoteUrl) => ({ id: newId(), previewUrl: remoteUrl, remoteUrl, status: 'success' })))
+  }, [existingImages])
 
-  // Dosya seçimi
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      addFiles(files);
-    }
-  };
+  const completedUrls = (nextItems: UploadItem[]) => nextItems.filter((item) => item.status === 'success' && item.remoteUrl).map((item) => item.remoteUrl!)
+  const updateItems = (updater: (current: UploadItem[]) => UploadItem[]) => setItems((current) => updater(current))
+  const publish = (nextItems: UploadItem[]) => {
+    const urls = completedUrls(nextItems)
+    lastPublishedUrls.current = urls
+    onUploadComplete(urls)
+  }
 
-  // Dosya ekleme
   const addFiles = (files: File[]) => {
-    // Dosya sayısı kontrolü
-    if (selectedFiles.length + previewUrls.length + files.length > maxFiles) {
-      toast.error(`Maksimum ${maxFiles} görsel yükleyebilirsiniz`);
-      return;
-    }
+    const available = Math.max(0, maxFiles - items.length)
+    const candidates = files.slice(0, available)
+    if (candidates.length === 0) return toast.error(`Maksimum ${maxFiles} görsel yükleyebilirsiniz`)
+    const valid = candidates.filter((file) => file.type.startsWith('image/') && file.size <= maxSizeMB * 1024 * 1024)
+    if (valid.length !== candidates.length) toast.error(`Yalnız görsel ve en fazla ${maxSizeMB}MB dosya ekleyebilirsiniz`)
+    if (files.length > available) toast.error(`Yalnız ${available} dosya daha eklenebilir`)
+    updateItems((current) => [...current, ...valid.map((file) => ({ id: newId(), file, previewUrl: URL.createObjectURL(file), status: 'pending' as const }))])
+  }
 
-    // Dosya boyutu kontrolü
-    const invalidFiles = files.filter(file => file.size > maxSizeMB * 1024 * 1024);
-    if (invalidFiles.length > 0) {
-      toast.error(`Dosya boyutu maksimum ${maxSizeMB}MB olmalıdır`);
-      return;
-    }
+  const removeImage = (id: string) => {
+    updateItems((current) => {
+      const removed = current.find((item) => item.id === id)
+      if (removed?.previewUrl.startsWith('blob:')) URL.revokeObjectURL(removed.previewUrl)
+      const next = current.filter((item) => item.id !== id)
+      publish(next)
+      return next
+    })
+  }
 
-    // Dosya tipi kontrolü
-    const validFiles = files.filter(file => file.type.startsWith('image/'));
-    if (validFiles.length !== files.length) {
-      toast.error('Sadece görsel dosyaları yükleyebilirsiniz');
-      return;
-    }
-
-    // Preview URL'leri oluştur
-    validFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrls(prev => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
-
-    setSelectedFiles(prev => [...prev, ...validFiles]);
-  };
-
-  // Drag & Drop
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    if (e.dataTransfer.files) {
-      const files = Array.from(e.dataTransfer.files);
-      addFiles(files);
-    }
-  };
-
-  // URL'den görsel yükleme
   const handleUrlAdd = async () => {
-    if (!urlInput.trim()) {
-      toast.error('Lütfen geçerli bir URL girin');
-      return;
-    }
-
-    if (previewUrls.length >= maxFiles) {
-      toast.error(`Maksimum ${maxFiles} görsel yükleyebilirsiniz`);
-      return;
-    }
-
-    setAddingFromUrl(true);
+    if (!urlInput.trim()) return toast.error('Lütfen geçerli bir URL girin')
+    if (items.length >= maxFiles) return toast.error(`Maksimum ${maxFiles} görsel yükleyebilirsiniz`)
+    setAddingFromUrl(true)
     try {
-      const { data, error } = await supabase.functions.invoke('image-storage-upload', {
-        body: {
-          imageUrl: urlInput.trim(),
-          bucketName
-        }
-      });
+      const { data, error } = await supabase.functions.invoke('image-storage-upload', { body: { imageUrl: urlInput.trim(), bucketName } })
+      if (error || data?.error || !data?.success || !data?.data?.publicUrl) throw error || new Error(data?.error?.message || 'Görsel yüklenemedi')
+      const added: UploadItem = { id: newId(), previewUrl: data.data.publicUrl, remoteUrl: data.data.publicUrl, status: 'success' }
+      updateItems((current) => { const next = [...current, added]; publish(next); return next })
+      setUrlInput('')
+      toast.success('Görsel başarıyla yüklendi')
+    } catch (error: any) { toast.error(error.message || 'Görsel yüklenirken hata oluştu') } finally { setAddingFromUrl(false) }
+  }
 
-      if (error || data?.error) {
-        throw error || new Error(data.error.message || 'Upload hatasi');
-      }
-
-      const publicUrl = data?.data?.publicUrl;
-
-      if (data?.success && publicUrl) {
-        const nextUrls = [...previewUrls, publicUrl];
-        setPreviewUrls(nextUrls);
-        onUploadComplete(nextUrls);
-        toast.success('Görsel başarıyla yüklendi');
-        setUrlInput('');
-      } else {
-        throw new Error('Upload basarisiz: Gecersiz response');
-      }
-
-    } catch (error: any) {
-      console.error('URL upload error:', error);
-      toast.error(error.message || 'Görsel yüklenirken hata oluştu');
-    } finally {
-      setAddingFromUrl(false);
-    }
-  };
-
-  // Görsel silme
-  const removeImage = (index: number) => {
-    const imageToRemove = previewUrls[index];
-    const nextPreviewUrls = previewUrls.filter((_, i) => i !== index);
-    
-    // Eğer mevcut URL ise (http/https ile başlıyor), previewUrls'den kaldır
-    if (imageToRemove && (imageToRemove.startsWith('http') || imageToRemove.startsWith('blob:'))) {
-      setPreviewUrls(nextPreviewUrls);
-    } else {
-      // Yeni eklenen dosya ise hem preview hem file'dan kaldır
-      const fileIndex = index - (previewUrls.length - selectedFiles.length);
-      setPreviewUrls(nextPreviewUrls);
-      setSelectedFiles(prev => prev.filter((_, i) => i !== fileIndex));
-    }
-
-    onUploadComplete(nextPreviewUrls.filter(url => url.startsWith('http')));
-  };
-
-  // Upload işlemi
   const handleUpload = async () => {
-    if (selectedFiles.length === 0 && !previewUrls.some(url => url.startsWith('data:') || url.startsWith('blob:'))) {
-      toast.error('Lütfen en az bir görsel seçin');
-      return;
-    }
-
-    setUploading(true);
-    setUploadProgress(0);
-
-    try {
-      const finalUrls: string[] = [];
-      
-      // Mevcut URL'leri koru (http/https ile başlayanlar)
-      const existingUrls = previewUrls.filter(url => url.startsWith('http'));
-      finalUrls.push(...existingUrls);
-
-      // Yeni dosyaları upload et
-      const filesToUpload = [...selectedFiles];
-      const filesToUploadCount = filesToUpload.length;
-      
-      if (filesToUploadCount > 0) {
-        for (let i = 0; i < filesToUpload.length; i++) {
-          const file = filesToUpload[i];
-          
-          // Base64'e çevir
-          const base64 = await fileToBase64(file);
-          
-          const { data, error } = await supabase.functions.invoke('image-storage-upload', {
-            body: {
-              imageData: base64,
-              bucketName,
-              fileName: `${Date.now()}_${file.name.replace(/\.[^/.]+$/, '')}`
-            }
-          });
-
-          if (error || data?.error) {
-            console.error('Upload error:', error || data);
-            toast.error(`${file.name} yüklenemedi`);
-            continue;
-          }
-
-          const publicUrl = data?.data?.publicUrl;
-
-          if (data?.success && publicUrl) {
-            finalUrls.push(publicUrl);
-            setUploadProgress(((i + 1) / filesToUploadCount) * 100);
-          } else {
-            console.error('Upload response error:', data);
-            toast.error(`${file.name} yüklenemedi: ${data?.error?.message || 'Gecersiz response'}`);
-          }
-        }
+    const pending = items.filter((item) => item.status === 'pending' || item.status === 'error')
+    if (!pending.length) return
+    for (const item of pending) {
+      if (!item.file) continue
+      updateItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, status: 'uploading', error: undefined } : entry))
+      try {
+        const imageData = await fileToBase64(item.file)
+        const { data, error } = await supabase.functions.invoke('image-storage-upload', { body: { imageData, bucketName, fileName: item.file.name } })
+        if (error || data?.error || !data?.success || !data?.data?.publicUrl) throw error || new Error(data?.error?.message || 'Görsel yüklenemedi')
+        if (item.previewUrl.startsWith('blob:')) URL.revokeObjectURL(item.previewUrl)
+        updateItems((current) => {
+          const next = current.map((entry) => entry.id === item.id ? { ...entry, remoteUrl: data.data.publicUrl, previewUrl: data.data.publicUrl, status: 'success' as const } : entry)
+          publish(next); return next
+        })
+      } catch (error: any) {
+        updateItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, status: 'error', error: error.message || 'Yükleme başarısız' } : entry))
       }
-
-      toast.success(`${finalUrls.length} görsel başarıyla yüklendi`);
-      onUploadComplete(finalUrls);
-      
-      // Seçili dosyaları temizle
-      setSelectedFiles([]);
-      setPreviewUrls(finalUrls);
-      
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error('Görseller yüklenirken hata oluştu');
-    } finally {
-      setUploading(false);
-      setUploadProgress(0);
     }
-  };
+  }
 
-  // File to Base64
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
-  };
+  const pendingCount = items.filter((item) => item.status === 'pending' || item.status === 'error').length
+  const successCount = items.filter((item) => item.status === 'success').length
+  const uploading = items.some((item) => item.status === 'uploading')
 
-  return (
-    <div className="space-y-4">
-      {/* Tab Buttons */}
-      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-        <button
-          type="button"
-          onClick={() => setActiveTab('device')}
-          className={`
-            flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-md font-medium transition-all
-            ${activeTab === 'device' 
-              ? 'bg-white text-orange-600 shadow-sm' 
-              : 'text-gray-600 hover:text-gray-900'
-            }
-          `}
-        >
-          <Smartphone className="w-4 h-4" />
-          <span>Cihazdan Seç</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('url')}
-          className={`
-            flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-md font-medium transition-all
-            ${activeTab === 'url' 
-              ? 'bg-white text-orange-600 shadow-sm' 
-              : 'text-gray-600 hover:text-gray-900'
-            }
-          `}
-        >
-          <Link className="w-4 h-4" />
-          <span>Link ile Ekle</span>
-        </button>
-      </div>
-
-      {/* Device Upload Tab */}
-      {activeTab === 'device' && (
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={`
-            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all
-            ${isDragging ? 'border-orange-500 bg-orange-50' : 'border-gray-300 hover:border-orange-400'}
-            ${previewUrls.length >= maxFiles ? 'opacity-50 cursor-not-allowed' : ''}
-          `}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={accept}
-            multiple={maxFiles > 1}
-            onChange={handleFileSelect}
-            className="hidden"
-            disabled={previewUrls.length >= maxFiles}
-          />
-          
-          <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 mb-2">
-            {maxFiles > 1 
-              ? `Görselleri sürükleyip bırakın veya tıklayarak seçin (Maksimum ${maxFiles} adet)`
-              : 'Görseli sürükleyip bırakın veya tıklayarak seçin'
-            }
-          </p>
-          <p className="text-sm text-gray-500">
-            Maksimum dosya boyutu: {maxSizeMB}MB
-          </p>
-        </div>
-      )}
-
-      {/* URL Upload Tab */}
-      {activeTab === 'url' && (
-        <div className="space-y-4">
-          <div className="flex space-x-2">
-            <input
-              type="url"
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              placeholder="Görsel URL'sini girin (https://...)"
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              disabled={addingFromUrl}
-            />
-            <button
-              type="button"
-              onClick={handlePaste}
-              disabled={addingFromUrl}
-              className="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center space-x-1"
-              title="Clipboard'dan yapıştır"
-            >
-              <Clipboard className="w-4 h-4" />
-              <span>Yapıştır</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleUrlAdd}
-              disabled={addingFromUrl || !urlInput.trim() || previewUrls.length >= maxFiles}
-              className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              <Link className="w-4 h-4" />
-              <span>{addingFromUrl ? 'Ekleniyor...' : 'Ekle'}</span>
-            </button>
-          </div>
-          <p className="text-sm text-gray-500">
-            Geçerli bir görsel URL'si girin (JPEG, PNG, GIF, WebP vb.) veya "Yapıştır" butonuyla clipboard'tan URL ekleyin
-          </p>
-        </div>
-      )}
-
-      {/* Preview Grid */}
-      {previewUrls.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {previewUrls.map((url, index) => (
-            <div key={index} className="relative group">
-              <img
-                src={getImageUrl(url)}
-                alt={`Preview ${index + 1}`}
-                className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
-              />
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeImage(index);
-                }}
-                className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              {index === 0 && maxFiles > 1 && (
-                <div className="absolute bottom-2 left-2 bg-orange-500 text-white text-xs px-2 py-1 rounded">
-                  Ana Görsel
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Upload Progress */}
-      {uploading && (
-        <div className="space-y-2">
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-orange-500 h-2 rounded-full transition-all"
-              style={{ width: `${uploadProgress}%` }}
-            />
-          </div>
-          <p className="text-sm text-center text-gray-600">
-            Yükleniyor... {Math.round(uploadProgress)}%
-          </p>
-        </div>
-      )}
-
-      {/* Upload Button - Hem seçili dosyalar hem de yüklenmemiş görseller varsa göster */}
-      {(selectedFiles.length > 0 || previewUrls.some(url => url.startsWith('data:') || url.startsWith('blob:'))) && (
-        <button
-          type="button"
-          onClick={handleUpload}
-          disabled={uploading}
-          className="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-        >
-          <ImageIcon className="w-5 h-5" />
-          <span>
-            {uploading ? 'Yükleniyor...' : 
-             selectedFiles.length > 0 ? `${selectedFiles.length} Görseli Yükle` : 
-             'Yükle'
-            }
-          </span>
-        </button>
-      )}
-
-      {/* Info */}
-      <p className="text-xs text-gray-500 text-center">
-        {previewUrls.length} / {maxFiles} görsel seçildi
-      </p>
+  return <div className="space-y-4">
+    <div className="flex rounded-lg bg-gray-100 p-1" role="tablist" aria-label="Görsel ekleme yöntemi">
+      <button type="button" role="tab" aria-selected={activeTab === 'device'} onClick={() => setActiveTab('device')} className={`flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 font-medium ${activeTab === 'device' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-600'}`}><Smartphone className="h-4 w-4" />Cihazdan Seç</button>
+      <button type="button" role="tab" aria-selected={activeTab === 'url'} onClick={() => setActiveTab('url')} className={`flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 font-medium ${activeTab === 'url' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-600'}`}><Link className="h-4 w-4" />Link ile Ekle</button>
     </div>
-  );
-};
+    {activeTab === 'device' && <div onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }} onDragLeave={() => setIsDragging(false)} onDrop={(e) => { e.preventDefault(); setIsDragging(false); addFiles(Array.from(e.dataTransfer.files)) }} onClick={() => items.length < maxFiles && fileInputRef.current?.click()} className={`rounded-lg border-2 border-dashed p-6 text-center ${isDragging ? 'border-orange-500 bg-orange-50' : 'border-gray-300'} ${items.length >= maxFiles ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+      <input ref={fileInputRef} type="file" accept={accept} multiple={maxFiles > 1} onChange={(e) => { if (e.target.files) addFiles(Array.from(e.target.files)); e.target.value = '' }} className="sr-only" disabled={items.length >= maxFiles} />
+      <Upload className="mx-auto mb-3 h-10 w-10 text-gray-400" /><p className="text-gray-700">Dosyaları sürükleyin veya seçmek için tıklayın</p><p className="mt-1 text-sm text-gray-500">En fazla {maxFiles} görsel, her biri {maxSizeMB}MB</p>
+    </div>}
+    {activeTab === 'url' && <div className="space-y-2"><label htmlFor="image-url" className="text-sm font-medium text-gray-700">Görsel URL’si</label><div className="flex flex-col gap-2 sm:flex-row"><input id="image-url" type="url" value={urlInput} onChange={(e) => setUrlInput(e.target.value)} placeholder="https://..." className="min-w-0 flex-1 rounded-lg border px-3 py-2" disabled={addingFromUrl} /><button type="button" onClick={async () => { try { setUrlInput((await navigator.clipboard.readText()).trim()) } catch { toast.error('URL’yi manuel girin') } }} className="min-h-10 rounded-lg bg-gray-600 px-3 text-white"><Clipboard className="h-4 w-4" aria-hidden="true" /><span className="sr-only">Panodan URL yapıştır</span></button><button type="button" onClick={handleUrlAdd} disabled={addingFromUrl || !urlInput.trim() || items.length >= maxFiles} className="min-h-10 rounded-lg bg-orange-500 px-4 text-white disabled:bg-gray-400">{addingFromUrl ? 'Ekleniyor...' : 'Ekle'}</button></div></div>}
+    {items.length > 0 && <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">{items.map((item, index) => <div key={item.id} className="relative min-w-0"><img src={getImageUrl(item.previewUrl)} alt={`Görsel önizleme ${index + 1}`} className="h-28 w-full rounded-lg border-2 object-cover" /><button type="button" onClick={() => removeImage(item.id)} className="absolute right-2 top-2 flex min-h-10 min-w-10 items-center justify-center rounded-full bg-red-600 text-white shadow" aria-label={`Görsel ${index + 1} sil`}><X className="h-4 w-4" /></button><p className={`mt-1 break-words text-xs ${item.status === 'error' ? 'text-red-600' : 'text-gray-600'}`}>{item.status === 'success' ? 'Yüklendi' : item.status === 'uploading' ? 'Yükleniyor...' : item.status === 'error' ? item.error : 'Yükleme bekliyor'}</p></div>)}</div>}
+    {pendingCount > 0 && <button type="button" onClick={handleUpload} disabled={uploading} className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-orange-500 py-2 text-white disabled:bg-gray-400"><ImageIcon className="h-5 w-5" />{uploading ? 'Yükleniyor...' : `${pendingCount} görseli ${items.some((item) => item.status === 'error') ? 'yeniden ' : ''}yükle`}</button>}
+    <p className="text-center text-xs text-gray-500" aria-live="polite">{successCount}/{items.length} başarılı · {items.length}/{maxFiles} görsel seçildi</p>
+  </div>
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result as string); reader.onerror = () => reject(new Error('Dosya okunamadı')); reader.readAsDataURL(file) })
+}
+
+function sameUrls(left: string[], right: string[]) {
+  return left.length === right.length && left.every((url, index) => url === right[index])
+}
