@@ -48,6 +48,48 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
     loadStoklar()
   }, [loadStoklar])
 
+  function komutStokSatiri(stok: any) {
+    return {
+      id: stok.id ?? null,
+      birim_turu: stok.birim_turu,
+      birim_adedi: Number(stok.birim_adedi),
+      stok_birimi: stok.stok_birimi || stok.birim_turu,
+      fiyat: Number(stok.fiyat),
+      stok_miktari: Number(stok.stok_miktari),
+      min_siparis_miktari: Number(stok.min_siparis_miktari),
+      stok_grubu: stok.stok_grubu || 'hepsi',
+      xml_export: Boolean(stok.xml_export),
+      aktif_durum: stok.aktif_durum !== false
+    }
+  }
+
+  async function stoklariKaydet(yeniStoklar: any[]) {
+    if (yeniStoklar.length === 0) {
+      throw new Error('Üründe en az bir stok seçeneği kalmalı; silmek yerine ürünü pasifleştirin.')
+    }
+
+    // Aynı admin komutu ürün sayfasındaki varyant kimliği, XML otoritesi ve açık
+    // sepet kontrollerini uygular. Tarayıcı doğrudan stok tablosunu değiştirmez.
+    const [urunRes, gorselRes] = await Promise.all([
+      supabase.from('urunler').select('urun_adi, aciklama, kategori_id, marka_id, aktif_durum').eq('id', urunId).maybeSingle(),
+      supabase.from('urun_gorselleri').select('gorsel_url').eq('urun_id', urunId).order('sira_no')
+    ])
+    if (urunRes.error || !urunRes.data) throw urunRes.error || new Error('Ürün bulunamadı; listeyi yenileyin.')
+    if (gorselRes.error) throw gorselRes.error
+
+    const { data, error } = await supabase.functions.invoke('admin-product-save', {
+      body: {
+        urunId,
+        urun: urunRes.data,
+        stoklar: yeniStoklar.map(komutStokSatiri),
+        gorseller: (gorselRes.data || []).map(gorsel => gorsel.gorsel_url)
+      }
+    })
+    if (error || data?.error) {
+      throw new Error(data?.error?.message || error?.message || 'Stok kaydedilemedi')
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     
@@ -59,7 +101,6 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
     
     try {
       const stokData = {
-        urun_id: urunId,
         birim_turu: formData.birim_turu,
         birim_adedi: formData.birim_adedi,
         birim_adedi_turu: formData.birim_adedi_turu,
@@ -71,22 +112,11 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
         aktif_durum: formData.aktif_durum
       }
       
-      if (editingId) {
-        const { error } = await supabase
-          .from('urun_stoklari')
-          .update(stokData)
-          .eq('id', editingId)
-        
-        if (error) throw error
-        toast.success('Stok başarıyla güncellendi!')
-      } else {
-        const { error } = await supabase
-          .from('urun_stoklari')
-          .insert(stokData)
-        
-        if (error) throw error
-        toast.success('Stok başarıyla eklendi!')
-      }
+      const yeniStoklar = editingId
+        ? stoklar.map(stok => stok.id === editingId ? { ...stok, ...stokData } : stok)
+        : [...stoklar, stokData]
+      await stoklariKaydet(yeniStoklar)
+      toast.success(editingId ? 'Stok başarıyla güncellendi!' : 'Stok başarıyla eklendi!')
       
       resetForm()
       await loadStoklar()
@@ -100,12 +130,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
     if (!confirm('Bu stok kaydını silmek istediğinizden emin misiniz?')) return
     
     try {
-      const { error } = await supabase
-        .from('urun_stoklari')
-        .delete()
-        .eq('id', id)
-      
-      if (error) throw error
+      await stoklariKaydet(stoklar.filter(stok => stok.id !== id))
       
       await loadStoklar()
       toast.success('Stok kaydı silindi!')

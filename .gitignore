@@ -28,3 +28,12 @@ public/images/*
 *.sw?
 testsprite_tests/tmp/
 testsprite_tests/tmp/config.json
+
+# Retired local secrets and one-off admin scripts
+SUPABASE-MCP-*.md
+MCP-KURULUM-TAMAMLANDI.md
+create-admin.html
+confirm-users.html
+create-admin.sql
+*.local
+%SystemDrive%/
