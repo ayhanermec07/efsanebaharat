@@ -6,10 +6,10 @@ import KampanyaUygula from '../components/KampanyaUygula'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
 import { CHECKOUT_TERMINAL_CODES, cartVersion, nextCheckoutAttempt, type CheckoutAttempt } from '../lib/cart-commands'
+import { formatPrice } from '../lib/currency'
 import { supabase } from '../lib/supabase'
 import { akilliBirimGoster } from '../utils/birimDonusturucu'
 
-const formatPrice = (value: number) => `${Math.max(0, value).toFixed(2)} TL`
 const CHECKOUT_ATTEMPT_KEY = 'efsane-checkout-denemesi'
 const IN_PROGRESS_RETRIES = 5
 

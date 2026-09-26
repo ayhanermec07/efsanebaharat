@@ -7,6 +7,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { supabase } from '../lib/supabase'
 import { getImageUrl } from '../utils/imageUtils'
 import { loadPublicCatalog } from '../lib/catalog'
+import { formatPrice } from '../lib/currency'
 
 const navLinks = [
   { to: '/', label: 'Ana Sayfa' },
@@ -367,7 +368,7 @@ export default function Header() {
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-sm font-semibold text-zinc-900">{urun.urun_adi}</div>
                             {urun.kategoriAdi && <div className="truncate text-xs text-zinc-500">{urun.kategoriAdi}</div>}
-                            {urun.ilkStok && <div className="text-sm font-bold text-amber-700">{Number(urun.ilkStok.fiyat).toFixed(2)} TL</div>}
+                            {urun.ilkStok && <div className="text-sm font-bold text-amber-700">{formatPrice(Number(urun.ilkStok.fiyat))}</div>}
                           </div>
                         </button>
                       ))}

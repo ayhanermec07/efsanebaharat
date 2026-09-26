@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
 import { kademeliIskontoUygula } from '../utils/iskonto'
 import { getImageUrl } from '../utils/imageUtils'
+import { formatPrice } from '../lib/currency'
 
 interface UrunKartProps {
   urun: any
@@ -170,11 +171,11 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
             {secilenStok ? (
               <>
                 <div className="text-lg font-bold leading-none text-zinc-950">
-                  {fiyatBilgisi.satisFiyati.toFixed(2)} TL
+                  {formatPrice(fiyatBilgisi.satisFiyati)}
                 </div>
                 {fiyatBilgisi.indirimVar && (
                   <div className="mt-1 text-xs font-semibold text-zinc-400 line-through">
-                    {fiyatBilgisi.eskiFiyat.toFixed(2)} TL
+                    {formatPrice(fiyatBilgisi.eskiFiyat)}
                   </div>
                 )}
               </>

@@ -4,6 +4,7 @@ import { Eye, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { akilliBirimGoster } from '../../utils/birimDonusturucu'
 import { orderPageRange, orderQueryFilters, ORDER_PAGE_SIZE } from '../../lib/admin-orders-query'
+import { formatPrice } from '../../lib/currency'
 
 type OrderFilters = { search: string; status: string; from: string; to: string }
 const emptyFilters: OrderFilters = { search: '', status: '', from: '', to: '' }
@@ -265,7 +266,7 @@ export default function Siparisler() {
                     {siparis.musteri?.email && <span className="block max-w-48 truncate text-xs text-gray-500" title={siparis.musteri.email}>{siparis.musteri.email}</span>}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
-                    {siparis.toplam_tutar?.toFixed(2)} ₺
+                    {formatPrice(siparis.toplam_tutar)}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     {(() => {
@@ -370,9 +371,9 @@ export default function Siparisler() {
                             {akilliBirimGoster(su.birim_adedi || 100, su.birim_adedi_turu || su.birim_turu)}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600">{su.miktar}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{su.birim_fiyat?.toFixed(2)} ₺</td>
+                          <td className="px-4 py-3 text-sm text-gray-900">{formatPrice(su.birim_fiyat)}</td>
                           <td className="px-4 py-3 text-sm font-semibold text-gray-900">
-                            {(su.miktar * su.birim_fiyat).toFixed(2)} ₺
+                            {formatPrice(su.miktar * su.birim_fiyat)}
                           </td>
                         </tr>
                       ))}
@@ -386,7 +387,7 @@ export default function Siparisler() {
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold text-gray-900">Genel Toplam:</span>
                     <span className="text-2xl font-bold text-orange-600">
-                      {secilenSiparis.toplam_tutar?.toFixed(2)} ₺
+                      {formatPrice(secilenSiparis.toplam_tutar)}
                     </span>
                   </div>
                 </div>
