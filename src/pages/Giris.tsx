@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { LogIn, ShieldCheck, Store, User } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { loginDestination } from '../lib/login-redirect'
 
 type GirisTipi = 'musteri' | 'bayi'
 
@@ -16,6 +17,7 @@ export default function Giris() {
   const [error, setError] = useState('')
   const { signIn, signOut } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
 
   async function handleSubmit(e: React.FormEvent) {
@@ -60,7 +62,7 @@ export default function Giris() {
         const { error } = await signIn(normalizedEmail, password)
         if (error) throw error
 
-        navigate(searchParams.get('redirect') || '/')
+        navigate(loginDestination(searchParams.get('redirect'), location.state?.from))
       }
     } catch (err: any) {
       console.error('Giriş hatası:', err)
@@ -127,7 +129,7 @@ export default function Giris() {
             </button>
           </div>
 
-          {error && <div className="mb-5 rounded-lg border border-red-100 bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</div>}
+          {error && <div role="alert" className="mb-5 rounded-lg border border-red-100 bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</div>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {girisTipi === 'bayi' && (
@@ -147,12 +149,12 @@ export default function Giris() {
 
             <label className="block">
               <span className="mb-1.5 block text-sm font-bold text-zinc-700">E-posta</span>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="shop-input" placeholder="ornek@email.com" />
+              <input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required className="shop-input" placeholder="ornek@email.com" />
             </label>
 
             <label className="block">
               <span className="mb-1.5 block text-sm font-bold text-zinc-700">Şifre</span>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="shop-input" placeholder="********" />
+              <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required className="shop-input" placeholder="********" />
             </label>
 
             <button type="submit" disabled={loading} className="shop-btn-primary w-full">
@@ -169,6 +171,12 @@ export default function Giris() {
               )}
             </button>
           </form>
+
+          <div className="mt-4 text-center sm:text-right">
+            <Link to="/sifre-sifirla" className="inline-flex min-h-11 items-center font-semibold text-emerald-800 underline-offset-4 hover:underline focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700">
+              Şifremi unuttum
+            </Link>
+          </div>
 
           <div className="mt-6 text-center text-sm text-zinc-600">
             {girisTipi === 'musteri' ? (

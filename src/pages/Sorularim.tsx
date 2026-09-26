@@ -203,10 +203,10 @@ export default function Sorularim() {
           </div>
 
           <div className="mb-6">
-            <div className="flex items-center space-x-2 bg-white rounded-lg shadow-sm p-2">
+            <div className="flex flex-wrap items-center gap-2 bg-white rounded-lg shadow-sm p-2">
               <button
                 onClick={() => setDurumFilter('hepsi')}
-                className={`px-4 py-2 rounded-md transition ${
+                className={`min-h-10 px-4 py-2 rounded-md transition ${
                   durumFilter === 'hepsi'
                     ? 'bg-orange-600 text-white'
                     : 'text-gray-600 hover:bg-gray-100'
@@ -216,7 +216,7 @@ export default function Sorularim() {
               </button>
               <button
                 onClick={() => setDurumFilter('beklemede')}
-                className={`px-4 py-2 rounded-md transition ${
+                className={`min-h-10 px-4 py-2 rounded-md transition ${
                   durumFilter === 'beklemede'
                     ? 'bg-orange-600 text-white'
                     : 'text-gray-600 hover:bg-gray-100'
@@ -226,7 +226,7 @@ export default function Sorularim() {
               </button>
               <button
                 onClick={() => setDurumFilter('cevaplandi')}
-                className={`px-4 py-2 rounded-md transition ${
+                className={`min-h-10 px-4 py-2 rounded-md transition ${
                   durumFilter === 'cevaplandi'
                     ? 'bg-orange-600 text-white'
                     : 'text-gray-600 hover:bg-gray-100'
@@ -236,7 +236,7 @@ export default function Sorularim() {
               </button>
               <button
                 onClick={() => setDurumFilter('kapatildi')}
-                className={`px-4 py-2 rounded-md transition ${
+                className={`min-h-10 px-4 py-2 rounded-md transition ${
                   durumFilter === 'kapatildi'
                     ? 'bg-orange-600 text-white'
                     : 'text-gray-600 hover:bg-gray-100'

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { MANAGEMENT_PAGE_SIZE, managementPageRange, managementSearchPattern } from '../../lib/admin-management-query'
 import { Store, Plus, Edit, Trash2, X, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -40,29 +41,50 @@ export default function AdminBayiler() {
     aktif: true
   })
   const [saving, setSaving] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [loadError, setLoadError] = useState(false)
+  const requestId = useRef(0)
 
-  useEffect(() => {
-    loadBayiler()
-  }, [])
-
-  async function loadBayiler() {
+  const loadBayiler = useCallback(async () => {
+    const currentRequest = ++requestId.current
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      setLoadError(false)
+      let query = supabase
         .from('bayiler')
-        .select('*')
+        .select('*', { count: 'exact' })
+      const pattern = managementSearchPattern(search)
+      const range = managementPageRange(page)
+      if (pattern) query = query.ilike('bayi_adi', pattern)
+      const { data, error, count } = await query
         .order('olusturma_tarihi', { ascending: false })
+        .order('id', { ascending: false })
+        .range(range.from, range.to)
 
       if (error) throw error
-
+      if (currentRequest !== requestId.current) return
+      setTotalCount(count || 0)
+      if (page > 1 && count !== null && range.from >= count) {
+        setPage(Math.max(1, Math.ceil(count / MANAGEMENT_PAGE_SIZE)))
+        return
+      }
       setBayiler(data || [])
     } catch (error: any) {
+      if (currentRequest !== requestId.current) return
       console.error('Bayiler yükleme hatası:', error)
-      toast.error('Bayiler yüklenemedi')
+      setLoadError(true)
+      setBayiler([])
     } finally {
-      setLoading(false)
+      if (currentRequest === requestId.current) setLoading(false)
     }
-  }
+  }, [page, search])
+
+  useEffect(() => {
+    void loadBayiler()
+  }, [loadBayiler])
 
   function generateBayiiKodu() {
     const prefix = 'BAY'
@@ -245,16 +267,8 @@ export default function AdminBayiler() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
-
   return (
-    <div className="p-8">
+    <div className="min-w-0 p-4 sm:p-8">
       <div className="mb-4 sm:mb-6 lg:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 flex items-center gap-3">
@@ -274,10 +288,21 @@ export default function AdminBayiler() {
         </button>
       </div>
 
-      {bayiler.length === 0 ? (
+      <form onSubmit={event => { event.preventDefault(); setPage(1); setSearch(searchInput) }} className="mb-4 flex min-w-0 flex-wrap gap-2">
+        <label htmlFor="bayi-ara" className="sr-only">Bayi adına göre ara</label>
+        <input id="bayi-ara" value={searchInput} onChange={event => setSearchInput(event.target.value)} maxLength={100} placeholder="Bayi adına göre ara" className="min-h-10 min-w-0 flex-1 rounded-lg border border-gray-300 px-3" />
+        <button type="submit" className="min-h-10 rounded-lg bg-orange-600 px-4 text-white">Ara</button>
+        {search && <button type="button" onClick={() => { setSearchInput(''); setSearch(''); setPage(1) }} className="min-h-10 px-3 text-orange-700">Temizle</button>}
+      </form>
+
+      {loading ? (
+        <div role="status" className="py-12 text-center">Bayiler yükleniyor…</div>
+      ) : loadError ? (
+        <div className="rounded-lg bg-white p-6 text-center text-red-700">Bayiler yüklenemedi. <button type="button" onClick={() => void loadBayiler()} className="min-h-10 px-2 underline">Tekrar dene</button></div>
+      ) : bayiler.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
           <Store className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">Henüz bayi bulunmuyor</p>
+          <p className="text-gray-600">{search ? 'Aramayla eşleşen bayi bulunmuyor' : 'Henüz bayi bulunmuyor'}</p>
           <button
             onClick={openCreateModal}
             className="mt-4 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
@@ -366,6 +391,14 @@ export default function AdminBayiler() {
           </table>
         </div>
       )}
+
+      {!loadError && totalCount > 0 && <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-700">
+        <span>{totalCount} bayi · Sayfa {page} / {Math.ceil(totalCount / MANAGEMENT_PAGE_SIZE)}</span>
+        <div className="flex gap-2">
+          <button type="button" disabled={loading || page === 1} onClick={() => setPage(value => value - 1)} className="min-h-10 rounded-lg border px-3 disabled:opacity-50">Önceki</button>
+          <button type="button" disabled={loading || page * MANAGEMENT_PAGE_SIZE >= totalCount} onClick={() => setPage(value => value + 1)} className="min-h-10 rounded-lg border px-3 disabled:opacity-50">Sonraki</button>
+        </div>
+      </div>}
 
       {/* Bayi Modal */}
       {modal && (

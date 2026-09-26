@@ -47,9 +47,9 @@ const defaultSiteInfo: SiteInfoSettings = {
     siteName: 'Efsane Baharat',
     tagline: 'Premium baharat ve gıda',
     description: 'Günlük mutfaktan profesyonel kullanıma kadar taze, seçili ve güvenilir baharat ürünleri.',
-    phone: '0850 123 45 67',
-    email: 'info@efsanebaharat.com',
-    address: 'İstanbul, Türkiye',
+    phone: '',
+    email: '',
+    address: '',
 }
 
 const normalizeColor = (value: unknown, fallback: string) =>
@@ -80,15 +80,20 @@ const normalizeText = (value: unknown, fallback: string, maxLength: number) => {
     return normalized || fallback
 }
 
+const normalizeContact = (value: unknown, maxLength: number, oldPlaceholder: string) => {
+    const normalized = typeof value === 'string' ? value.trim().slice(0, maxLength) : ''
+    return normalized === oldPlaceholder ? '' : normalized
+}
+
 const normalizeSiteInfo = (value: unknown): SiteInfoSettings => {
     const setting = value && typeof value === 'object' ? value as Partial<SiteInfoSettings> : {}
     return {
         siteName: normalizeText(setting.siteName, defaultSiteInfo.siteName, 80),
         tagline: normalizeText(setting.tagline, defaultSiteInfo.tagline, 120),
         description: normalizeText(setting.description, defaultSiteInfo.description, 300),
-        phone: normalizeText(setting.phone, defaultSiteInfo.phone, 40),
-        email: normalizeText(setting.email, defaultSiteInfo.email, 160),
-        address: normalizeText(setting.address, defaultSiteInfo.address, 200),
+        phone: normalizeContact(setting.phone, 40, '0850 123 45 67'),
+        email: normalizeContact(setting.email, 160, 'info@efsanebaharat.com'),
+        address: normalizeContact(setting.address, 200, 'İstanbul, Türkiye'),
     }
 }
 

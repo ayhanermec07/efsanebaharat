@@ -275,7 +275,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ad: userData.ad,
           soyad: userData.soyad,
           telefon: userData.telefon,
-          adres: userData.adres || ''
+          adres: userData.adres || '',
+          basvuru_tipi: userData.basvuru_tipi
         }
       }
     })

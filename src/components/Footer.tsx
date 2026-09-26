@@ -28,18 +28,18 @@ export default function Footer() {
               {siteInfo.description}
             </p>
             <div className="mt-5 grid gap-3 text-sm">
-              <div className="flex items-center gap-3">
+              {siteInfo.phone && <div className="flex items-center gap-3">
                 <Phone className="site-secondary-text h-4 w-4" />
                 <a href={`tel:${siteInfo.phone.replace(/[^+\d]/g, '')}`} className="hover:text-white">{siteInfo.phone}</a>
-              </div>
-              <div className="flex items-center gap-3">
+              </div>}
+              {siteInfo.email && <div className="flex items-center gap-3">
                 <Mail className="site-secondary-text h-4 w-4" />
                 <a href={`mailto:${siteInfo.email}`} className="break-all hover:text-white">{siteInfo.email}</a>
-              </div>
-              <div className="flex items-center gap-3">
+              </div>}
+              {siteInfo.address && <div className="flex items-center gap-3">
                 <MapPin className="site-secondary-text h-4 w-4" />
                 <span>{siteInfo.address}</span>
-              </div>
+              </div>}
             </div>
           </div>
 
@@ -82,7 +82,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 border-t border-zinc-800 pt-6 text-center text-xs text-zinc-500">
-          (c) 2026 EfsaneBaharat.com - Tüm hakları saklıdır.
+          © {new Date().getFullYear()} EfsaneBaharat.com - Tüm hakları saklıdır.
         </div>
       </div>
     </footer>

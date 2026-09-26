@@ -158,6 +158,11 @@ export default function Sepet() {
         storeAttempt(null)
       }
       if (code === 'CART_VERSION_MISMATCH') await sepetiYenile()
+      if (code === 'DELIVERY_CONTACT_REQUIRED') {
+        toast.error('Ödemeden önce hesabınızda teslimat adresi ve telefon numarası girin.')
+        navigate('/hesabim')
+        return
+      }
       if (code === 'ORDER_ALREADY_FINALIZED' && response.error?.siparis_id) {
         navigate(`/odeme-basarili?order_id=${encodeURIComponent(response.error.siparis_id)}`)
         return

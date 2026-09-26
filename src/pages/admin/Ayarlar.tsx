@@ -2,18 +2,9 @@ import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import { supabase } from '../../lib/supabase'
-import { createClient } from '@supabase/supabase-js'
 import { uploadImage } from '../../utils/imageUpload'
 import toast from 'react-hot-toast'
 import { Save, RefreshCw, Upload, Shield, Palette, UserPlus } from 'lucide-react'
-
-// Supabase config for temporary client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY tanimli olmali')
-}
 
 export default function Ayarlar() {
     const { theme, logo, siteInfo, updateTheme, updateLogo, updateSiteInfo } = useTheme()
@@ -203,64 +194,17 @@ export default function Ayarlar() {
             toast.error('Lütfen tüm alanları doldurun')
             return
         }
+        if (newItemPassword.length < 12) {
+            toast.error('Şifre en az 12 karakter olmalıdır')
+            return
+        }
 
         setNewAdminLoading(true)
         try {
-            // Geçici bir client oluştur (Mevcut oturumu bozmamak için)
-            // persistSession: false önemli!
-            const tempSupabase = createClient(supabaseUrl, supabaseAnonKey, {
-                auth: {
-                    persistSession: false,
-                    autoRefreshToken: false,
-                    detectSessionInUrl: false
-                }
+            const { data, error } = await supabase.functions.invoke('create-admin-user', {
+                body: { email: newItemEmail, password: newItemPassword, ad: newItemName, soyad: newItemSurname }
             })
-
-            // 1. Yeni kullanıcıyı oluştur
-            const { data: authData, error: authError } = await tempSupabase.auth.signUp({
-                email: newItemEmail,
-                password: newItemPassword,
-                options: {
-                    data: {
-                        ad: newItemName,
-                        soyad: newItemSurname || '',
-                        musteri_tipi: 'admin' // İsteğe bağlı
-                    }
-                }
-            })
-
-            if (authError) throw authError
-            if (!authData.user) throw new Error('Kullanıcı oluşturulamadı')
-
-            const newUserId = authData.user.id
-
-            // 2. Müşteri kaydını oluştur (Normalde trigger yapabilir ama biz manuel garanti edelim)
-            // Bunu ANA client ile yapıyoruz çünkü admin yetkisi gerekebilir veya trigger çalıştıysa hata verebilir (conflict)
-            // Eğer trigger varsa conflict te nothing yaparız.
-            const { error: customerError } = await supabase
-                .from('musteriler')
-                .insert({
-                    user_id: newUserId,
-                    ad: newItemName,
-                    soyad: newItemSurname || '',
-                    musteri_tipi: 'admin', // Admin tipi yoksa musteri olabilir
-                    aktif_durum: true
-                })
-                .select() // Varsa
-
-            // Eğer müşteri tablosunda user_id unique ise ve trigger zaten eklediyse hata verebilir.
-            // Bu yüzden try-catch içinde veya ignore ederek geçebiliriz.
-            // Ancak en önemlisi admin_users tablosu.
-
-            // 3. Admin yetkisi ver
-            const { error: adminError } = await supabase
-                .from('admin_users')
-                .insert({
-                    user_id: newUserId,
-                    role: 'admin'
-                })
-
-            if (adminError) throw adminError
+            if (error || !data?.success) throw new Error('Yönetici hesabı oluşturulamadı')
 
             toast.success('Yeni admin kullanıcısı oluşturuldu!')
             setNewItemEmail('')
@@ -310,8 +254,8 @@ export default function Ayarlar() {
                     {activeTab === 'tasarim' && (
                         <div className="max-w-xl space-y-8">
                             <div>
-                                <h3 className="text-lg font-medium text-gray-900 mb-4">Renk Teması</h3>
-                                <p className="mb-4 text-sm leading-6 text-gray-600">Ana renk; butonlar, arama ve vurgu alanlarında kullanılır. İkincil renk; küçük vurgularda kullanılır. Arka plan rengi ise sitenin genel zeminini belirler.</p>
+                                <h3 className="text-lg font-medium text-gray-900 mb-4">Temel Site Renkleri</h3>
+                                <p className="mb-4 text-sm leading-6 text-gray-600">Bu ayarlar değişken kullanan mağaza yüzeyleri ve sayfa zemininde uygulanır. Sabit renkle tasarlanmış düğme ve yönetim alanlarının tümünü değiştirmez.</p>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -326,7 +270,7 @@ export default function Ayarlar() {
                                             />
                                             <span className="text-sm text-gray-500 font-mono">{primaryColor}</span>
                                         </div>
-                                        <p className="mt-1 text-xs text-gray-500">Butonlar ve linkler.</p>
+                                        <p className="mt-1 text-xs text-gray-500">Değişken kullanan vurgu alanları.</p>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -341,7 +285,7 @@ export default function Ayarlar() {
                                             />
                                             <span className="text-sm text-gray-500 font-mono">{secondaryColor}</span>
                                         </div>
-                                        <p className="mt-1 text-xs text-gray-500">Uyarılar ve ikincil öğeler.</p>
+                                        <p className="mt-1 text-xs text-gray-500">Değişken kullanan ikincil alanlar.</p>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -581,11 +525,11 @@ export default function Ayarlar() {
                                         <input
                                             type="password"
                                             required
-                                            minLength={6}
+                                            minLength={12}
                                             value={newItemPassword}
                                             onChange={e => setNewItemPassword(e.target.value)}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
-                                            placeholder="En az 6 karakter"
+                                            placeholder="En az 12 karakter"
                                         />
                                     </div>
 

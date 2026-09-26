@@ -31,6 +31,8 @@ export default function Header() {
   const navigate = useNavigate()
 
   const searchContainerRef = useRef<HTMLDivElement>(null)
+  const categoryMenuRef = useRef<HTMLDivElement>(null)
+  const userMenuRef = useRef<HTMLDivElement>(null)
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const searchRequestRef = useRef(0)
 
@@ -43,11 +45,16 @@ export default function Header() {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
         setSearchResults([])
       }
+      if (categoryMenuRef.current && !categoryMenuRef.current.contains(e.target as Node)) setShowCategoryMenu(false)
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setShowUserMenu(false)
     }
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         setSearchOpen(false)
         setSearchResults([])
+        setShowCategoryMenu(false)
+        setShowUserMenu(false)
+        setMenuOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -181,10 +188,11 @@ export default function Header() {
               </NavLink>
             ))}
 
-            <div className="relative">
+            <div ref={categoryMenuRef} className="relative">
               <button
                 type="button"
                 onClick={() => setShowCategoryMenu((value) => !value)}
+                aria-expanded={showCategoryMenu}
                 className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-950"
               >
                 Kategoriler
@@ -257,10 +265,11 @@ export default function Header() {
             </Link>
 
             {user ? (
-              <div className="relative hidden sm:block">
+              <div ref={userMenuRef} className="relative hidden sm:block">
                 <button
                   type="button"
                   onClick={() => setShowUserMenu((value) => !value)}
+                  aria-expanded={showUserMenu}
                   className="flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100"
                 >
                   <User className="h-5 w-5" />

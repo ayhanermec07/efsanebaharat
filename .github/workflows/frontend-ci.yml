@@ -1,0 +1,32 @@
+name: Frontend checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: efsanebaharat
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: efsanebaharat
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: efsanebaharat/package-lock.json
+      - run: npm ci
+      - run: node ./node_modules/typescript/bin/tsc -b --pretty false
+      - run: node ./node_modules/eslint/bin/eslint.js .
+      # preflight.test.mjs requires the separate Supabase repository; the
+      # standalone frontend acceptance tests run in this checkout.
+      - run: node --test tests/account-orders.test.mjs tests/admin-management-query.test.mjs tests/admin-orders-query.test.mjs tests/admin-taxonomy-query.test.mjs tests/cart-commands.test.mjs tests/customer-management.test.mjs tests/dealer-sales-csv.test.mjs tests/login-redirect.test.mjs tests/product-deactivation.test.mjs tests/seo.test.mjs
+      - run: npm run build

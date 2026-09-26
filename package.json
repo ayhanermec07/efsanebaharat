@@ -17,9 +17,7 @@
     "lint": "eslint .",
     "test:preflight": "node --test tests/preflight.test.mjs",
     "test:environment": "node scripts/verify-test-environment.mjs",
-    "preview": "vite preview",
-    "install-deps": "pnpm install --prefer-offline",
-    "clean": "node -e \"const fs=require('fs'); ['node_modules','.pnpm-store','pnpm-lock.yaml'].forEach(p=>fs.rmSync(p,{recursive:true,force:true}))\" && pnpm store prune"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -70,13 +68,12 @@
     "react-hook-form": "^7.54.2",
     "react-hot-toast": "^2.4.1",
     "react-resizable-panels": "^2.1.7",
-    "react-router-dom": "^6",
+    "react-router-dom": "^7.18.4",
     "recharts": "2.13.0",
     "sonner": "^1.7.2",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
-    "xlsx": "^0.18.5",
     "zod": "^3.24.1"
   },
   "devDependencies": {
@@ -84,14 +81,13 @@
     "@types/node": "^22.10.7",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@types/react-router-dom": "^5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "10.4.20",
     "eslint": "^9.15.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.12.0",
-    "postcss": "8.4.49",
+    "postcss": "^8.5.28",
     "tailwindcss": "v3.4.16",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.15.0",

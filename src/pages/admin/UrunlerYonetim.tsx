@@ -4,6 +4,8 @@ import { Plus, Edit, Trash2, Save, ExternalLink, Link2, Lock } from 'lucide-reac
 import toast from 'react-hot-toast'
 import { ImageUpload } from '../../components/ImageUpload'
 import AccessibleModal from '../../components/admin/AccessibleModal'
+import { deactivateProduct } from '../../lib/admin-product-deactivation'
+import { MANAGEMENT_PAGE_SIZE, managementPageRange, managementSearchPattern } from '../../lib/admin-management-query'
 
 // Formdaki stok satırı. `id` yalnızca veritabanında var olan satırlarda bulunur;
 // kayıt komutu bu kimliği koruyarak günceller, yeni satırlar yeni UUID alır.
@@ -63,20 +65,28 @@ export default function UrunlerYonetim() {
   const [urunGorselleri, setUrunGorselleri] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [formYukleniyor, setFormYukleniyor] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [loadError, setLoadError] = useState(false)
+  const listRequest = useRef(0)
   // Hızlı art arda açılan düzenlemelerde eski ürünün yanıtı forma yazılmasın.
   const duzenlemeIstegi = useRef(0)
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
+    const currentRequest = ++listRequest.current
     setLoading(true)
+    setLoadError(false)
     try {
+      const range = managementPageRange(page)
+      const pattern = managementSearchPattern(search)
+      let productQuery = supabase.from('urunler').select('*', { count: 'exact' })
+      if (pattern) productQuery = productQuery.ilike('urun_adi', pattern)
       // Manual fetching (no foreign keys - Supabase best practice)
       const [urunRes, katRes, markaRes] = await Promise.all([
         // Admin listesi oturumlu istemciyle okunur; pasif ürünler de görünür.
-        supabase.from('urunler').select('*').order('created_at', { ascending: false }),
+        productQuery.order('created_at', { ascending: false }).order('id', { ascending: false }).range(range.from, range.to),
         publicSupabase.from('kategoriler').select('*').eq('aktif_durum', true),
         publicSupabase.from('markalar').select('*').eq('aktif_durum', true)
       ])
@@ -84,6 +94,12 @@ export default function UrunlerYonetim() {
       if (urunRes.error) throw urunRes.error
       if (katRes.error) throw katRes.error
       if (markaRes.error) throw markaRes.error
+      if (currentRequest !== listRequest.current) return
+      setTotalCount(urunRes.count || 0)
+      if (page > 1 && urunRes.count !== null && range.from >= urunRes.count) {
+        setPage(Math.max(1, Math.ceil(urunRes.count / MANAGEMENT_PAGE_SIZE)))
+        return
+      }
 
       if (urunRes.data && katRes.data && markaRes.data) {
         // Manual join - Map kategoriler ve markalar
@@ -98,12 +114,18 @@ export default function UrunlerYonetim() {
       if (katRes.data) setKategoriler(katRes.data)
       if (markaRes.data) setMarkalar(markaRes.data)
     } catch (error: any) {
+      if (currentRequest !== listRequest.current) return
       console.error('Ürün yükleme hatası:', error)
-      toast.error(`Ürünler yüklenemedi: ${error.message || 'Bilinmeyen hata'}`)
+      setLoadError(true)
+      setUrunler([])
     } finally {
-      setLoading(false)
+      if (currentRequest === listRequest.current) setLoading(false)
     }
-  }
+  }, [page, search])
+
+  useEffect(() => {
+    void loadData()
+  }, [loadData])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -150,27 +172,17 @@ export default function UrunlerYonetim() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Bu ürünü silmek istediğinizden emin misiniz?')) return
-
+  async function handleDeactivate(urun: { id: string; urun_adi: string }) {
+    if (saving || !confirm(`${urun.urun_adi} ürününü satıştan kaldırıp pasifleştirmek istiyor musunuz?`)) return
+    setSaving(true)
     try {
-      // Her adımın sonucu kontrol edilir; referanslı stok silme isteği veritabanı
-      // tarafından tümüyle reddedilir ve sonraki adımlara geçilmez.
-      const stokSonuc = await supabase.from('urun_stoklari').delete().eq('urun_id', id)
-      if (stokSonuc.error) {
-        if (/Referenced stock variant/i.test(stokSonuc.error.message)) {
-          throw new Error('Ürünün stok seçenekleri sipariş, sepet veya stok hareketlerinde kullanılıyor; silmek yerine ürünü pasifleştirin.')
-        }
-        throw stokSonuc.error
-      }
-      const gorselSonuc = await supabase.from('urun_gorselleri').delete().eq('urun_id', id)
-      if (gorselSonuc.error) throw gorselSonuc.error
-      const urunSonuc = await supabase.from('urunler').delete().eq('id', id)
-      if (urunSonuc.error) throw urunSonuc.error
+      await deactivateProduct(supabase, urun.id)
       await loadData()
-      toast.success('Ürün silindi!')
+      toast.success('Ürün pasifleştirildi; stok, görsel ve sipariş geçmişi korundu.')
     } catch (error: unknown) {
-      toast.error('Hata: ' + (error instanceof Error ? error.message : (error as { message?: string })?.message || 'Bilinmeyen hata'))
+      toast.error('Ürün pasifleştirilemedi: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'))
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -274,10 +286,21 @@ export default function UrunlerYonetim() {
         </button>
       </div>
 
+      <form onSubmit={event => { event.preventDefault(); setPage(1); setSearch(searchInput) }} className="mb-4 flex min-w-0 flex-wrap gap-2">
+        <label htmlFor="urun-ara" className="sr-only">Ürün adına göre ara</label>
+        <input id="urun-ara" value={searchInput} onChange={event => setSearchInput(event.target.value)} maxLength={100} placeholder="Ürün adına göre ara" className="min-h-10 min-w-0 flex-1 rounded-lg border border-gray-300 px-3" />
+        <button type="submit" className="min-h-10 rounded-lg bg-orange-600 px-4 text-white">Ara</button>
+        {search && <button type="button" onClick={() => { setSearchInput(''); setSearch(''); setPage(1) }} className="min-h-10 px-3 text-orange-700">Temizle</button>}
+      </form>
+
       {loading ? (
         <div className="text-center py-12">
           <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
         </div>
+      ) : loadError ? (
+        <div className="rounded-lg bg-white p-6 text-center text-red-700">Ürünler yüklenemedi. <button type="button" onClick={() => void loadData()} className="min-h-10 px-2 underline">Tekrar dene</button></div>
+      ) : urunler.length === 0 ? (
+        <div className="rounded-lg bg-white p-8 text-center text-gray-600">{search ? 'Aramayla eşleşen ürün bulunmuyor' : 'Henüz ürün bulunmuyor'}</div>
       ) : (
         <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
           <table className="w-full min-w-[600px]">
@@ -308,12 +331,14 @@ export default function UrunlerYonetim() {
                     >
                       <Edit className="w-4 h-4 inline" /> Düzenle
                     </button>
-                    <button
-                      onClick={() => handleDelete(urun.id)}
-                      className="text-red-600 hover:text-red-700"
+                    {urun.aktif_durum && <button
+                      type="button"
+                      onClick={() => handleDeactivate(urun)}
+                      disabled={saving}
+                      className="min-h-10 text-red-600 hover:text-red-700 disabled:opacity-50"
                     >
-                      <Trash2 className="w-4 h-4 inline" /> Sil
-                    </button>
+                      <Trash2 className="w-4 h-4 inline" /> Pasifleştir
+                    </button>}
                     <button
                       onClick={() => window.open(`/urun/${urun.id}`, '_blank')}
                       className="text-green-600 hover:text-green-700"
@@ -328,6 +353,14 @@ export default function UrunlerYonetim() {
           </table>
         </div>
       )}
+
+      {!loadError && totalCount > 0 && <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-700">
+        <span>{totalCount} ürün · Sayfa {page} / {Math.ceil(totalCount / MANAGEMENT_PAGE_SIZE)}</span>
+        <div className="flex gap-2">
+          <button type="button" disabled={loading || page === 1} onClick={() => setPage(value => value - 1)} className="min-h-10 rounded-lg border px-3 disabled:opacity-50">Önceki</button>
+          <button type="button" disabled={loading || page * MANAGEMENT_PAGE_SIZE >= totalCount} onClick={() => setPage(value => value + 1)} className="min-h-10 rounded-lg border px-3 disabled:opacity-50">Sonraki</button>
+        </div>
+      </div>}
 
       {/* Modal */}
       <AccessibleModal open={modalOpen} onClose={resetForm} title={editingId ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'} className="max-w-2xl">
@@ -464,6 +497,14 @@ export default function UrunlerYonetim() {
                     }
                     // XML ana stok otoritesi importer'dadır; bu alanlar formdan değiştirilemez.
                     const xmlKilitli = stok.xml_imported === true
+                    const gramKaynaklar = stoklar.filter(s => s.birim_turu === 'gr' && s.aktif_durum !== false
+                      && (s.stok_grubu === stok.stok_grubu || s.stok_grubu === 'hepsi'))
+                    const gramKaynak = stok.kaynak_stok_id
+                      ? stoklar.find(s => s.id === stok.kaynak_stok_id)
+                      : gramKaynaklar.length === 1 ? gramKaynaklar[0] : null
+                    const turetilmisKgFiyat = stok.birim_turu === 'kg' && gramKaynak
+                      ? Number(gramKaynak.fiyat) * 1000 * Number(stok.birim_adedi)
+                      : null
                     const satirNo = index + 1
 
                     return (
@@ -477,7 +518,7 @@ export default function UrunlerYonetim() {
                             )}
                             {stok.birim_turu === 'kg' && (
                               <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-amber-800">
-                                <Link2 className="h-3 w-3" aria-hidden="true" /> Gram ana stoktan düşer
+                                <Link2 className="h-3 w-3" aria-hidden="true" /> Gram ana stoktan düşer; fiyat gramdan türetilir
                               </span>
                             )}
                             {stok.aktif_durum === false && (
@@ -513,6 +554,7 @@ export default function UrunlerYonetim() {
                               newStoklar[index].stok_birimi = 'adet'
                             } else if (yeniBirim === 'kg') {
                               newStoklar[index].stok_birimi = 'kg'
+                              newStoklar[index].birim_adedi = 1
                             } else if (yeniBirim === 'gr') {
                               // GR seçildiğinde, eğer stok birimi adet ise gr yap
                               if (newStoklar[index].stok_birimi === 'adet') {
@@ -535,13 +577,13 @@ export default function UrunlerYonetim() {
                           type="number"
                           placeholder="0.00"
                           aria-label={`${satirNo}. seçenek fiyatı (TL)`}
-                          value={stok.fiyat || ''}
+                          value={turetilmisKgFiyat ?? (stok.fiyat || '')}
                           onChange={(e) => {
                             const val = e.target.value === '' ? 0 : parseFloat(e.target.value)
                             updateStok(index, 'fiyat', isNaN(val) ? 0 : val)
                           }}
                           required
-                          disabled={xmlKilitli}
+                          disabled={xmlKilitli || stok.birim_turu === 'kg'}
                           step="0.01"
                           min="0"
                           className="min-w-0 min-h-10 px-2 py-1 border rounded text-sm disabled:bg-gray-100"

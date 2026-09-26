@@ -29,19 +29,6 @@ export default function UrunDetay() {
     return kademeliIskontoUygula(Number(secilenStok.fiyat || 0), grupIskontoOrani, ozelIskontoOrani)
   }, [grupIskontoOrani, ozelIskontoOrani, secilenStok])
 
-  const trackProductView = useCallback(async () => {
-    try {
-      await supabase.from('product_views').insert([{
-        urun_id: id,
-        user_id: user?.id || null,
-        ip_address: null,
-        user_agent: navigator.userAgent
-      }])
-    } catch (error) {
-      console.error('Product view tracking error:', error)
-    }
-  }, [id, user?.id])
-
   const loadUrun = useCallback(async () => {
     const requestId = ++requestSequence.current
     setLoading(true)
@@ -105,9 +92,8 @@ export default function UrunDetay() {
   useEffect(() => {
     if (id) {
       loadUrun()
-      trackProductView()
     }
-  }, [id, loadUrun, trackProductView])
+  }, [id, loadUrun])
 
   function selectStok(stok: any) {
     setSecilenStok(stok)

@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Package, User as UserIcon, Truck, Copy, Check, ExternalLink, Pencil, X, Clock3, LayoutDashboard, LogOut } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { loadCustomerOrders } from '../lib/account-orders'
 
 export default function Hesabim() {
   const { user, musteriData, loading: authLoading, updateUser, isAdmin, signOut } = useAuth()
@@ -79,51 +80,7 @@ export default function Hesabim() {
     setLoading(true)
 
     try {
-      const { data: siparisData, error: siparisError } = await supabase
-        .from('siparisler')
-        .select('*')
-        .eq('musteri_id', musteriData.id)
-        .order('olusturma_tarihi', { ascending: false })
-
-      if (siparisError) throw siparisError
-
-      if (siparisData && siparisData.length > 0) {
-        const siparislerWithUrunler = await Promise.all(
-          siparisData.map(async (siparis) => {
-            const { data: siparisUrunleri } = await supabase
-              .from('siparis_urunleri')
-              .select('*')
-              .eq('siparis_id', siparis.id)
-
-            if (siparisUrunleri && siparisUrunleri.length > 0) {
-              const urunIds = [...new Set(siparisUrunleri.map(su => su.urun_id))]
-              const { data: urunler } = await supabase
-                .from('urunler')
-                .select('id, urun_adi')
-                .in('id', urunIds)
-
-              const detayliUrunler = siparisUrunleri.map(su => ({
-                ...su,
-                urun_adi: urunler?.find(u => u.id === su.urun_id)?.urun_adi || 'Ürün'
-              }))
-
-              return {
-                ...siparis,
-                siparis_urunleri: detayliUrunler
-              }
-            }
-
-            return {
-              ...siparis,
-              siparis_urunleri: []
-            }
-          })
-        )
-
-        setSiparisler(siparislerWithUrunler)
-      } else {
-        setSiparisler([])
-      }
+      setSiparisler(await loadCustomerOrders(supabase, musteriData.id))
     } catch (error) {
       console.error('Siparişler yüklenirken hata:', error)
       toast.error('Siparişler yüklenemedi')
@@ -205,12 +162,13 @@ export default function Hesabim() {
                     <h2 className="text-xl font-bold text-gray-900">
                       {musteriData?.ad_soyad || `${musteriData?.ad} ${musteriData?.soyad}`}
                     </h2>
-                    <p className="text-gray-600">{user?.email}</p>
+                    <p className="break-all text-gray-600">{user?.email}</p>
                   </div>
                 )}
               </div>
               {!isEditing ? (
-                <button
+                  <button
+                  type="button"
                   onClick={() => {
                     setFormData({
                       ad: musteriData?.ad || '',
@@ -220,15 +178,18 @@ export default function Hesabim() {
                     })
                     setIsEditing(true)
                   }}
-                  className="text-gray-400 hover:text-orange-600 transition"
+                  aria-label="Profili düzenle"
+                  className="inline-flex min-h-11 min-w-11 items-center justify-center text-gray-400 hover:text-orange-600 transition"
                   title="Profili Düzenle"
                 >
                   <Pencil className="w-5 h-5" />
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={() => setIsEditing(false)}
-                  className="text-gray-400 hover:text-red-600 transition"
+                  aria-label="Profil düzenlemeyi iptal et"
+                  className="inline-flex min-h-11 min-w-11 items-center justify-center text-gray-400 hover:text-red-600 transition"
                   title="İptal"
                 >
                   <X className="w-5 h-5" />
@@ -389,8 +350,10 @@ export default function Hesabim() {
                                 {siparis.kargo_takip_no}
                               </span>
                               <button
+                                type="button"
                                 onClick={() => copyToClipboard(siparis.kargo_takip_no, siparis.id)}
-                                className="text-blue-600 hover:text-blue-700 transition"
+                                aria-label="Takip numarasını kopyala"
+                                className="inline-flex min-h-11 min-w-11 items-center justify-center text-blue-600 hover:text-blue-700 transition"
                                 title="Takip numarasını kopyala"
                               >
                                 {copiedId === siparis.id ? (

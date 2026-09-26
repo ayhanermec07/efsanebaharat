@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /giris
+Disallow: /kayit
+Disallow: /sifre-
+Disallow: /hesabim
+Disallow: /sepet
+Disallow: /bayi-
+Disallow: /xml-
+Disallow: /odeme-
+Disallow: /sorularim
+Disallow: /urun/
+
+Sitemap: https://efsanebaharat.appsgo.cloud/sitemap.xml

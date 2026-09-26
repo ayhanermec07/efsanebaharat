@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ShieldCheck, ShoppingBag, Truck } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import CanliDestekWidget from '../components/CanliDestekWidget'
 import UrunKart from '../components/UrunKart'
 import { publicSupabase } from '../lib/supabase'
@@ -258,29 +258,6 @@ export default function AnaSayfa() {
           </div>
         </section>
       )}
-
-      <section className="shop-container pb-12 pt-4">
-        <div className="grid gap-3 md:grid-cols-3">
-          {[
-            { icon: Truck, title: 'Hızlı operasyon', text: 'Siparişler stok ve kargo akışı için hazırlanır.' },
-            { icon: ShieldCheck, title: 'Güvenli alışveriş', text: 'Ödeme ve sipariş süreci server taraflı doğrulamaya hazır.' },
-            { icon: ShoppingBag, title: 'Bayi uyumlu', text: 'Bayi fiyatları, XML stokları ve seçili sortiler desteklenir.' }
-          ].map((item) => {
-            const Icon = item.icon
-            return (
-              <div key={item.title} className="flex min-w-0 gap-4 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
-                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-orange-100 text-orange-700">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-bold text-zinc-950">{item.title}</h3>
-                  <p className="mt-1 text-sm leading-6 text-zinc-600">{item.text}</p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </section>
 
       <CanliDestekWidget />
     </div>

@@ -8,7 +8,6 @@ import {
   Tag,
   ShoppingCart,
   Users,
-  Image,
   LogOut,
   Megaphone,
   MessageSquare,
@@ -18,7 +17,6 @@ import {
   Headphones,
   Percent,
   ExternalLink,
-  LifeBuoy,
   Settings,
   FileCode,
   Boxes,
@@ -55,23 +53,35 @@ export default function AdminLayout() {
     return <Navigate to="/giris" replace />
   }
 
-  const menuItems = [
-    { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/admin/urunler', icon: Package, label: 'Ürünler' },
-    { path: '/admin/kategoriler', icon: FolderTree, label: 'Kategoriler' },
-    { path: '/admin/markalar', icon: Tag, label: 'Markalar' },
-    { path: '/admin/siparisler', icon: ShoppingCart, label: 'Siparişler' },
-    { path: '/admin/kargo', icon: Truck, label: 'Kargo' },
-    { path: '/admin/bayiler', icon: Store, label: 'Bayiler' },
-    { path: '/admin/bayi-satislari', icon: BarChart3, label: 'Bayi Satışları' },
-    { path: '/admin/musteriler', icon: Users, label: 'Müşteriler' },
-    { path: '/admin/iskonto', icon: Percent, label: 'İskonto Grupları' },
-    { path: '/admin/xml-yonetim', icon: FileCode, label: 'XML Yönetimi' },
-    { path: '/admin/asorti-stok', icon: Boxes, label: 'Asorti Stok' },
-    { path: '/admin/ayarlar', icon: Settings, label: 'Ayarlar' },
-    { path: '/admin/kampanyalar', icon: Megaphone, label: 'Kampanyalar' },
-    { path: '/admin/sorular', icon: MessageSquare, label: 'Sorular' },
-    { path: '/admin/canli-destek', icon: Headphones, label: 'Canlı Destek' }
+  const menuGroups = [
+    { label: 'Genel', items: [
+      { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' }
+    ] },
+    { label: 'Katalog', items: [
+      { path: '/admin/urunler', icon: Package, label: 'Ürünler' },
+      { path: '/admin/kategoriler', icon: FolderTree, label: 'Kategoriler' },
+      { path: '/admin/markalar', icon: Tag, label: 'Markalar' },
+      { path: '/admin/asorti-stok', icon: Boxes, label: 'Asorti Stok' },
+      { path: '/admin/kampanyalar', icon: Megaphone, label: 'Kampanyalar' }
+    ] },
+    { label: 'Sipariş', items: [
+      { path: '/admin/siparisler', icon: ShoppingCart, label: 'Siparişler' },
+      { path: '/admin/kargo', icon: Truck, label: 'Kargo' },
+      { path: '/admin/bayi-satislari', icon: BarChart3, label: 'Bayi Satışları' }
+    ] },
+    { label: 'Müşteri', items: [
+      { path: '/admin/musteriler', icon: Users, label: 'Müşteriler' },
+      { path: '/admin/bayiler', icon: Store, label: 'Bayiler' },
+      { path: '/admin/iskonto', icon: Percent, label: 'İskonto Grupları' },
+      { path: '/admin/sorular', icon: MessageSquare, label: 'Sorular' },
+      { path: '/admin/canli-destek', icon: Headphones, label: 'Canlı Destek' }
+    ] },
+    { label: 'Entegrasyon', items: [
+      { path: '/admin/xml-yonetim', icon: FileCode, label: 'XML Yönetimi' }
+    ] },
+    { label: 'Ayarlar', items: [
+      { path: '/admin/ayarlar', icon: Settings, label: 'Site Ayarları' }
+    ] }
   ]
 
   return (
@@ -111,24 +121,29 @@ export default function AdminLayout() {
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4 space-y-1">
-          {menuItems.map((item) => {
-            const Icon = item.icon
-            const isActive = location.pathname === item.path
-
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-6 py-3 transition-colors ${isActive
-                  ? 'bg-orange-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
-              >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm font-medium">{item.label}</span>
-              </Link>
-            )
-          })}
+          {menuGroups.map(group => (
+            <div key={group.label} className="border-t border-gray-800 pt-3 first:border-0 first:pt-0">
+              <p className="px-6 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{group.label}</p>
+              {group.items.map(item => {
+                const Icon = item.icon
+                const isActive = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(`${item.path}/`))
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`flex min-h-11 items-center gap-3 px-6 py-2 transition-colors ${isActive
+                      ? 'bg-orange-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      }`}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          ))}
 
           {/* Ana Sayfa - Yeni sekmede açılır */}
           <div className="border-t border-gray-800 mt-2 pt-2">
