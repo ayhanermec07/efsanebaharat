@@ -5,6 +5,7 @@ import { SepetProvider } from './contexts/SepetContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import Layout from './components/Layout'
 import SeoManager from './components/SeoManager'
+import OfflineNotice from './components/OfflineNotice'
 const AnaSayfa = lazy(() => import('./pages/AnaSayfa'))
 const Urunler = lazy(() => import('./pages/Urunler'))
 const UrunDetay = lazy(() => import('./pages/UrunDetay'))
@@ -50,6 +51,7 @@ function App() {
       <ThemeProvider>
         <SepetProvider>
           <Router>
+            <OfflineNotice />
             <SeoManager />
             <Suspense fallback={<div role="status" className="flex min-h-screen items-center justify-center px-4 text-sm text-zinc-700">Sayfa yükleniyor…</div>}>
             <Routes>
