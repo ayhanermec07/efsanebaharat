@@ -98,9 +98,6 @@ export default function Sepet() {
   const [kampanyaIndirimi, setKampanyaIndirimi] = useState(0)
   const checkoutAttempt = useRef<CheckoutAttempt | null>(null)
 
-  const kdvOrani = 0.20
-  const araToplamTutar = toplamTutar / (1 + kdvOrani)
-  const kdvTutari = toplamTutar - araToplamTutar
   const indirimliToplam = Math.max(0, toplamTutar - kampanyaIndirimi)
   const sepetMesgul = bekleyenStoklar.size > 0
 
@@ -187,6 +184,7 @@ export default function Sepet() {
               <div>
                 <h1 className="text-2xl font-bold text-zinc-950">Güvenli ödeme</h1>
                 <p className="mt-1 text-sm text-zinc-600">PayTR ödeme ekranı aşağıda açıldı.</p>
+                <p className="mt-1 text-xs text-zinc-600">Bu ekranı kapatmak ödeme girişimini iptal etmez; kesin sonuç ödeme sağlayıcısının bildirimiyle belirlenir.</p>
               </div>
               <button
                 type="button"
@@ -196,7 +194,7 @@ export default function Sepet() {
                 }}
                 className="shop-btn-secondary"
               >
-                Ödemeyi iptal et
+                Ödeme ekranını kapat
               </button>
             </div>
           </div>
@@ -207,7 +205,7 @@ export default function Sepet() {
               id="paytriframe"
               title="PayTR Ödeme"
               frameBorder="0"
-              scrolling="no"
+              scrolling="auto"
               className="h-[720px] w-full sm:h-[800px]"
             />
           </div>
@@ -358,12 +356,8 @@ export default function Sepet() {
 
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between gap-3 text-zinc-600">
-                  <span>Ara toplam</span>
-                  <span className="font-bold text-zinc-900">{formatPrice(araToplamTutar)}</span>
-                </div>
-                <div className="flex justify-between gap-3 text-zinc-600">
-                  <span>KDV (%{(kdvOrani * 100).toFixed(0)})</span>
-                  <span className="font-bold text-zinc-900">{formatPrice(kdvTutari)}</span>
+                  <span>Ürünler toplamı</span>
+                  <span className="font-bold text-zinc-900">{formatPrice(toplamTutar)}</span>
                 </div>
                 {kampanyaIndirimi > 0 && (
                   <div className="flex justify-between gap-3 font-bold text-emerald-700">
