@@ -1,175 +1,82 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { Package, ShoppingBag } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { Package, TrendingUp, ShoppingCart } from 'lucide-react'
-import { fetchInBatches } from '../utils/supabaseBatch'
+
+type DealerState = 'loading' | 'active' | 'inactive' | 'missing' | 'error'
 
 export default function BayiPanel() {
   const { user, musteriData, loading: authLoading } = useAuth()
   const navigate = useNavigate()
-  const [stats, setStats] = useState({
-    toplamSiparis: 0,
-    toplamHarcama: 0,
-    bekleyenSiparis: 0
-  })
-  const [populerUrunler, setPopulerUrunler] = useState<any[]>([])
+  const [state, setState] = useState<DealerState>('loading')
+  const [dealerName, setDealerName] = useState('')
 
-  const loadBayiData = useCallback(async () => {
-    if (!musteriData) return
-
-    const { data: siparisler } = await supabase
-      .from('siparisler')
-      .select('*')
-      .eq('musteri_id', musteriData.id)
-
-    if (siparisler) {
-      setStats({
-        toplamSiparis: siparisler.length,
-        toplamHarcama: siparisler.reduce((sum, s) => sum + (s.toplam_tutar || 0), 0),
-        bekleyenSiparis: siparisler.filter(s => s.siparis_durumu === 'Yeni' || s.siparis_durumu === 'Hazırlanıyor').length
-      })
-    }
-
-    const { data: urunler } = await supabase
-      .from('urunler')
-      .select('*')
-      .eq('aktif_durum', true)
-      .limit(6)
-
-    if (urunler && urunler.length > 0) {
-      const urunIds = urunler.map(u => u.id)
-      const { data: stoklar } = await fetchInBatches(urunIds, ids =>
-        supabase
-          .from('urun_stoklari')
-          .select('*')
-          .in('urun_id', ids)
-          .eq('aktif_durum', true)
-      )
-
-      const urunlerWithStok = urunler.map(u => ({
-        ...u,
-        stoklar: stoklar?.filter(s => s.urun_id === u.id) || []
-      }))
-
-      setPopulerUrunler(urunlerWithStok)
-    }
-  }, [musteriData])
+  const loadDealer = useCallback(async () => {
+    if (!user?.id) return
+    setState('loading')
+    const { data, error } = await supabase
+      .from('bayiler')
+      .select('bayi_adi, aktif')
+      .eq('kullanici_id', user.id)
+      .maybeSingle()
+    if (error) { setState('error'); return }
+    if (!data) { setState('missing'); return }
+    setDealerName(data.bayi_adi || '')
+    setState(data.aktif ? 'active' : 'inactive')
+  }, [user?.id])
 
   useEffect(() => {
-    if (!authLoading && (!user || musteriData?.musteri_tipi !== 'bayi')) {
+    if (authLoading) return
+    if (!user || musteriData?.musteri_tipi !== 'bayi') {
       navigate('/giris')
-    } else if (user && musteriData) {
-      loadBayiData()
+      return
     }
-  }, [user, authLoading, musteriData, navigate, loadBayiData])
+    void loadDealer()
+  }, [authLoading, user, musteriData?.musteri_tipi, navigate, loadDealer])
 
-  if (authLoading) {
+  if (authLoading || state === 'loading') {
+    return <main className="shop-container py-16 text-center" role="status">Bayi hesabı yükleniyor…</main>
+  }
+  if (!user || musteriData?.musteri_tipi !== 'bayi') return null
+
+  if (state !== 'active') {
+    const message = state === 'inactive'
+      ? 'Bayi hesabınız henüz aktif değil.'
+      : state === 'missing'
+        ? 'Bu hesaba bağlı bayi kaydı bulunamadı.'
+        : 'Bayi hesabı şu anda doğrulanamadı.'
     return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
-      </div>
+      <main className="shop-container py-12">
+        <section className="mx-auto max-w-xl rounded-xl border border-amber-200 bg-white p-6 text-center shadow-sm sm:p-8">
+          <h1 className="text-2xl font-bold text-zinc-950">Bayi paneli</h1>
+          <p className="mt-3 text-zinc-700" role="alert">{message}</p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {state === 'error' && <button type="button" onClick={() => void loadDealer()} className="shop-btn-primary min-h-11">Tekrar dene</button>}
+            <Link to="/hesabim" className="shop-btn-secondary min-h-11">Hesabıma git</Link>
+          </div>
+        </section>
+      </main>
     )
   }
 
-  if (!musteriData || musteriData.musteri_tipi !== 'bayi') {
-    return null
-  }
-
-  // Bayi indirimi hesapla
-  const bayiIndirim = musteriData.fiyat_gruplari?.indirim_orani || 0
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Bayi Paneli</h1>
-      <p className="text-gray-600 mb-8">
-        Hoş geldiniz {musteriData.ad} {musteriData.soyad} - 
-        <span className="text-orange-600 font-semibold ml-2">
-          %{bayiIndirim} İndirim
-        </span>
-      </p>
-
-      {/* İstatistikler */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <ShoppingCart className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Toplam Sipariş</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.toplamSiparis}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Toplam Harcama</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.toplamHarcama.toFixed(2)} ₺</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Bekleyen Sipariş</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.bekleyenSiparis}</p>
-            </div>
-          </div>
-        </div>
+    <main className="shop-container py-8 sm:py-12">
+      <div className="mb-6">
+        <p className="text-sm font-semibold text-orange-700">Bayi hesabı aktif</p>
+        <h1 className="mt-1 break-words text-3xl font-bold text-zinc-950">{dealerName || 'Bayi paneli'}</h1>
+        <p className="mt-3 max-w-2xl text-zinc-600">Ürünleri ve satış birimlerini inceleyin. Kesin fiyat ve stok, sipariş sırasında doğrulanır.</p>
       </div>
-
-      {/* Popüler Ürünler - Bayi Fiyatları */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Önerilen Ürünler (Bayi Fiyatları)</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {populerUrunler.map((urun) => {
-            const ilkStok = urun.stoklar?.[0]
-            const normalFiyat = ilkStok?.fiyat || 0
-            const bayiFiyat = normalFiyat * (1 - bayiIndirim / 100)
-
-            return (
-              <div key={urun.id} className="border rounded-lg p-4 hover:shadow-md transition">
-                <h3 className="font-semibold text-gray-900 mb-2">{urun.urun_adi}</h3>
-                {ilkStok && (
-                  <div>
-                    <p className="text-sm text-gray-500 line-through">{normalFiyat.toFixed(2)} ₺</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-orange-600">
-                        {bayiFiyat.toFixed(2)} ₺
-                      </span>
-                      <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                        %{bayiIndirim} İND
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">{ilkStok.birim_turu}</p>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Link to="/urunler" className="flex min-h-36 items-start gap-4 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:border-orange-300 hover:shadow-md">
+          <ShoppingBag className="h-7 w-7 shrink-0 text-orange-700" aria-hidden="true" />
+          <span className="min-w-0"><strong className="block text-lg text-zinc-950">Ürünleri incele</strong><span className="mt-1 block text-sm text-zinc-600">Satış seçeneklerini gör ve sepete ekle.</span></span>
+        </Link>
+        <Link to="/hesabim" className="flex min-h-36 items-start gap-4 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:border-orange-300 hover:shadow-md">
+          <Package className="h-7 w-7 shrink-0 text-orange-700" aria-hidden="true" />
+          <span className="min-w-0"><strong className="block text-lg text-zinc-950">Siparişlerim</strong><span className="mt-1 block text-sm text-zinc-600">Sipariş geçmişini ve teslimat bilgilerini görüntüle.</span></span>
+        </Link>
       </div>
-
-      {/* Bilgilendirme */}
-      <div className="mt-6 bg-orange-50 border border-orange-200 rounded-lg p-6">
-        <h3 className="font-semibold text-orange-900 mb-2">Bayi Avantajları</h3>
-        <ul className="text-sm text-orange-800 space-y-1">
-          <li>• Tüm ürünlerde %{bayiIndirim} özel indirim</li>
-          <li>• Toplu sipariş imkanı</li>
-          <li>• Öncelikli kargo</li>
-          <li>• Özel kampanyalardan haberdar olma</li>
-        </ul>
-      </div>
-    </div>
+    </main>
   )
 }
