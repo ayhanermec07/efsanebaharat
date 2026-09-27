@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { Package, User as UserIcon, Truck, Copy, Check, ExternalLink, Pencil, X, Clock3, LayoutDashboard, LogOut } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { loadCustomerOrders } from '../lib/account-orders'
+import { formatPrice } from '../lib/currency'
 
 export default function Hesabim() {
   const { user, musteriData, loading: authLoading, updateUser, isAdmin, signOut } = useAuth()
@@ -199,10 +200,11 @@ export default function Hesabim() {
 
             {isEditing ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Ad</label>
+                    <label htmlFor="profil-ad" className="block text-sm font-medium text-gray-700 mb-1">Ad</label>
                     <input
+                      id="profil-ad"
                       type="text"
                       value={formData.ad}
                       onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
@@ -210,8 +212,9 @@ export default function Hesabim() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Soyad</label>
+                    <label htmlFor="profil-soyad" className="block text-sm font-medium text-gray-700 mb-1">Soyad</label>
                     <input
+                      id="profil-soyad"
                       type="text"
                       value={formData.soyad}
                       onChange={(e) => setFormData({ ...formData, soyad: e.target.value })}
@@ -221,8 +224,9 @@ export default function Hesabim() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                  <label htmlFor="profil-telefon" className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
                   <input
+                    id="profil-telefon"
                     type="tel"
                     value={formData.telefon}
                     onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
@@ -231,8 +235,9 @@ export default function Hesabim() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Adres</label>
+                  <label htmlFor="profil-adres" className="block text-sm font-medium text-gray-700 mb-1">Adres</label>
                   <textarea
+                    id="profil-adres"
                     rows={3}
                     value={formData.adres}
                     onChange={(e) => setFormData({ ...formData, adres: e.target.value })}
@@ -389,11 +394,11 @@ export default function Hesabim() {
 
                     <div className="space-y-2 mb-4">
                       {siparis.siparis_urunleri?.map((item: any) => (
-                        <div key={item.id} className="flex justify-between text-sm">
-                          <span className="text-gray-700">
+                        <div key={item.id} className="flex items-start justify-between gap-3 text-sm">
+                          <span className="min-w-0 break-words text-gray-700">
                             {item.urun_adi} ({item.birim_turu}) x {item.miktar}
                           </span>
-                          <span className="font-medium">{item.toplam_fiyat?.toFixed(2)} TL</span>
+                          <span className="shrink-0 font-medium">{formatPrice(item.toplam_fiyat == null ? null : Number(item.toplam_fiyat))}</span>
                         </div>
                       ))}
                     </div>
@@ -401,7 +406,7 @@ export default function Hesabim() {
                     <div className="border-t pt-4 flex justify-between items-center">
                       <span className="font-semibold text-gray-900">Toplam</span>
                       <span className="text-xl font-bold text-orange-600">
-                        {siparis.toplam_tutar?.toFixed(2)} TL
+                        {formatPrice(siparis.toplam_tutar == null ? null : Number(siparis.toplam_tutar))}
                       </span>
                     </div>
                   </div>
