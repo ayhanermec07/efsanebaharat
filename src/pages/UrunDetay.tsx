@@ -4,6 +4,7 @@ import { AlertCircle, Check, Minus, Plus, RotateCcw, ShoppingCart, Sparkles } fr
 import UrunSoruModul from '../components/UrunSoruModul'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
+import { formatPrice } from '../lib/currency'
 import { supabase } from '../lib/supabase'
 import { akilliBirimGoster } from '../utils/birimDonusturucu'
 import { getImageUrl } from '../utils/imageUtils'
@@ -201,14 +202,14 @@ export default function UrunDetay() {
             <div className="mt-5 rounded-lg bg-orange-50 p-4">
               {iskontoInfo?.varMi ? (
                 <>
-                  <div className="text-sm font-bold text-zinc-500 line-through">{iskontoInfo.eskiFiyat.toFixed(2)} TL</div>
+                  <div className="text-sm font-bold text-zinc-500 line-through">{formatPrice(iskontoInfo.eskiFiyat)}</div>
                   <div className="mt-1 flex flex-wrap items-end justify-between gap-2">
-                    <span className="text-3xl font-bold text-zinc-950">{fiyat.toFixed(2)} TL</span>
+                    <span className="text-3xl font-bold text-zinc-950">{formatPrice(fiyat)}</span>
                     <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">%{iskontoInfo.oran} indirim</span>
                   </div>
                 </>
               ) : (
-                <span className="text-3xl font-bold text-zinc-950">{fiyat.toFixed(2)} TL</span>
+                <span className="text-3xl font-bold text-zinc-950">{formatPrice(fiyat)}</span>
               )}
             </div>
 
@@ -233,7 +234,7 @@ export default function UrunDetay() {
                         <div className="font-bold text-zinc-950">
                           {akilliBirimGoster(stok.birim_adedi || 1, stok.birim_adedi_turu || stok.birim_turu)}
                         </div>
-                        <div className="mt-1 text-sm font-bold text-orange-700">{stokFiyat.toFixed(2)} TL</div>
+                        <div className="mt-1 text-sm font-bold text-orange-700">{formatPrice(stokFiyat)}</div>
                       </button>
                     )
                   })}
