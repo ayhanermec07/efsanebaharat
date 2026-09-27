@@ -229,7 +229,7 @@ export default function Sepet() {
             </p>
           </div>
           {sepetItems.length > 0 && (
-            <button type="button" onClick={() => { void sepetiTemizle() }} disabled={sepetMesgul} className="shop-btn-secondary border-white/20 bg-white/10 text-white hover:bg-white hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-60">
+            <button type="button" onClick={() => { if (window.confirm('Sepetinizdeki tüm ürünler kaldırılsın mı?')) void sepetiTemizle() }} disabled={sepetMesgul} className="shop-btn-secondary border-white/20 bg-white/10 text-white hover:bg-white hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-60">
               <Trash2 className="h-4 w-4" />
               Sepeti temizle
             </button>
