@@ -454,7 +454,7 @@ export default function XMLYonetim() {
 
     async function handleGenerateFeedXML() {
         if (selectedProducts.length === 0) {
-            toast.error('XML\'e gÃ¶nderilecek sorti seÃ§ilmemiÅŸ!')
+            toast.error('XML\'e gönderilecek sorti seçilmemiş!')
             return
         }
 
@@ -462,7 +462,7 @@ export default function XMLYonetim() {
         try {
             const response = await fetch(getFeedUrl())
             if (!response.ok) {
-                throw new Error('XML feed oluÅŸturulamadÄ±')
+                throw new Error('XML feed oluşturulamadı')
             }
 
             const xmlContent = await response.text()
@@ -474,10 +474,10 @@ export default function XMLYonetim() {
                 .eq('id', xmlSettings.id)
 
             setXmlSettings({ ...xmlSettings, last_updated_at: new Date().toISOString() })
-            toast.success(`XML feed baÅŸarÄ±yla hazÄ±rlandÄ±! (${selectedProducts.length} sorti)`)
+            toast.success(`XML feed başarıyla hazırlandı! (${selectedProducts.length} sorti)`)
         } catch (error: any) {
-            console.error('XML feed oluÅŸturma hatasÄ±:', error)
-            toast.error(error.message || 'XML feed oluÅŸturulurken hata oluÅŸtu')
+            console.error('XML feed oluşturma hatası:', error)
+            toast.error(error.message || 'XML feed oluşturulurken hata oluştu')
         } finally {
             setGenerating(false)
         }
@@ -490,7 +490,7 @@ export default function XMLYonetim() {
     async function handleCopyFeedUrl() {
         const success = await copyToClipboard(getFeedUrl())
         if (success) {
-            toast.success('XML feed linki kopyalandÄ±')
+            toast.success('XML feed linki kopyalandı')
         }
     }
 
@@ -501,7 +501,7 @@ export default function XMLYonetim() {
             .filter(Boolean)
 
         if (!importUrl.trim()) {
-            toast.error('XML kaynaÄŸÄ± boÅŸ olamaz')
+            toast.error('XML kaynağı boş olamaz')
             return
         }
 
@@ -574,8 +574,8 @@ export default function XMLYonetim() {
 
             toast.success('XML kaynağı ve güncelleme ayarları kaydedildi')
         } catch (error: any) {
-            console.error('XML ayarlarÄ± kaydedilemedi:', error)
-            toast.error(error.message || 'XML ayarlarÄ± kaydedilemedi')
+            console.error('XML ayarları kaydedilemedi:', error)
+            toast.error(error.message || 'XML ayarları kaydedilemedi')
         }
     }
 
