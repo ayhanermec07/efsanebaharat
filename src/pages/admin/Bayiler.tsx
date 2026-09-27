@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { MANAGEMENT_PAGE_SIZE, managementPageRange, managementSearchPattern } from '../../lib/admin-management-query'
-import { Store, Plus, Edit, Trash2, X, RefreshCw } from 'lucide-react'
+import { Store, Plus, Edit, Trash2, X, RefreshCw, Mail } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Bayi {
@@ -13,6 +13,7 @@ interface Bayi {
   telefon: string | null
   adres: string | null
   aktif: boolean
+  kullanici_id: string | null
   olusturma_tarihi: string
 }
 
@@ -41,6 +42,7 @@ export default function AdminBayiler() {
     aktif: true
   })
   const [saving, setSaving] = useState(false)
+  const [invitingId, setInvitingId] = useState<string | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
@@ -180,14 +182,13 @@ export default function AdminBayiler() {
         })
 
         if (functionError || functionData?.error) {
-          throw functionError || new Error(functionData.error.message || 'Bayi kullanıcısı oluşturulamadı')
+          toast.error('Bayi kaydı oluştu ancak davet gönderilemedi. E-posta ayarlarını kontrol edip listedeki Davet et düğmesiyle tekrar deneyin.')
+          closeModal()
+          void loadBayiler()
+          return
         }
 
-        const deliveryMessage = functionData?.data?.password_delivery === 'email_sent'
-          ? 'Geçici şifre bayiye email ile gönderildi.'
-          : 'Bayi oluşturuldu. RESEND_API_KEY yoksa şifre iletimi için şifre sıfırlama akışı kullanılmalıdır.'
-
-        toast.success(`Bayi başarıyla oluşturuldu. ${deliveryMessage}`)
+        toast.success('Bayi oluşturuldu ve şifre belirleme daveti e-posta ile gönderildi.')
       } else if (modal === 'edit' && selectedBayi) {
         // Bayi güncelle
         const { error } = await supabase
@@ -226,7 +227,29 @@ export default function AdminBayiler() {
     }
   }
 
+  async function sendInvite(bayi: Bayi) {
+    if (invitingId) return
+    setInvitingId(bayi.id)
+    try {
+      const { data, error } = await supabase.functions.invoke('bayi-kullanici-olustur', {
+        body: { bayii_kodu: bayi.bayii_kodu, email: bayi.email },
+      })
+      if (error || data?.error) throw error || new Error(data.error.message || 'Davet gönderilemedi')
+      toast.success('Bayi erişim bağlantısı e-posta ile gönderildi.')
+      void loadBayiler()
+    } catch (error) {
+      console.error('Bayi davet hatası:', error)
+      toast.error('Davet gönderilemedi. E-posta ayarlarını ve bayi kaydını kontrol edip tekrar deneyin.')
+    } finally {
+      setInvitingId(null)
+    }
+  }
+
   async function handleDelete(bayi: Bayi) {
+    if (bayi.kullanici_id) {
+      toast.error('Bağlı bayi hesabını silmek yerine pasifleştirin; sipariş geçmişi korunmalıdır.')
+      return
+    }
     if (!confirm(`${bayi.bayi_adi} bayisini silmek istediğinize emin misiniz?`)) {
       return
     }
@@ -371,6 +394,16 @@ export default function AdminBayiler() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
+                      type="button"
+                      disabled={invitingId !== null}
+                      onClick={() => void sendInvite(bayi)}
+                      className="mr-2 inline-flex min-h-10 items-center gap-1 rounded px-2 text-orange-700 hover:bg-orange-50 disabled:opacity-50"
+                      title={bayi.kullanici_id ? 'Erişim bağlantısını tekrar gönder' : 'Bayi daveti gönder'}
+                    >
+                      <Mail className="h-4 w-4" aria-hidden="true" />
+                      <span>{invitingId === bayi.id ? 'Gönderiliyor…' : bayi.kullanici_id ? 'Yeniden davet' : 'Davet et'}</span>
+                    </button>
+                    <button
                       onClick={() => openEditModal(bayi)}
                       className="text-blue-600 hover:text-blue-900 mr-4"
                       title="Düzenle"
@@ -488,7 +521,9 @@ export default function AdminBayiler() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="info@abcgida.com"
                   required
+                  disabled={modal === 'edit' && Boolean(selectedBayi?.kullanici_id)}
                 />
+                {modal === 'edit' && selectedBayi?.kullanici_id && <p className="mt-1 text-xs text-gray-600">Bağlı hesabın e-postası bu ekrandan değiştirilemez.</p>}
               </div>
 
               <div>
