@@ -15,6 +15,7 @@
     "lint": "eslint .",
     "test:preflight": "node --test tests/preflight.test.mjs",
     "test:environment": "node scripts/verify-test-environment.mjs",
+    "test:e2e:guest": "node scripts/verify-test-environment.mjs && playwright test",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^22.10.7",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
