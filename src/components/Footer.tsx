@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
-import { Mail, MapPin, Phone, ShieldCheck, Sparkles, Truck } from 'lucide-react'
+import { Mail, MapPin, Phone, ShieldCheck, Truck } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { getImageUrl } from '../utils/imageUtils'
 
 export default function Footer() {
-  const { logo, siteInfo } = useTheme()
+  const { logo, siteInfo, loading: themeLoading } = useTheme()
 
   return (
     <footer className="mt-auto border-t border-emerald-900/20 bg-zinc-950 text-zinc-300">
@@ -12,12 +12,10 @@ export default function Footer() {
         <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="min-w-0">
             <div className="mb-4 flex items-center gap-3">
-              <div className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg ${logo.url ? 'bg-white' : 'site-primary-bg text-white'}`}>
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg ${logo.url ? 'bg-white' : themeLoading ? 'bg-zinc-800' : 'site-primary-bg text-white'}`}>
                 {logo.url ? (
                   <img src={getImageUrl(logo.url)} alt={`${siteInfo.siteName} logosu`} className="h-full w-full object-cover object-center" />
-                ) : (
-                  <Sparkles className="h-5 w-5" />
-                )}
+                ) : themeLoading ? null : <span aria-hidden="true" className="text-sm font-bold">EB</span>}
               </div>
               <div>
                 <div className="text-xl font-bold text-white">{siteInfo.siteName}</div>

@@ -52,3 +52,29 @@ test('ziyaretçi giriş ve iletişim sayfalarına ulaşır', async ({ page }) =>
   await expect(page.getByRole('heading', { name: /bize ulaşın/i }).first()).toBeVisible()
   await expectNoHorizontalOverflow(page)
 })
+
+test('logo ayarı yüklenirken yapay zeka simgesi görünmez', async ({ page }) => {
+  let releaseSettings!: () => void
+  const settingsGate = new Promise<void>((resolve) => { releaseSettings = resolve })
+  await page.route('**/rest/v1/site_settings*', async (route) => {
+    await settingsGate
+    const response = await route.fetch()
+    const rows = await response.json() as Array<{ setting_key: string; setting_value: unknown }>
+    await route.fulfill({
+      response,
+      json: rows.map((row) => row.setting_key === 'logo'
+        ? { ...row, setting_value: { url: '/icon.svg', width: 120 } }
+        : row),
+    })
+  })
+
+  try {
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('header')).toBeVisible()
+    await expect(page.locator('header svg.lucide-sparkles')).toHaveCount(0)
+    await expectNoHorizontalOverflow(page)
+  } finally {
+    releaseSettings()
+  }
+  await expect(page.locator('header img[src="/icon.svg"]')).toBeVisible()
+})

@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { ChevronDown, LayoutDashboard, LogOut, Menu, Search, ShoppingCart, Sparkles, User, X } from 'lucide-react'
+import { ChevronDown, LayoutDashboard, LogOut, Menu, Search, ShoppingCart, User, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
@@ -19,7 +19,7 @@ const navLinks = [
 
 export default function Header() {
   const { user, isAdmin, musteriData, signOut } = useAuth()
-  const { logo, siteInfo } = useTheme()
+  const { logo, siteInfo, loading: themeLoading } = useTheme()
   const { sepetItems, toplamAdet } = useSepet()
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -155,18 +155,17 @@ export default function Header() {
         <div className="flex h-16 min-w-0 items-center gap-2 sm:gap-3">
           <Link to="/" className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3" onClick={closeMenus}>
             <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg text-white shadow-sm ${logo.url ? 'border border-zinc-100 bg-white' : 'site-primary-bg'}`}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg text-white shadow-sm ${logo.url ? 'border border-zinc-100 bg-white' : themeLoading ? 'bg-zinc-100' : 'site-primary-bg'}`}
               style={logo.url ? { width: logoSize, height: logoSize } : undefined}
             >
               {logo.url ? (
                 <img
                   src={getImageUrl(logo.url)}
                   alt={`${siteInfo.siteName} logosu`}
+                  fetchPriority="high"
                   className="h-full w-full object-cover object-center"
                 />
-              ) : (
-                <Sparkles className="h-5 w-5" />
-              )}
+              ) : themeLoading ? null : <span aria-hidden="true" className="text-sm font-bold">EB</span>}
             </div>
             <div className="min-w-0">
               <div className="truncate text-base font-bold leading-tight tracking-tight text-zinc-950 sm:text-xl">{siteInfo.siteName}</div>

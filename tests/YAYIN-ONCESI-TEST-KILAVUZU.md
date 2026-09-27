@@ -13,7 +13,7 @@ node .\node_modules\eslint\bin\eslint.js .
 
 `test:environment`, yanlışlıkla canlı Supabase adresiyle test çalıştırılmasını engeller. `test:preflight` rota, kritik Edge Function ve temel ödeme/yükleme/yetki savunmalarını kontrol eder.
 
-Salt okunur tarayıcı provası: ayrı terminalde `npm run test:functions`, ardından `npm run test:e2e:guest`. Playwright yüklü Chrome'u kullanır, `dev:test` ile yerel Vite'ı başlatır ve 320, 360, 375, 390, 412, 430, 768, 1024, 1280, 1440 px genişliklerinde katalog→detay, boş sepet ve giriş/iletişim yollarını kontrol eder. Girişli müşteri, bayi, admin ve ödeme senaryoları bu sette yoktur.
+Salt okunur tarayıcı provası: ayrı terminalde `npm run test:functions`, ardından `npm run test:e2e:guest`. Playwright yüklü Chrome'u kullanır, `dev:test` ile yerel Vite'ı başlatır ve 320, 360, 375, 390, 412, 430, 768, 1024, 1280, 1440 px genişliklerinde katalog→detay, boş sepet, giriş/iletişim ve gecikmeli logo ayarı yollarını kontrol eder. Girişli müşteri, bayi, admin ve ödeme senaryoları bu sette yoktur.
 
 ## 2. Test hesapları
 
