@@ -91,7 +91,7 @@ export default function Giris() {
               </div>
               <h1 className="mt-5 text-4xl font-bold leading-tight">Efsane Baharat hesabınızla hızlı sipariş verin.</h1>
               <p className="mt-4 text-sm leading-7 text-zinc-200">
-                Müşteri ve bayi hesapları Supabase Auth ile doğrulanır; sepetiniz ve fiyatlarınız hesabınıza göre hazırlanır.
+                Hesabınız güvenle doğrulanır; sepetiniz ve size özel fiyatlarınız giriş yaptıktan sonra gösterilir.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">

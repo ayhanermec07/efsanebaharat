@@ -62,7 +62,7 @@ export default function Kayit() {
       <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300">Perakende hesabınız hemen açılır. Bayi ve XML müşteri başvuruları yönetici onayına gönderilir.</p>
     </div>
     <div className="p-5 sm:p-8">
-      <div className="mb-6 flex gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-900"><Info className="mt-0.5 h-5 w-5 shrink-0" /><p>Bayi ve XML müşteri yetkisini yönetici verir; başvuru seçimi bu yetkiyi hemen açmaz.</p></div>
+      <div className="mb-6 flex gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-900"><Info className="mt-0.5 h-5 w-5 shrink-0" /><p>Bayi ve XML sipariş özellikleri başvurunuz onaylandıktan sonra açılır.</p></div>
       {error && <div role="alert" className="mb-6 rounded-lg border border-red-100 bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</div>}
       <form onSubmit={handleSubmit} className="space-y-5">
         <label className="block"><span className="mb-1.5 block text-sm font-bold text-zinc-700">Hesap türü</span><select name="basvuru_tipi" value={formData.basvuru_tipi} onChange={(event) => setFormData((current) => ({ ...current, basvuru_tipi: event.target.value }))} className="shop-input"><option value="musteri">Perakende — hemen aktif</option><option value="bayi">Bayi — yönetici onaylı</option><option value="xml_musteri">XML müşteri — yönetici onaylı</option></select></label>
