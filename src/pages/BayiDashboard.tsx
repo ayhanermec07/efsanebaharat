@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { Store, ShoppingCart, Package, TrendingUp, LogOut } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { formatPrice } from '../lib/currency'
 
 interface BayiData {
   id: string
@@ -26,6 +27,7 @@ export default function BayiDashboard() {
   const [bayi, setBayi] = useState<BayiData | null>(null)
   const [satislar, setSatislar] = useState<SatisData[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [stats, setStats] = useState({
     toplamSatis: 0,
     toplamUrun: 0,
@@ -39,6 +41,7 @@ export default function BayiDashboard() {
 
     try {
       setLoading(true)
+      setLoadError(false)
 
       const { data: bayiData, error: bayiError } = await supabase
         .from('bayiler')
@@ -49,16 +52,12 @@ export default function BayiDashboard() {
       if (bayiError) throw bayiError
 
       if (!bayiData) {
-        toast.error('Bayi bilgileri bulunamadı')
-        await signOut()
-        navigate('/giris')
+        navigate('/bayi-panel')
         return
       }
 
       if (!bayiData.aktif) {
-        toast.error('Bayi hesabı pasif durumda')
-        await signOut()
-        navigate('/giris')
+        navigate('/bayi-panel')
         return
       }
 
@@ -101,11 +100,11 @@ export default function BayiDashboard() {
       }
     } catch (error: any) {
       console.error('Bayi verileri yükleme hatası:', error)
-      toast.error('Veriler yüklenemedi')
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
-  }, [navigate, signOut, user])
+  }, [navigate, user])
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -137,27 +136,29 @@ export default function BayiDashboard() {
     )
   }
 
-  if (!bayi) {
-    return null
+  if (loadError) {
+    return <main className="shop-container py-16 text-center" role="alert"><p>Bayi satışları yüklenemedi.</p><button type="button" onClick={() => void loadBayiData()} className="shop-btn-primary mt-4 min-h-11">Tekrar dene</button></main>
   }
+
+  if (!bayi) return null
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
                 <Store className="w-6 h-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">{bayi.bayi_adi}</h1>
+              <div className="min-w-0">
+                <h1 className="break-words text-xl font-bold text-gray-900">{bayi.bayi_adi}</h1>
                 <p className="text-sm text-gray-600">Bayii Kodu: {bayi.bayii_kodu}</p>
               </div>
             </div>
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
+              className="flex min-h-11 items-center justify-center gap-2 self-start rounded-lg px-4 py-2 text-gray-700 transition hover:bg-gray-100 hover:text-gray-900 sm:self-auto"
             >
               <LogOut className="w-5 h-5" />
               Çıkış
@@ -170,27 +171,27 @@ export default function BayiDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-600">Toplam Satış</h3>
+              <h3 className="text-sm font-medium text-gray-600">Son 10 satışın toplamı</h3>
               <TrendingUp className="w-8 h-8 text-green-500" />
             </div>
             <p className="text-3xl font-bold text-gray-900">
-              {stats.toplamSatis.toFixed(2)} TL
+              {formatPrice(stats.toplamSatis)}
             </p>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-600">Bu Ay Satış</h3>
+              <h3 className="text-sm font-medium text-gray-600">Bu ay (son 10 kayıtta)</h3>
               <ShoppingCart className="w-8 h-8 text-blue-500" />
             </div>
             <p className="text-3xl font-bold text-gray-900">
-              {stats.buAySatis.toFixed(2)} TL
+              {formatPrice(stats.buAySatis)}
             </p>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-600">Toplam Ürün</h3>
+              <h3 className="text-sm font-medium text-gray-600">Son 10 satışta ürün</h3>
               <Package className="w-8 h-8 text-orange-500" />
             </div>
             <p className="text-3xl font-bold text-gray-900">
@@ -239,7 +240,7 @@ export default function BayiDashboard() {
                         {satis.urun_adedi} Adet
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
-                        {Number(satis.toplam_tutar).toFixed(2)} TL
+                        {formatPrice(Number(satis.toplam_tutar))}
                       </td>
                     </tr>
                   ))}
