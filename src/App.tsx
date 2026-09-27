@@ -16,7 +16,6 @@ const Bulunamadi = lazy(() => import('./pages/Bulunamadi'))
 const Kayit = lazy(() => import('./pages/Kayit'))
 const Hesabim = lazy(() => import('./pages/Hesabim'))
 const OdemeBasarili = lazy(() => import('./pages/OdemeBasarili'))
-const OdemeBasarisiz = lazy(() => import('./pages/OdemeBasarisiz'))
 const EnCokSatan = lazy(() => import('./pages/EnCokSatan'))
 const Kampanyalar = lazy(() => import('./pages/Kampanyalar'))
 const BizeUlasin = lazy(() => import('./pages/BizeUlasin'))
@@ -71,7 +70,7 @@ function App() {
                 <Route path="/xml-siparis" element={<XmlMusteriSiparis />} />
                 <Route path="/xml-siparislerim" element={<XmlSiparislerim />} />
                 <Route path="/odeme-basarili" element={<OdemeBasarili />} />
-                <Route path="/odeme-basarisiz" element={<OdemeBasarisiz />} />
+                <Route path="/odeme-basarisiz" element={<OdemeBasarili />} />
                 <Route path="/en-cok-satan" element={<EnCokSatan />} />
                 <Route path="/kampanyalar" element={<Kampanyalar />} />
                 <Route path="/bize-ulasin" element={<BizeUlasin />} />
