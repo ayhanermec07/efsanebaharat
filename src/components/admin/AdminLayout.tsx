@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Outlet, Link, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import {
@@ -29,6 +29,9 @@ export default function AdminLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const sidebarRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) {
@@ -40,6 +43,35 @@ export default function AdminLayout() {
   useEffect(() => {
     setSidebarOpen(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!sidebarOpen) return
+    const menuButton = menuButtonRef.current
+    closeButtonRef.current?.focus()
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSidebarOpen(false)
+        return
+      }
+      if (event.key !== 'Tab') return
+      const items = sidebarRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')
+      if (!items?.length) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      menuButton?.focus()
+    }
+  }, [sidebarOpen])
 
   if (loading) {
     return (
@@ -90,9 +122,13 @@ export default function AdminLayout() {
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-gray-900 flex items-center justify-between px-4 z-40">
         <h1 className="text-lg font-bold text-white">Admin Panel</h1>
         <button
+          ref={menuButtonRef}
+          type="button"
           onClick={() => setSidebarOpen(true)}
           className="min-h-10 min-w-10 p-2 text-white hover:bg-gray-800 rounded-lg transition-colors"
           aria-label="Yönetim menüsünü aç"
+          aria-controls="admin-sidebar"
+          aria-expanded={sidebarOpen}
         >
           <Menu className="w-6 h-6" />
         </button>
@@ -107,11 +143,13 @@ export default function AdminLayout() {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 w-64 bg-gray-900 text-white flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0`}>
+      <div ref={sidebarRef} id="admin-sidebar" role={sidebarOpen ? 'dialog' : undefined} aria-modal={sidebarOpen ? 'true' : undefined} aria-label={sidebarOpen ? 'Yönetim menüsü' : undefined} className={`fixed inset-y-0 left-0 w-64 bg-gray-900 text-white flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'visible translate-x-0' : 'invisible -translate-x-full'
+        } lg:visible lg:translate-x-0`}>
         <div className="p-6 flex-shrink-0 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Admin Panel</h1>
           <button
+            ref={closeButtonRef}
+            type="button"
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden min-h-10 min-w-10 p-1 text-gray-400 hover:text-white"
             aria-label="Yönetim menüsünü kapat"

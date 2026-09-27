@@ -334,7 +334,7 @@ export default function AdminBayiler() {
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
+        <div className="bg-white rounded-lg shadow overflow-x-auto" role="region" tabIndex={0} aria-label="Bayi listesi, yatay kaydırılabilir">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -383,8 +383,9 @@ export default function AdminBayiler() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
+                      type="button"
                       onClick={() => toggleAktif(bayi)}
-                      className={`px-3 py-1 text-xs font-semibold rounded-full ${bayi.aktif
+                      className={`min-h-10 px-3 py-1 text-xs font-semibold rounded-full ${bayi.aktif
                           ? 'bg-green-100 text-green-800 hover:bg-green-200'
                           : 'bg-red-100 text-red-800 hover:bg-red-200'
                         }`}
@@ -404,16 +405,20 @@ export default function AdminBayiler() {
                       <span>{invitingId === bayi.id ? 'Gönderiliyor…' : bayi.kullanici_id ? 'Yeniden davet' : 'Davet et'}</span>
                     </button>
                     <button
+                      type="button"
                       onClick={() => openEditModal(bayi)}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
+                      className="mr-2 inline-flex min-h-10 min-w-10 items-center justify-center rounded text-blue-600 hover:bg-blue-50 hover:text-blue-900"
                       title="Düzenle"
+                      aria-label={`${bayi.bayi_adi} bayisini düzenle`}
                     >
                       <Edit className="w-5 h-5" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleDelete(bayi)}
-                      className="text-red-600 hover:text-red-900"
+                      className="inline-flex min-h-10 min-w-10 items-center justify-center rounded text-red-600 hover:bg-red-50 hover:text-red-900"
                       title="Sil"
+                      aria-label={`${bayi.bayi_adi} bayisini sil`}
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>

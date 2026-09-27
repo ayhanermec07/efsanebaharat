@@ -302,7 +302,7 @@ export default function UrunlerYonetim() {
       ) : urunler.length === 0 ? (
         <div className="rounded-lg bg-white p-8 text-center text-gray-600">{search ? 'Aramayla eşleşen ürün bulunmuyor' : 'Henüz ürün bulunmuyor'}</div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+        <div className="bg-white rounded-lg shadow-sm overflow-x-auto" role="region" tabIndex={0} aria-label="Ürün listesi, yatay kaydırılabilir">
           <table className="w-full min-w-[600px]">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -326,8 +326,9 @@ export default function UrunlerYonetim() {
                   </td>
                   <td className="px-6 py-4 text-sm space-x-2">
                     <button
+                      type="button"
                       onClick={() => handleEdit(urun)}
-                      className="text-blue-600 hover:text-blue-700"
+                      className="min-h-10 text-blue-600 hover:text-blue-700"
                     >
                       <Edit className="w-4 h-4 inline" /> Düzenle
                     </button>
@@ -340,8 +341,9 @@ export default function UrunlerYonetim() {
                       <Trash2 className="w-4 h-4 inline" /> Pasifleştir
                     </button>}
                     <button
+                      type="button"
                       onClick={() => window.open(`/urun/${urun.id}`, '_blank')}
-                      className="text-green-600 hover:text-green-700"
+                      className="min-h-10 text-green-600 hover:text-green-700"
                       title="Ürünü önizle"
                     >
                       <ExternalLink className="w-4 h-4 inline" /> Ön İzleme

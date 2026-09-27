@@ -15,7 +15,8 @@
     "lint": "eslint .",
     "test:preflight": "node --test tests/preflight.test.mjs",
     "test:environment": "node scripts/verify-test-environment.mjs",
-    "test:e2e:guest": "node scripts/verify-test-environment.mjs && playwright test",
+    "test:e2e:guest": "node scripts/verify-test-environment.mjs && playwright test tests/e2e/guest-store.spec.ts",
+    "test:e2e:auth": "node scripts/verify-test-environment.mjs && playwright test tests/e2e/authenticated.spec.ts",
     "preview": "vite preview"
   },
   "dependencies": {

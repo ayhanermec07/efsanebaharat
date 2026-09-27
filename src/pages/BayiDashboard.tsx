@@ -211,7 +211,7 @@ export default function BayiDashboard() {
               <p className="text-gray-600">Henüz satış kaydı bulunmuyor</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" role="region" tabIndex={0} aria-label="Son satışlar tablosu, yatay kaydırılabilir">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -252,9 +252,9 @@ export default function BayiDashboard() {
 
         <div className="mt-8 bg-blue-50 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-blue-900 mb-2">İletişim Bilgileri</h3>
-          <div className="space-y-1 text-blue-800">
+          <div className="space-y-1 break-words text-blue-800">
             <p>Yetkili: {bayi.yetkili_kisi}</p>
-            <p>Email: {bayi.email}</p>
+            <p>Email: <span className="break-all">{bayi.email}</span></p>
           </div>
         </div>
       </div>

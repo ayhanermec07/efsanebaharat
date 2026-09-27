@@ -306,7 +306,8 @@ export default function Header() {
               type="button"
               onClick={() => setMenuOpen((value) => !value)}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-zinc-700 transition hover:bg-zinc-100 lg:hidden"
-              aria-label="Menu"
+              aria-label={menuOpen ? 'Menüyü kapat' : 'Menüyü aç'}
+              aria-expanded={menuOpen}
             >
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -319,6 +320,7 @@ export default function Header() {
               <Search className="absolute left-4 top-3.5 h-5 w-5 text-zinc-400" />
               <input
                 type="text"
+                aria-label="Ürün ara"
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Baharat, marka, kategori veya ürün ara..."
@@ -332,7 +334,8 @@ export default function Header() {
                     setSearchQuery('')
                     setSearchResults([])
                   }}
-                  className="absolute right-20 top-3 text-zinc-400 hover:text-zinc-600"
+                  aria-label="Aramayı temizle"
+                  className="absolute right-16 top-1 flex h-10 w-10 items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-700"
                 >
                   <X className="h-5 w-5" />
                 </button>
