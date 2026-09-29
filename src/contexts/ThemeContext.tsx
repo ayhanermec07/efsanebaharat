@@ -33,7 +33,7 @@ interface ThemeContextType {
 }
 
 const defaultTheme: ThemeSettings = {
-    primaryColor: '#ea580c', // orange-600
+    primaryColor: '#c2410c', // orange-700; white text meets WCAG AA
     secondaryColor: '#dc2626', // red-600
     backgroundColor: '#f9fafb', // gray-50
 }
@@ -54,6 +54,19 @@ const defaultSiteInfo: SiteInfoSettings = {
 
 const normalizeColor = (value: unknown, fallback: string) =>
     typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback
+
+const colorForWhiteText = (color: string) => {
+    const channels = [1, 3, 5].map(offset => parseInt(color.slice(offset, offset + 2), 16))
+    const contrast = () => {
+        const [red, green, blue] = channels.map(value => {
+            const normalized = value / 255
+            return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
+        })
+        return 1.05 / (0.2126 * red + 0.7152 * green + 0.0722 * blue + 0.05)
+    }
+    while (contrast() < 4.5) channels.forEach((value, index) => { channels[index] = Math.floor(value * 0.95) })
+    return `#${channels.map(value => value.toString(16).padStart(2, '0')).join('')}`
+}
 
 const normalizeTheme = (value: unknown): ThemeSettings => {
     const setting = value && typeof value === 'object' ? value as Partial<ThemeSettings> : {}
@@ -120,6 +133,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         // is using CSS variables.
 
         root.style.setProperty('--site-primary-color', theme.primaryColor)
+        root.style.setProperty('--site-primary-contrast-color', colorForWhiteText(theme.primaryColor))
         root.style.setProperty('--site-secondary-color', theme.secondaryColor)
         root.style.setProperty('--site-background-color', theme.backgroundColor)
         document.body.style.backgroundColor = theme.backgroundColor

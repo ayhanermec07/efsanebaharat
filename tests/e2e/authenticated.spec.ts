@@ -1,23 +1,12 @@
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { expect, test, type Page } from '@playwright/test'
+import { getLocalSupabaseCredentials } from '../../scripts/local-supabase-credentials.mjs'
 
 type Role = 'customer' | 'dealer' | 'admin'
 type Account = { email: string; password: string; userId: string }
 
-const localUrl = 'http://127.0.0.1:54321'
-const runtimeEnvPath = path.resolve(import.meta.dirname, '../../../supabase/.temp/start-secrets/supabase_edge_runtime_Efsane_Baharat/env/docker.env')
-const runtimeValues = Object.fromEntries(
-  readFileSync(runtimeEnvPath, 'utf8').split(/\r?\n/).filter((line) => line.includes('='))
-    .map((line) => {
-      const index = line.indexOf('=')
-      return [line.slice(0, index), line.slice(index + 1)]
-    }),
-)
-if (!runtimeValues.SUPABASE_SERVICE_ROLE_KEY) throw new Error('Yerel service-role anahtarı bulunamadı')
-
-const service = createClient(localUrl, runtimeValues.SUPABASE_SERVICE_ROLE_KEY, {
+const { url: localUrl, serviceRoleKey } = getLocalSupabaseCredentials()
+const service = createClient(localUrl, serviceRoleKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 })
 const accounts = {} as Record<Role, Account>

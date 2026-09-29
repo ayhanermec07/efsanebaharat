@@ -19,7 +19,7 @@ export default function Footer() {
               </div>
               <div>
                 <div className="text-xl font-bold text-white">{siteInfo.siteName}</div>
-                <div className="text-xs font-medium text-zinc-500">{siteInfo.tagline}</div>
+                <div className="text-xs font-medium text-zinc-400">{siteInfo.tagline}</div>
               </div>
             </div>
             <p className="max-w-md text-sm leading-6 text-zinc-400">
@@ -79,7 +79,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 border-t border-zinc-800 pt-6 text-center text-xs text-zinc-500">
+        <div className="mt-10 border-t border-zinc-800 pt-6 text-center text-xs text-zinc-400">
           © {new Date().getFullYear()} EfsaneBaharat.com - Tüm hakları saklıdır.
         </div>
       </div>

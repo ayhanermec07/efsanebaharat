@@ -156,7 +156,7 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
                 type="button"
                 onClick={() => setSecilenStok(stok)}
                 className={`min-h-[36px] shrink-0 rounded-full border px-3 text-xs font-bold transition ${secilenStok?.id === stok.id
-                  ? 'border-orange-600 bg-orange-600 text-white shadow-sm'
+                  ? 'border-orange-700 bg-orange-700 text-white shadow-sm'
                   : 'border-zinc-200 bg-white text-zinc-700 hover:border-orange-300'
                   }`}
               >

@@ -17,7 +17,8 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-    --site-primary-color: #ea580c;
+    --site-primary-color: #c2410c;
+    --site-primary-contrast-color: #c2410c;
     --site-secondary-color: #dc2626;
     --site-background-color: #f9fafb;
   }
@@ -62,7 +63,7 @@
 
   .shop-btn-primary {
     @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60;
-    background-color: var(--site-primary-color);
+    background-color: var(--site-primary-contrast-color);
   }
 
   .shop-btn-primary:hover {
@@ -89,11 +90,11 @@
 }
 
 .site-primary-bg {
-  background-color: var(--site-primary-color);
+  background-color: var(--site-primary-contrast-color);
 }
 
 .site-primary-text {
-  color: var(--site-primary-color);
+  color: var(--site-primary-contrast-color);
 }
 
 .site-secondary-bg {
