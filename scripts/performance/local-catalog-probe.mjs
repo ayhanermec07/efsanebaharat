@@ -15,6 +15,11 @@ const cases = [
   ['search', '?q=baharat'],
   ['price-sort', '?sirala=fiyat_artan'],
 ]
+const selectedCase = process.argv[2]
+if (selectedCase && !cases.some(([name]) => name === selectedCase)) {
+  throw new Error(`Unknown case: ${selectedCase}`)
+}
+const selectedCases = selectedCase ? cases.filter(([name]) => name === selectedCase) : cases
 
 if (!fs.existsSync(runtimeEnvPath)) {
   throw new Error('Local Supabase runtime unavailable; start the local test stack first.')
@@ -56,24 +61,31 @@ function percentile(values, fraction) {
   return Math.round(sorted[Math.ceil(sorted.length * fraction) - 1] * 10) / 10
 }
 
-console.log(`Local catalog probe: ${cases.length} cases, ${samplesPerCase} samples/case, ${concurrency} concurrent, ${timeoutMs} ms timeout`)
-for (const [name, suffix] of cases) {
-  await request(suffix) // warm-up excluded from measurements
-  const results = []
-  for (let offset = 0; offset < samplesPerCase; offset += concurrency) {
-    results.push(...await Promise.all(Array.from({ length: Math.min(concurrency, samplesPerCase - offset) }, () => request(suffix))))
+console.log(`Local catalog probe: ${selectedCases.length} cases, ${samplesPerCase} samples/case, ${concurrency} concurrent, ${timeoutMs} ms timeout`)
+let failures = 0
+for (const [name, suffix] of selectedCases) {
+  try {
+    await request(suffix) // warm-up excluded from measurements
+    const results = []
+    for (let offset = 0; offset < samplesPerCase; offset += concurrency) {
+      results.push(...await Promise.all(Array.from({ length: Math.min(concurrency, samplesPerCase - offset) }, () => request(suffix))))
+    }
+    const latencies = results.map((item) => item.elapsedMs)
+    const first = results[0]
+    console.log(JSON.stringify({
+      case: name,
+      samples: results.length,
+      p50Ms: percentile(latencies, 0.5),
+      p95Ms: percentile(latencies, 0.95),
+      maxMs: percentile(latencies, 1),
+      responseBytes: first.bytes,
+      products: first.products,
+      total: first.total,
+      nextPage: first.nextPage,
+    }))
+  } catch (error) {
+    failures++
+    console.error(JSON.stringify({ case: name, error: error instanceof Error ? error.message : String(error) }))
   }
-  const latencies = results.map((item) => item.elapsedMs)
-  const first = results[0]
-  console.log(JSON.stringify({
-    case: name,
-    samples: results.length,
-    p50Ms: percentile(latencies, 0.5),
-    p95Ms: percentile(latencies, 0.95),
-    maxMs: percentile(latencies, 1),
-    responseBytes: first.bytes,
-    products: first.products,
-    total: first.total,
-    nextPage: first.nextPage,
-  }))
 }
+if (failures) process.exitCode = 1
