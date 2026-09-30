@@ -67,7 +67,7 @@ export default function BayiPanel() {
   if (authLoading) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+        <div className="inline-block w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -84,7 +84,7 @@ export default function BayiPanel() {
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Bayi Paneli</h1>
       <p className="text-gray-600 mb-8">
         Hoş geldiniz {musteriData.ad} {musteriData.soyad} - 
-        <span className="text-orange-600 font-semibold ml-2">
+        <span className="text-brand font-semibold ml-2">
           %{bayiIndirim} İndirim
         </span>
       </p>
@@ -118,7 +118,7 @@ export default function BayiPanel() {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-orange-600" />
+              <Package className="w-6 h-6 text-brand" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Bekleyen Sipariş</p>
@@ -144,7 +144,7 @@ export default function BayiPanel() {
                   <div>
                     <p className="text-sm text-gray-500 line-through">{normalFiyat.toFixed(2)} ₺</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-orange-600">
+                      <span className="text-lg font-bold text-brand">
                         {bayiFiyat.toFixed(2)} ₺
                       </span>
                       <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">

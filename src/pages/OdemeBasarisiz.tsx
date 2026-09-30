@@ -6,7 +6,7 @@ export default function OdemeBasarisiz() {
     <div className="container mx-auto px-4 py-16">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm p-8 text-center">
         <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <XCircle className="w-12 h-12 text-red-600" />
+          <XCircle className="w-12 h-12 text-brand-secondary" />
         </div>
 
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Ödeme Başarısız</h1>
@@ -20,7 +20,7 @@ export default function OdemeBasarisiz() {
         <div className="space-y-3">
           <Link
             to="/sepet"
-            className="block w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition"
+            className="block w-full bg-brand text-white py-3 rounded-lg hover:bg-emerald-800 transition"
           >
             Sepete Dön
           </Link>

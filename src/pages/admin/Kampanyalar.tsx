@@ -335,7 +335,7 @@ export default function AdminKampanyalar() {
           onClick={() => setActiveTab('kampanyalar')}
           className={`px-6 py-3 font-medium transition ${
             activeTab === 'kampanyalar'
-              ? 'border-b-2 border-orange-600 text-orange-600'
+              ? 'border-b-2 border-brand text-brand'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -348,7 +348,7 @@ export default function AdminKampanyalar() {
           onClick={() => setActiveTab('bannerlar')}
           className={`px-6 py-3 font-medium transition ${
             activeTab === 'bannerlar'
-              ? 'border-b-2 border-orange-600 text-orange-600'
+              ? 'border-b-2 border-brand text-brand'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -361,7 +361,7 @@ export default function AdminKampanyalar() {
           onClick={() => setActiveTab('onerilen')}
           className={`px-6 py-3 font-medium transition ${
             activeTab === 'onerilen'
-              ? 'border-b-2 border-orange-600 text-orange-600'
+              ? 'border-b-2 border-brand text-brand'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -470,7 +470,7 @@ function KampanyalarTab({ kampanyalar, onAdd, onEdit, onDelete, formatDate }: an
         <p className="text-gray-600">{kampanyalar.length} kampanya</p>
         <button
           onClick={onAdd}
-          className="flex items-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
+          className="flex items-center space-x-2 bg-brand text-white px-4 py-2 rounded-lg hover:bg-emerald-800 transition"
         >
           <Plus className="w-5 h-5" />
           <span>Yeni Kampanya</span>
@@ -491,7 +491,7 @@ function KampanyalarTab({ kampanyalar, onAdd, onEdit, onDelete, formatDate }: an
                 </button>
                 <button
                   onClick={() => onDelete(kampanya.id)}
-                  className="text-red-600 hover:text-red-700"
+                  className="text-brand-secondary hover:text-red-700"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -531,7 +531,7 @@ function BannerlarTab({ bannerlar, kampanyalar, onAdd, onEdit, onDelete }: any) 
         <p className="text-gray-600">{bannerlar.length} banner</p>
         <button
           onClick={onAdd}
-          className="flex items-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
+          className="flex items-center space-x-2 bg-brand text-white px-4 py-2 rounded-lg hover:bg-emerald-800 transition"
         >
           <Plus className="w-5 h-5" />
           <span>Yeni Banner</span>
@@ -569,7 +569,7 @@ function BannerlarTab({ bannerlar, kampanyalar, onAdd, onEdit, onDelete }: any) 
                     </button>
                     <button
                       onClick={() => onDelete(banner.id)}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-brand-secondary hover:text-red-700"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -611,12 +611,12 @@ function OnerilenUrunlerTab({ onerilenUrunler, searchUrun, setSearchUrun, onAdd,
             value={searchUrun}
             onChange={(e) => setSearchUrun(e.target.value)}
             placeholder="Ürün ara..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
           />
         </div>
         <button
           onClick={onAdd}
-          className="flex items-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
+          className="flex items-center space-x-2 bg-brand text-white px-4 py-2 rounded-lg hover:bg-emerald-800 transition"
         >
           <Plus className="w-5 h-5" />
           <span>Ürün Ekle</span>
@@ -656,7 +656,7 @@ function OnerilenUrunlerTab({ onerilenUrunler, searchUrun, setSearchUrun, onAdd,
                   <td className="px-6 py-4 text-right">
                     <button
                       onClick={() => onDelete(onerilen.id)}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-brand-secondary hover:text-red-700"
                       title="Kaldır"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -800,7 +800,7 @@ function KampanyaModal({ kampanya, onSave, onClose }: any) {
             <div className="flex space-x-3 pt-4">
               <button
                 type="submit"
-                className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition"
+                className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition"
               >
                 Kaydet
               </button>
@@ -940,7 +940,7 @@ function BannerModal({ banner, kampanyalar, onSave, onClose }: any) {
             <div className="flex space-x-3 pt-4">
               <button
                 type="submit"
-                className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition"
+                className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition"
               >
                 Kaydet
               </button>
@@ -1016,7 +1016,7 @@ function OnerilenUrunModal({ tumUrunler, mevcutUrunler, onAdd, onClose }: any) {
             <div className="flex space-x-3 pt-4">
               <button
                 type="submit"
-                className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition"
+                className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition"
               >
                 Ekle
               </button>

@@ -51,7 +51,7 @@ export default function KampanyaIstatistikleri({ kampanyaId }: Props) {
   if (yukleniyor) {
     return (
       <div className="flex justify-center items-center p-8">
-        <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -102,7 +102,7 @@ export default function KampanyaIstatistikleri({ kampanyaId }: Props) {
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-600">Toplam İndirim</span>
-              <TrendingUp className="w-5 h-5 text-red-600" />
+              <TrendingUp className="w-5 h-5 text-brand-secondary" />
             </div>
             <p className="text-2xl font-bold text-gray-900">
               {toplamIstatistikler.toplam_indirim.toFixed(2)} ₺
@@ -112,7 +112,7 @@ export default function KampanyaIstatistikleri({ kampanyaId }: Props) {
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-600">Toplam Satış</span>
-              <DollarSign className="w-5 h-5 text-orange-600" />
+              <DollarSign className="w-5 h-5 text-brand" />
             </div>
             <p className="text-2xl font-bold text-gray-900">
               {toplamIstatistikler.toplam_satis.toFixed(2)} ₺
@@ -171,7 +171,7 @@ export default function KampanyaIstatistikleri({ kampanyaId }: Props) {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {stat.siparis_sayisi}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-brand-secondary">
                     {stat.toplam_indirim.toFixed(2)} ₺
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">

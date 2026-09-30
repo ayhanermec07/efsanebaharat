@@ -272,7 +272,7 @@ export default function CanliDestek() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -297,7 +297,7 @@ export default function CanliDestek() {
         <button
           onClick={() => setShowSettings(!showSettings)}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${showSettings
-              ? 'bg-orange-600 text-white'
+              ? 'bg-brand text-white'
               : 'bg-white text-gray-700 hover:bg-gray-50 border'
             }`}
         >
@@ -313,7 +313,7 @@ export default function CanliDestek() {
             <button
               onClick={() => setActiveTab('otomatik')}
               className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition ${activeTab === 'otomatik'
-                ? 'border-b-2 border-orange-500 text-orange-600 bg-orange-50'
+                ? 'border-b-2 border-emerald-700 text-brand bg-orange-50'
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
             >
@@ -323,7 +323,7 @@ export default function CanliDestek() {
             <button
               onClick={() => setActiveTab('whatsapp')}
               className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition ${activeTab === 'whatsapp'
-                ? 'border-b-2 border-orange-500 text-orange-600 bg-orange-50'
+                ? 'border-b-2 border-emerald-700 text-brand bg-orange-50'
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
             >
@@ -346,7 +346,7 @@ export default function CanliDestek() {
                       tetikleyici: 'konusma_baslangic',
                       aktif: true
                     })}
-                    className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+                    className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition"
                   >
                     <Plus className="w-5 h-5" />
                     Yeni Mesaj
@@ -362,7 +362,7 @@ export default function CanliDestek() {
                           type="text"
                           value={editingMesaj.baslik}
                           onChange={(e) => setEditingMesaj({ ...editingMesaj, baslik: e.target.value })}
-                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                           placeholder="Örn: Karşılama Mesajı"
                         />
                       </div>
@@ -372,7 +372,7 @@ export default function CanliDestek() {
                           value={editingMesaj.mesaj}
                           onChange={(e) => setEditingMesaj({ ...editingMesaj, mesaj: e.target.value })}
                           rows={3}
-                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                           placeholder="Müşteriye gönderilecek mesaj..."
                         />
                       </div>
@@ -381,7 +381,7 @@ export default function CanliDestek() {
                         <select
                           value={editingMesaj.tetikleyici}
                           onChange={(e) => setEditingMesaj({ ...editingMesaj, tetikleyici: e.target.value })}
-                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                         >
                           <option value="konusma_baslangic">Konuşma Başlangıcı</option>
                           <option value="mesai_disi">Mesai Dışı Saatler</option>
@@ -393,7 +393,7 @@ export default function CanliDestek() {
                           type="checkbox"
                           checked={editingMesaj.aktif}
                           onChange={(e) => setEditingMesaj({ ...editingMesaj, aktif: e.target.checked })}
-                          className="w-4 h-4 text-orange-600 rounded"
+                          className="w-4 h-4 text-brand rounded"
                         />
                         <label className="text-sm text-gray-700">Aktif</label>
                       </div>
@@ -437,7 +437,7 @@ export default function CanliDestek() {
                         <button onClick={() => setEditingMesaj(mesaj)} className="p-2 text-blue-600 hover:bg-blue-50 rounded">
                           <Edit2 className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleDeleteOtomatikMesaj(mesaj.id)} className="p-2 text-red-600 hover:bg-red-50 rounded">
+                        <button onClick={() => handleDeleteOtomatikMesaj(mesaj.id)} className="p-2 text-brand-secondary hover:bg-red-50 rounded">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -473,7 +473,7 @@ export default function CanliDestek() {
                         value={newWhatsappName}
                         onChange={(e) => setNewWhatsappName(e.target.value)}
                         placeholder="Örn: Müşteri Hizmetleri"
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                       />
                     </div>
                     <div className="flex-1">
@@ -483,13 +483,13 @@ export default function CanliDestek() {
                         value={newWhatsappNumber}
                         onChange={(e) => setNewWhatsappNumber(e.target.value)}
                         placeholder="905xxxxxxxxx"
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                       />
                     </div>
                     <button
                       type="submit"
                       disabled={whatsappLoading}
-                      className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 flex items-center gap-2"
+                      className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 disabled:opacity-50 flex items-center gap-2"
                     >
                       <Plus className="w-4 h-4" />
                       Ekle
@@ -531,7 +531,7 @@ export default function CanliDestek() {
                             </div>
                             <button
                               onClick={() => handleDeleteWhatsapp(wp.id)}
-                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                              className="p-2 text-gray-400 hover:text-brand-secondary hover:bg-red-50 rounded-lg transition"
                             >
                               <Trash2 className="w-5 h-5" />
                             </button>
@@ -558,7 +558,7 @@ export default function CanliDestek() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Müşteri ara..."
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                 />
               </div>
             </div>
@@ -573,14 +573,14 @@ export default function CanliDestek() {
                   <button
                     key={conv.id}
                     onClick={() => setSelectedConversation(conv.id)}
-                    className={`w-full p-4 border-b hover:bg-gray-50 transition text-left ${selectedConversation === conv.id ? 'bg-orange-50 border-l-4 border-l-orange-600' : ''
+                    className={`w-full p-4 border-b hover:bg-gray-50 transition text-left ${selectedConversation === conv.id ? 'bg-orange-50 border-l-4 border-l-brand' : ''
                       }`}
                   >
                     {/* Existing list item code */}
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5 text-orange-600" />
+                          <User className="w-5 h-5 text-brand" />
                         </div>
                         <div>
                           <h3 className="font-semibold text-gray-900">{conv.musteri_adi}</h3>
@@ -588,7 +588,7 @@ export default function CanliDestek() {
                         </div>
                       </div>
                       {conv.okunmamis_sayisi > 0 && (
-                        <span className="bg-orange-600 text-white text-xs px-2 py-1 rounded-full">
+                        <span className="bg-brand text-white text-xs px-2 py-1 rounded-full">
                           {conv.okunmamis_sayisi}
                         </span>
                       )}
@@ -620,7 +620,7 @@ export default function CanliDestek() {
                 <div className="p-4 border-b flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-orange-600" />
+                      <User className="w-6 h-6 text-brand" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-semibold text-gray-900">{selectedConv.musteri_adi}</h3>
@@ -644,7 +644,7 @@ export default function CanliDestek() {
                     >
                       <div
                         className={`max-w-[70%] rounded-lg p-3 ${message.gonderen === 'admin'
-                            ? 'bg-orange-600 text-white'
+                            ? 'bg-brand text-white'
                             : 'bg-white text-gray-900 shadow-sm'
                           }`}
                       >
@@ -676,12 +676,12 @@ export default function CanliDestek() {
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       placeholder="Mesajınızı yazın..."
-                      className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                     />
                     <button
                       type="submit"
                       disabled={!newMessage.trim()}
-                      className="w-full sm:w-auto min-h-10 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="w-full sm:w-auto min-h-10 px-6 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       <Send className="w-5 h-5" />
                       Gönder

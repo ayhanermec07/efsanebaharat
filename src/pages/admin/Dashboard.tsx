@@ -261,7 +261,7 @@ export default function Dashboard() {
                   <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}>
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <div className={`flex items-center gap-1 text-sm ${stat.trendUp ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className={`flex items-center gap-1 text-sm ${stat.trendUp ? 'text-green-600' : 'text-brand-secondary'}`}>
                     {stat.trendUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                     <span>{stat.trend}</span>
                   </div>
@@ -342,7 +342,7 @@ export default function Dashboard() {
                   {/* @ts-ignore Recharts React type compatibility */}
                   <Tooltip />
                   {/* @ts-ignore Recharts React type compatibility */}
-                  <Bar dataKey="toplam_satis" fill="#3B82F6" name="Satış Adedi" />
+                  <Bar dataKey="toplam_satis" fill="#34513c" name="Satış Adedi" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -368,7 +368,7 @@ export default function Dashboard() {
                   {/* @ts-ignore Recharts React type compatibility */}
                   <Tooltip />
                   {/* @ts-ignore Recharts React type compatibility */}
-                  <Bar dataKey="ziyaret_sayisi" fill="#F59E0B" name="Ziyaret" />
+                  <Bar dataKey="ziyaret_sayisi" fill="#a84b2b" name="Ziyaret" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -395,21 +395,21 @@ export default function Dashboard() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setPeriod(7)}
-                  className={`px-3 py-1 text-sm rounded-lg transition ${period === 7 ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  className={`px-3 py-1 text-sm rounded-lg transition ${period === 7 ? 'bg-brand text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                 >
                   7 Gün
                 </button>
                 <button
                   onClick={() => setPeriod(30)}
-                  className={`px-3 py-1 text-sm rounded-lg transition ${period === 30 ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  className={`px-3 py-1 text-sm rounded-lg transition ${period === 30 ? 'bg-brand text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                 >
                   30 Gün
                 </button>
                 <button
                   onClick={() => setPeriod(90)}
-                  className={`px-3 py-1 text-sm rounded-lg transition ${period === 90 ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  className={`px-3 py-1 text-sm rounded-lg transition ${period === 90 ? 'bg-brand text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                 >
                   90 Gün
@@ -429,7 +429,7 @@ export default function Dashboard() {
                   {/* @ts-ignore Recharts React type compatibility */}
                   <Legend />
                   {/* @ts-ignore Recharts React type compatibility */}
-                  <Line type="monotone" dataKey="tutar" stroke="#10B981" strokeWidth={2} name="Satış (TL)" dot={{ fill: '#10B981' }} />
+                  <Line type="monotone" dataKey="tutar" stroke="#5b7a51" strokeWidth={2} name="Satış (TL)" dot={{ fill: '#5b7a51' }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -457,7 +457,7 @@ export default function Dashboard() {
                   {/* @ts-ignore Recharts React type compatibility */}
                   <Legend />
                   {/* @ts-ignore Recharts React type compatibility */}
-                  <Bar dataKey="tutar" fill="#10B981" name="Aylık Satış (TL)" />
+                  <Bar dataKey="tutar" fill="#5b7a51" name="Aylık Satış (TL)" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (

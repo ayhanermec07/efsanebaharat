@@ -79,11 +79,10 @@ export default function Giris() {
   return (
     <div className="shop-container py-8 sm:py-12">
       <div className="mx-auto grid max-w-5xl overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-lg lg:grid-cols-[0.95fr_1.05fr]">
-        <section className="relative hidden min-h-[520px] overflow-hidden bg-zinc-950 p-8 text-white lg:block">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_25%,rgba(251,146,60,0.28),transparent_28rem),linear-gradient(135deg,#064e3b,#18181b_58%,#7c2d12)]" />
+        <section className="relative hidden min-h-[520px] overflow-hidden bg-brand-soft p-8 text-brand-ink lg:block">
           <div className="relative flex h-full flex-col justify-between">
             <div>
-              <div className="shop-eyebrow border-white/20 bg-white/10 text-orange-100">
+              <div className="shop-eyebrow">
                 <ShieldCheck className="h-4 w-4" />
                 Güvenli hesap erişimi
               </div>
@@ -93,8 +92,8 @@ export default function Giris() {
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-lg bg-white/10 p-4 font-bold">Bayi fiyatları</div>
-              <div className="rounded-lg bg-white/10 p-4 font-bold">Sipariş takibi</div>
+              <div className="rounded-lg border border-brand-line bg-brand-paper p-4 font-bold">Bayi fiyatları</div>
+              <div className="rounded-lg border border-brand-line bg-brand-paper p-4 font-bold">Sipariş takibi</div>
             </div>
           </div>
         </section>
@@ -173,7 +172,7 @@ export default function Giris() {
           <div className="mt-6 text-center text-sm text-zinc-600">
             {girisTipi === 'musteri' ? (
               <p>
-                Hesabınız yok mu? <Link to="/kayit" className="font-bold text-orange-700 hover:text-orange-800">Kayıt ol</Link>
+                Hesabınız yok mu? <Link to="/kayit" className="font-bold text-emerald-800 hover:text-orange-800">Kayıt ol</Link>
               </p>
             ) : (
               <p>Bayi hesabı için yönetici tarafından oluşturulan bilgilerle giriş yapın.</p>

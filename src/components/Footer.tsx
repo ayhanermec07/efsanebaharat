@@ -1,71 +1,69 @@
 import { Link } from 'react-router-dom'
-import { Mail, MapPin, Phone, ShieldCheck, Sparkles, Truck } from 'lucide-react'
+import { Mail, MapPin, Phone, ShieldCheck, Sprout, Truck } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { getImageUrl } from '../utils/imageUtils'
 
 export default function Footer() {
-  const { logo, siteInfo } = useTheme()
+  const { logo, siteInfo, loading: themeLoading } = useTheme()
 
   return (
-    <footer className="mt-auto border-t border-emerald-900/20 bg-zinc-950 text-zinc-300">
+    <footer className="mt-auto border-t border-brand-line bg-brand-soft text-brand-ink">
       <div className="shop-container py-10 sm:py-12">
         <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="min-w-0">
             <div className="mb-4 flex items-center gap-3">
-              <div className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg ${logo.url ? 'bg-white' : 'site-primary-bg text-white'}`}>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg text-emerald-700">
                 {logo.url ? (
-                  <img src={getImageUrl(logo.url)} alt={`${siteInfo.siteName} logosu`} className="h-full w-full object-cover object-center" />
-                ) : (
-                  <Sparkles className="h-5 w-5" />
-                )}
+                  <img src={getImageUrl(logo.url)} alt={`${siteInfo.siteName} logosu`} className="h-full w-full object-contain object-center" />
+                ) : themeLoading ? null : <Sprout className="h-7 w-7" aria-hidden="true" />}
               </div>
               <div>
-                <div className="text-xl font-bold text-white">{siteInfo.siteName}</div>
-                <div className="text-xs font-medium text-zinc-500">{siteInfo.tagline}</div>
+                <div className="break-words font-display text-2xl font-medium">{siteInfo.siteName}</div>
+                <div className="mt-1 text-xs text-brand-muted">{siteInfo.tagline}</div>
               </div>
             </div>
-            <p className="max-w-md text-sm leading-6 text-zinc-400">
+            <p className="max-w-md text-sm leading-6 text-brand-muted">
               {siteInfo.description}
             </p>
             <div className="mt-5 grid gap-3 text-sm">
-              <div className="flex items-center gap-3">
+              {siteInfo.phone && <div className="flex items-center gap-3">
                 <Phone className="site-secondary-text h-4 w-4" />
-                <a href={`tel:${siteInfo.phone.replace(/[^+\d]/g, '')}`} className="hover:text-white">{siteInfo.phone}</a>
-              </div>
-              <div className="flex items-center gap-3">
+                <a href={`tel:${siteInfo.phone.replace(/[^+\d]/g, '')}`} className="hover:underline">{siteInfo.phone}</a>
+              </div>}
+              {siteInfo.email && <div className="flex items-center gap-3">
                 <Mail className="site-secondary-text h-4 w-4" />
-                <a href={`mailto:${siteInfo.email}`} className="break-all hover:text-white">{siteInfo.email}</a>
-              </div>
-              <div className="flex items-center gap-3">
+                <a href={`mailto:${siteInfo.email}`} className="break-all hover:underline">{siteInfo.email}</a>
+              </div>}
+              {siteInfo.address && <div className="flex items-center gap-3">
                 <MapPin className="site-secondary-text h-4 w-4" />
                 <span>{siteInfo.address}</span>
-              </div>
+              </div>}
             </div>
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-white">Alışveriş</h3>
+            <h3 className="mb-4 text-xl text-brand-ink">Alışveriş</h3>
             <ul className="grid gap-2 text-sm">
-              <li><Link to="/urunler" className="hover:text-white">Tüm Ürünler</Link></li>
-              <li><Link to="/en-cok-satan" className="hover:text-white">En Çok Satanlar</Link></li>
-              <li><Link to="/kampanyalar" className="hover:text-white">Kampanyalar</Link></li>
-              <li><Link to="/sepet" className="hover:text-white">Sepetim</Link></li>
+              <li><Link to="/urunler" className="inline-flex min-h-11 items-center hover:underline">Tüm Ürünler</Link></li>
+              <li><Link to="/en-cok-satan" className="inline-flex min-h-11 items-center hover:underline">En Çok Satanlar</Link></li>
+              <li><Link to="/kampanyalar" className="inline-flex min-h-11 items-center hover:underline">Kampanyalar</Link></li>
+              <li><Link to="/sepet" className="inline-flex min-h-11 items-center hover:underline">Sepetim</Link></li>
             </ul>
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-white">Hesap</h3>
+            <h3 className="mb-4 text-xl text-brand-ink">Hesap</h3>
             <ul className="grid gap-2 text-sm">
-              <li><Link to="/giris" className="hover:text-white">Giriş Yap</Link></li>
-              <li><Link to="/kayit" className="hover:text-white">Kayıt Ol</Link></li>
-              <li><Link to="/hesabim" className="hover:text-white">Hesabım</Link></li>
-              <li><Link to="/sorularim" className="hover:text-white">Sorularım</Link></li>
+              <li><Link to="/giris" className="inline-flex min-h-11 items-center hover:underline">Giriş Yap</Link></li>
+              <li><Link to="/kayit" className="inline-flex min-h-11 items-center hover:underline">Kayıt Ol</Link></li>
+              <li><Link to="/hesabim" className="inline-flex min-h-11 items-center hover:underline">Hesabım</Link></li>
+              <li><Link to="/sorularim" className="inline-flex min-h-11 items-center hover:underline">Sorularım</Link></li>
             </ul>
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-white">Güvence</h3>
-            <div className="grid gap-3 text-sm text-zinc-400">
+            <h3 className="mb-4 text-xl text-brand-ink">Yardım</h3>
+            <div className="grid gap-3 text-sm text-brand-muted">
               <div className="flex gap-3">
                 <Truck className="site-secondary-text mt-0.5 h-4 w-4 shrink-0" />
                 <span>Hızlı kargo ve takip bildirimi</span>
@@ -74,15 +72,15 @@ export default function Footer() {
                 <ShieldCheck className="site-secondary-text mt-0.5 h-4 w-4 shrink-0" />
                 <span>Güvenli ödeme altyapısı</span>
               </div>
-              <Link to="/bize-ulasin" className="shop-btn-secondary mt-2 border-zinc-700 bg-zinc-900 text-zinc-100 hover:border-amber-500 hover:text-white">
+              <Link to="/bize-ulasin" className="shop-btn-secondary mt-2">
                 Bize Ulaşın
               </Link>
             </div>
           </div>
         </div>
 
-        <div className="mt-10 border-t border-zinc-800 pt-6 text-center text-xs text-zinc-500">
-          (c) 2026 EfsaneBaharat.com - Tüm hakları saklıdır.
+        <div className="mt-10 border-t border-brand-line pt-6 text-center text-xs text-brand-muted">
+          © {new Date().getFullYear()} EfsaneBaharat.com - Tüm hakları saklıdır.
         </div>
       </div>
     </footer>

@@ -224,12 +224,12 @@ export default function Urunler() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center space-x-3">
-            <Package className="w-8 h-8 text-orange-600" />
+            <Package className="w-8 h-8 text-brand" />
             <span>Ürünler</span>
           </h1>
           <button 
             onClick={handleNewUrun}
-            className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition flex items-center space-x-2"
+            className="bg-brand text-white px-6 py-3 rounded-lg hover:bg-emerald-800 transition flex items-center space-x-2"
           >
             <Plus className="w-5 h-5" />
             <span>Yeni Ürün</span>
@@ -246,7 +246,7 @@ export default function Urunler() {
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+          <div className="inline-block w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filteredUrunler.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm p-12 text-center">
@@ -317,7 +317,7 @@ export default function Urunler() {
                       <Edit className="w-4 h-4" />
                       <span>Düzenle</span>
                     </button>
-                    <button className="text-red-600 hover:text-red-700 flex items-center space-x-1">
+                    <button className="text-brand-secondary hover:text-red-700 flex items-center space-x-1">
                       <Trash2 className="w-4 h-4" />
                       <span>Sil</span>
                     </button>
@@ -427,7 +427,7 @@ export default function Urunler() {
               <div className="flex space-x-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition"
+                  className="flex-1 bg-brand text-white py-2 px-4 rounded-lg hover:bg-emerald-800 transition"
                 >
                   {editingUrun ? 'Güncelle' : 'Ekle'}
                 </button>

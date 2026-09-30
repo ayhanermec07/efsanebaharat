@@ -154,13 +154,13 @@ export default function Kampanyalar() {
 
   return (
     <div className="shop-container py-6 sm:py-8">
-      <div className="mb-6 rounded-lg bg-zinc-950 p-5 text-white shadow-lg sm:p-7">
-        <div className="shop-eyebrow border-white/20 bg-white/10 text-orange-100">
+      <div className="shop-page-heading mb-6">
+        <div className="shop-eyebrow">
           <Tag className="h-4 w-4" />
           Fırsatlar
         </div>
         <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Kampanyalı ürünler</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300">
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-brand-muted">
           Aktif indirimler ve avantajlı ürün rafları burada listelenir.
         </p>
       </div>
@@ -173,14 +173,14 @@ export default function Kampanyalar() {
         </div>
       ) : loadError ? (
         <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-red-200 bg-white p-6 text-center">
-          <AlertCircle className="h-12 w-12 text-red-600" />
+          <AlertCircle className="h-12 w-12 text-brand-secondary" />
           <h2 className="mt-3 text-xl font-bold text-zinc-950">Kampanyalar yüklenemedi</h2>
           <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">Bağlantıyı kontrol edip tekrar deneyin.</p>
           <button type="button" onClick={loadKampanyalarWithProducts} className="mt-5 flex min-h-10 items-center gap-2 rounded-lg bg-zinc-950 px-4 text-white"><RotateCcw className="h-4 w-4" />Tekrar dene</button>
         </div>
       ) : kampanyalar.length === 0 ? (
         <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center">
-          <PackageSearch className="h-12 w-12 text-zinc-300" />
+          <PackageSearch className="h-12 w-12 text-brand-muted" />
           <h2 className="mt-3 text-xl font-bold text-zinc-950">Aktif kampanya yok</h2>
           <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">Yeni kampanyalar eklendiğinde burada görünür.</p>
         </div>
@@ -192,12 +192,12 @@ export default function Kampanyalar() {
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div className="min-w-0">
                     <div className="mb-2 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex min-h-[30px] items-center gap-1 rounded-full bg-red-600 px-3 text-xs font-bold text-white">
+                      <span className="inline-flex min-h-[30px] items-center gap-1 rounded-full bg-brand-secondary px-3 text-xs font-bold text-white">
                         <Percent className="h-4 w-4" />
                         {kampanya.indirim_tipi === 'yuzde' ? `%${kampanya.indirim_degeri} indirim` : `${kampanya.indirim_degeri} TL indirim`}
                       </span>
                       {kampanya.kod && (
-                        <span className="rounded-full border border-orange-200 bg-white px-3 py-1 text-xs font-bold text-orange-700">
+                        <span className="rounded-full border border-orange-200 bg-white px-3 py-1 text-xs font-bold text-emerald-800">
                           {kampanya.kod}
                         </span>
                       )}
@@ -206,7 +206,7 @@ export default function Kampanyalar() {
                     {kampanya.aciklama && <p className="mt-1 text-sm leading-6 text-zinc-600">{kampanya.aciklama}</p>}
                   </div>
                   <div className="flex min-w-0 items-center gap-2 rounded-lg border border-orange-100 bg-white px-3 py-2 text-xs font-bold text-zinc-600">
-                    <Calendar className="h-4 w-4 shrink-0 text-orange-700" />
+                    <Calendar className="h-4 w-4 shrink-0 text-emerald-800" />
                     <span className="break-words">{formatDate(kampanya.baslangic_tarihi)} - {formatDate(kampanya.bitis_tarihi)}</span>
                   </div>
                 </div>

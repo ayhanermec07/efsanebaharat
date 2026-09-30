@@ -353,7 +353,7 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
                           İndirim: -{indirim.toFixed(2)} TL
                         </span>
                       ) : (
-                        <span className="text-orange-600">
+                        <span className="text-brand">
                           {(kampanya.min_sepet_tutari - sepetTutari).toFixed(2)} TL daha ekleyin
                         </span>
                       )}
@@ -386,7 +386,7 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
 
           {hata && (
             <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-brand-secondary flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-800">{hata}</p>
             </div>
           )}

@@ -111,7 +111,7 @@ export default function AdminAsortiStok() {
     }
   }
 
-  if (loading) return <div className="py-16 text-center"><span className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-orange-600 border-t-transparent" /></div>
+  if (loading) return <div className="py-16 text-center"><span className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand border-t-transparent" /></div>
 
   return (
     <main className="mx-auto max-w-6xl space-y-5">
@@ -157,7 +157,7 @@ export default function AdminAsortiStok() {
               <span className="mb-1.5 block text-sm font-semibold text-gray-800">3. Hazırlanan paket adedi</span>
               <input type="number" inputMode="numeric" min="1" step="1" value={packageQuantity} onChange={(event) => setPackageQuantity(event.target.value)} placeholder="Örn. 40" className="min-h-11 w-full rounded-lg border border-gray-300 px-3 text-gray-900" />
             </label>
-            <button type="button" disabled={!canPrepare || saving} onClick={() => void prepareStock()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-orange-600 px-5 py-2.5 font-semibold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="button" disabled={!canPrepare || saving} onClick={() => void prepareStock()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">
               <ArrowRightLeft className="h-5 w-5" /> {saving ? 'Aktarılıyor...' : 'Stoğa aktar'}
             </button>
           </div>
@@ -178,7 +178,7 @@ export default function AdminAsortiStok() {
       )}
 
       <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
-        <div className="flex items-center gap-2"><PackageCheck className="h-5 w-5 text-orange-700" /><h2 className="text-lg font-bold text-gray-950">Son stok hazırlama işlemleri</h2></div>
+        <div className="flex items-center gap-2"><PackageCheck className="h-5 w-5 text-emerald-800" /><h2 className="text-lg font-bold text-gray-950">Son stok hazırlama işlemleri</h2></div>
         {!history.length ? <p className="mt-4 text-sm text-gray-600">Henüz paketleme işlemi yapılmadı.</p> : (
           <div className="mt-4 overflow-x-auto"><table className="min-w-[620px] w-full text-sm"><thead className="border-b text-left text-xs uppercase tracking-wide text-gray-500"><tr><th className="pb-3 pr-4">Ürün</th><th className="pb-3 pr-4">Asorti</th><th className="pb-3 pr-4">Paket</th><th className="pb-3 pr-4">Kullanılan ana stok</th><th className="pb-3">Tarih</th></tr></thead><tbody className="divide-y">{history.map((entry) => { const stock = stocks.find((item) => item.id === entry.asorti_stok_id); return <tr key={entry.id}><td className="py-3 pr-4 font-medium text-gray-900">{productById.get(entry.urun_id)?.urun_adi || 'Ürün'}</td><td className="py-3 pr-4">{stock ? displayUnit(stock) : 'Asorti'}</td><td className="py-3 pr-4">{entry.paket_adedi}</td><td className="py-3 pr-4">{Number(entry.harcanan_gram).toLocaleString('tr-TR')} gr</td><td className="py-3 whitespace-nowrap">{new Date(entry.olusturma_tarihi).toLocaleString('tr-TR')}</td></tr> } )}</tbody></table></div>
         )}

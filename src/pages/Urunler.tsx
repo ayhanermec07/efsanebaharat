@@ -298,15 +298,15 @@ export default function Urunler() {
 
   return (
     <div className="shop-container py-6 sm:py-8">
-      <div className="mb-6 rounded-lg bg-zinc-950 p-5 text-white shadow-lg sm:p-7">
+      <div className="shop-page-heading mb-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">
-            <div className="shop-eyebrow border-white/20 bg-white/10 text-orange-100">
+            <div className="shop-eyebrow">
               <PackageSearch className="h-4 w-4" />
               Ürün kataloğu
             </div>
             <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Ürünler</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-brand-muted sm:text-base">
               Baharat, kahve ve gurme ürünleri kategori, marka ve kampanya filtresiyle hızlı bulun.
             </p>
           </div>
@@ -326,13 +326,13 @@ export default function Urunler() {
           <div className="sticky top-24 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-zinc-950">
-                <SlidersHorizontal className="h-5 w-5 text-orange-600" />
+                <SlidersHorizontal className="h-5 w-5 text-brand" />
                 Filtreler
               </div>
               <button
                 type="button"
                 onClick={clearFilters}
-                className="text-xs font-bold text-orange-700 hover:text-orange-800"
+                className="text-xs font-bold text-emerald-800 hover:text-orange-800"
               >
                 Temizle
               </button>
@@ -402,7 +402,7 @@ export default function Urunler() {
 
               {activeCampaign && (
                 <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-orange-700">Aktif kampanya</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-800">Aktif kampanya</p>
                   <p className="mt-1 break-words text-sm font-bold text-zinc-900">{activeCampaign.ad || activeCampaign.kampanya_adi}</p>
                 </div>
               )}
@@ -434,7 +434,7 @@ export default function Urunler() {
             </div>
           ) : urunler.length === 0 ? (
             <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center">
-              <PackageSearch className="h-12 w-12 text-zinc-300" />
+              <PackageSearch className="h-12 w-12 text-brand-muted" />
               <h2 className="mt-3 text-xl font-bold text-zinc-950">Ürün bulunamadı</h2>
               <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">
                 Arama veya filtreleri değiştirerek tekrar deneyebilirsiniz.

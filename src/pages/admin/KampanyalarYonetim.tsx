@@ -272,7 +272,7 @@ export default function KampanyalarYonetim() {
   if (yukleniyor) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -290,7 +290,7 @@ export default function KampanyalarYonetim() {
           <button
             onClick={() => setActiveTab('kampanyalar')}
             className={`min-h-10 shrink-0 px-4 py-2 rounded-lg transition-colors ${activeTab === 'kampanyalar'
-              ? 'bg-orange-100 text-orange-700 font-medium'
+              ? 'bg-orange-100 text-emerald-800 font-medium'
               : 'text-gray-600 hover:bg-gray-100'
               }`}
           >
@@ -299,7 +299,7 @@ export default function KampanyalarYonetim() {
           <button
             onClick={() => setActiveTab('istatistikler')}
             className={`min-h-10 shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === 'istatistikler'
-              ? 'bg-orange-100 text-orange-700 font-medium'
+              ? 'bg-orange-100 text-emerald-800 font-medium'
               : 'text-gray-600 hover:bg-gray-100'
               }`}
           >
@@ -319,7 +319,7 @@ export default function KampanyalarYonetim() {
             </p>
             <button
               onClick={() => modalAc()}
-              className="min-h-10 shrink-0 flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+              className="min-h-10 shrink-0 flex items-center justify-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800"
             >
               <Plus className="w-5 h-5" />
               Yeni Kampanya
@@ -368,7 +368,7 @@ export default function KampanyalarYonetim() {
                       <span className={`px-2 py-1 rounded-md font-medium ${kampanya.hedef_grup === 'musteri' ? 'bg-indigo-50 text-indigo-700' : kampanya.hedef_grup === 'bayi' ? 'bg-purple-50 text-purple-700' : 'bg-gray-100 text-gray-700'}`}>
                         Hedef: {kampanya.hedef_grup === 'musteri' ? 'Müşteriler' : kampanya.hedef_grup === 'bayi' ? 'Bayiler' : 'Herkes'}
                       </span>
-                      <span className="px-2 py-1 bg-orange-50 text-orange-700 rounded-md font-medium flex items-center gap-1">
+                      <span className="px-2 py-1 bg-orange-50 text-emerald-800 rounded-md font-medium flex items-center gap-1">
                         <Tag className="w-3 h-3" />
                         {kampanya.kapsam === 'tum_urunler' ? 'Tüm Ürünler' : kampanya.kapsam === 'kategori' ? 'Belirli Kategori' : kampanya.kapsam === 'marka' ? 'Belirli Marka' : 'Seçili Ürünler'}
                       </span>
@@ -418,7 +418,7 @@ export default function KampanyalarYonetim() {
                       </button>
                       <button
                         onClick={() => kampanyaSil(kampanya.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-brand-secondary hover:bg-red-50 rounded-lg transition-colors"
                         title="Sil"
                       >
                         <Trash2 className="w-5 h-5" />
@@ -445,17 +445,17 @@ export default function KampanyalarYonetim() {
                   <button 
                     type="button" 
                     onClick={() => setFormTab('genel')} 
-                    className={`min-h-10 shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'genel' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                    className={`min-h-10 shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'genel' ? 'border-emerald-700 text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                   >Temel Bilgiler</button>
                   <button 
                     type="button" 
                     onClick={() => setFormTab('kosullar')} 
-                    className={`min-h-10 shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'kosullar' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                    className={`min-h-10 shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'kosullar' ? 'border-emerald-700 text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                   >Koşullar ve Kapsam</button>
                   <button 
                     type="button" 
                     onClick={() => setFormTab('banner')} 
-                    className={`min-h-10 shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'banner' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                    className={`min-h-10 shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${formTab === 'banner' ? 'border-emerald-700 text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                   >Ana Sayfa Bannerı</button>
                 </div>
 
@@ -473,7 +473,7 @@ export default function KampanyalarYonetim() {
                               type="text"
                               value={formData.kod}
                               onChange={(e) => setFormData({ ...formData, kod: e.target.value.toUpperCase() })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 uppercase transition-all"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 uppercase transition-all"
                               required
                               disabled={!!duzenlenecekKampanya}
                               placeholder="Örn: YAZ20"
@@ -488,7 +488,7 @@ export default function KampanyalarYonetim() {
                               type="text"
                               value={formData.ad}
                               onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 transition-all"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 transition-all"
                               required
                               placeholder="Yaza Merhaba İndirimi"
                             />
@@ -502,7 +502,7 @@ export default function KampanyalarYonetim() {
                           <textarea
                             value={formData.aciklama}
                             onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 transition-all"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 transition-all"
                             rows={3}
                             placeholder="Kampanya detaylarını buraya girebilirsiniz..."
                           />
@@ -516,7 +516,7 @@ export default function KampanyalarYonetim() {
                             <select
                               value={formData.indirim_tipi}
                               onChange={(e) => setFormData({ ...formData, indirim_tipi: e.target.value as 'yuzde' | 'tutar' })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 transition-all bg-white"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 transition-all bg-white"
                             >
                               <option value="yuzde">Yüzde (%) İndirim</option>
                               <option value="tutar">Sabit Tutar (TL) İndirimi</option>
@@ -532,7 +532,7 @@ export default function KampanyalarYonetim() {
                                 type="number"
                                 value={formData.indirim_degeri}
                                 onChange={(e) => setFormData({ ...formData, indirim_degeri: parseFloat(e.target.value) })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 transition-all pr-10"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 transition-all pr-10"
                                 required
                                 min="0"
                                 step="0.01"
@@ -560,7 +560,7 @@ export default function KampanyalarYonetim() {
                               type="date"
                               value={formData.baslangic_tarihi}
                               onChange={(e) => setFormData({ ...formData, baslangic_tarihi: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700"
                               required
                             />
                           </div>
@@ -570,7 +570,7 @@ export default function KampanyalarYonetim() {
                               type="date"
                               value={formData.bitis_tarihi}
                               onChange={(e) => setFormData({ ...formData, bitis_tarihi: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700"
                               required
                             />
                           </div>
@@ -583,7 +583,7 @@ export default function KampanyalarYonetim() {
                               type="number"
                               value={formData.min_sepet_tutari}
                               onChange={(e) => setFormData({ ...formData, min_sepet_tutari: parseFloat(e.target.value) })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700"
                               required
                               min="0"
                               step="0.01"
@@ -595,7 +595,7 @@ export default function KampanyalarYonetim() {
                               type="number"
                               value={formData.max_indirim_tutari || ''}
                               onChange={(e) => setFormData({ ...formData, max_indirim_tutari: e.target.value ? parseFloat(e.target.value) : null })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700"
                               min="0"
                               step="0.01"
                               placeholder="Sınırsız"
@@ -607,7 +607,7 @@ export default function KampanyalarYonetim() {
                               type="number"
                               value={formData.kullanim_limiti || ''}
                               onChange={(e) => setFormData({ ...formData, kullanim_limiti: e.target.value ? parseInt(e.target.value) : null })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700"
                               min="1"
                               placeholder="Sınırsız"
                             />
@@ -624,7 +624,7 @@ export default function KampanyalarYonetim() {
                               <select
                                 value={formData.hedef_grup}
                                 onChange={(e) => setFormData({ ...formData, hedef_grup: e.target.value as 'musteri' | 'bayi' | 'hepsi' })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 bg-white"
                               >
                                 <option value="hepsi">Herkes (Bayi ve Müşteri)</option>
                                 <option value="musteri">Sadece Standart Müşteriler</option>
@@ -636,7 +636,7 @@ export default function KampanyalarYonetim() {
                               <select
                                 value={formData.kapsam}
                                 onChange={(e) => setFormData({ ...formData, kapsam: e.target.value as any })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 bg-white"
                               >
                                 <option value="tum_urunler">Tüm Ürünler</option>
                                 <option value="kategori">Belirli Kategori</option>
@@ -651,7 +651,7 @@ export default function KampanyalarYonetim() {
                                 <select
                                   value={formData.kategori_id}
                                   onChange={(e) => setFormData({ ...formData, kategori_id: e.target.value })}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 bg-white"
                                   required
                                 >
                                   <option value="">Seçiniz...</option>
@@ -666,7 +666,7 @@ export default function KampanyalarYonetim() {
                                 <select
                                   value={formData.marka_id}
                                   onChange={(e) => setFormData({ ...formData, marka_id: e.target.value })}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 bg-white"
                                   required
                                 >
                                   <option value="">Seçiniz...</option>
@@ -690,7 +690,7 @@ export default function KampanyalarYonetim() {
                                         if (e.target.checked) setSeciliUrunIds([...seciliUrunIds, urun.id]);
                                         else setSeciliUrunIds(seciliUrunIds.filter(id => id !== urun.id));
                                       }}
-                                      className="w-4 h-4 text-orange-600 rounded mr-2 focus:ring-orange-500 border-gray-300"
+                                      className="w-4 h-4 text-brand rounded mr-2 focus:ring-emerald-700 border-gray-300"
                                     />
                                     <label htmlFor={`prod-${urun.id}`} className="truncate cursor-pointer select-none text-gray-700">
                                       {urun.urun_adi}
@@ -698,7 +698,7 @@ export default function KampanyalarYonetim() {
                                   </div>
                                 ))}
                               </div>
-                              <div className="text-right text-xs text-orange-600 mt-2 font-medium">
+                              <div className="text-right text-xs text-brand mt-2 font-medium">
                                 {seciliUrunIds.length} ürün seçildi
                               </div>
                             </div>
@@ -728,7 +728,7 @@ export default function KampanyalarYonetim() {
                               onChange={(e) => setFormData({ ...formData, aktif: e.target.checked })}
                               className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
                           </label>
                         </div>
 
@@ -750,7 +750,7 @@ export default function KampanyalarYonetim() {
                                 onChange={(e) => setFormData({ ...formData, anasayfada_goster: e.target.checked })}
                                 className="sr-only peer"
                               />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
                             </label>
                           </div>
                           
@@ -763,7 +763,7 @@ export default function KampanyalarYonetim() {
                                     type="number"
                                     value={formData.sira_no}
                                     onChange={(e) => setFormData({ ...formData, sira_no: parseInt(e.target.value) || 0 })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 bg-white"
                                     placeholder="0"
                                   />
                                   <p className="text-xs text-gray-500 mt-1">Küçük numaralar önce gösterilir. Aynı numaralar kendi içinde sırayla döner.</p>
@@ -816,7 +816,7 @@ export default function KampanyalarYonetim() {
                   <button type="button" onClick={modalKapat} className="min-h-10 px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition-colors">
                     İptal
                   </button>
-                  <button type="submit" form="kampanya-form" className="min-h-10 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center justify-center gap-2 font-medium transition-colors shadow-sm hover:shadow">
+                  <button type="submit" form="kampanya-form" className="min-h-10 px-6 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 flex items-center justify-center gap-2 font-medium transition-colors shadow-sm hover:shadow">
                     <Save className="w-5 h-5" />
                     {duzenlenecekKampanya ? 'Değişiklikleri Kaydet' : 'Kampanyayı Oluştur'}
                   </button>
@@ -936,7 +936,7 @@ function KampanyaKodlari({ kampanyalar }: { kampanyalar: Kampanya[] }) {
             <select
               value={secilenKampanya}
               onChange={(e) => setSecilenKampanya(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700"
             >
               <option value="">Seçiniz...</option>
               {kampanyalar.map(k => (
@@ -954,7 +954,7 @@ function KampanyaKodlari({ kampanyalar }: { kampanyalar: Kampanya[] }) {
               onChange={(e) => setAdet(Math.max(1, parseInt(e.target.value)))}
               min="1"
               max="100"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700"
             />
           </div>
           <button
@@ -986,7 +986,7 @@ function KampanyaKodlari({ kampanyalar }: { kampanyalar: Kampanya[] }) {
 
         {yukleniyor ? (
           <div className="p-8 text-center">
-            <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+            <div className="inline-block w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
             <p className="mt-2 text-gray-500">Kodlar yükleniyor...</p>
           </div>
         ) : kodlar.length === 0 ? (
@@ -1034,7 +1034,7 @@ function KampanyaKodlari({ kampanyalar }: { kampanyalar: Kampanya[] }) {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() => sil(kod.id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-brand-secondary hover:text-red-900"
                       title="Sil"
                     >
                       <Trash2 className="w-4 h-4" />

@@ -132,7 +132,7 @@ export default function BayiDashboard() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -147,7 +147,7 @@ export default function BayiDashboard() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-700 to-brand-secondary rounded-full flex items-center justify-center">
                 <Store className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -191,7 +191,7 @@ export default function BayiDashboard() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-medium text-gray-600">Toplam Ürün</h3>
-              <Package className="w-8 h-8 text-orange-500" />
+              <Package className="w-8 h-8 text-emerald-700" />
             </div>
             <p className="text-3xl font-bold text-gray-900">
               {stats.toplamUrun} Adet

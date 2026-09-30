@@ -22,6 +22,7 @@ import {
   Settings,
   FileCode,
   Boxes,
+  AlertTriangle,
   Menu,
   X
 } from 'lucide-react'
@@ -46,7 +47,7 @@ export default function AdminLayout() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -75,13 +76,13 @@ export default function AdminLayout() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="anadolu-ui anadolu-admin min-h-screen min-w-0 bg-brand-cream">
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-gray-900 flex items-center justify-between px-4 z-40">
-        <h1 className="text-lg font-bold text-white">Admin Panel</h1>
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 border-b border-brand-line bg-brand-paper flex items-center justify-between gap-3 px-4 z-40">
+        <div className="min-w-0"><p className="truncate text-sm font-semibold text-brand-ink">Efsane Baharat</p><p className="text-xs text-brand-muted">Yönetim paneli</p></div>
         <button
           onClick={() => setSidebarOpen(true)}
-          className="min-h-10 min-w-10 p-2 text-white hover:bg-gray-800 rounded-lg transition-colors"
+          className="shop-icon-button"
           aria-label="Yönetim menüsünü aç"
         >
           <Menu className="w-6 h-6" />
@@ -97,13 +98,13 @@ export default function AdminLayout() {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 w-64 bg-gray-900 text-white flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      <div className={`fixed inset-y-0 left-0 w-64 border-r border-brand-line bg-brand-paper text-brand-ink flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}>
-        <div className="p-6 flex-shrink-0 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Admin Panel</h1>
+        <div className="border-b border-brand-line p-5 flex-shrink-0 flex items-center justify-between">
+          <h1 className="text-lg font-semibold">Yönetim paneli</h1>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden min-h-10 min-w-10 p-1 text-gray-400 hover:text-white"
+            className="shop-icon-button lg:hidden"
             aria-label="Yönetim menüsünü kapat"
           >
             <X className="w-5 h-5" />
@@ -119,9 +120,9 @@ export default function AdminLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-6 py-3 transition-colors ${isActive
-                  ? 'bg-orange-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                className={`mx-2 flex min-h-11 items-center gap-3 rounded-lg px-3 py-3 transition-colors ${isActive
+                  ? 'bg-brand text-white'
+                  : 'text-brand-muted hover:bg-brand-soft hover:text-brand-ink'
                   }`}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
@@ -131,12 +132,12 @@ export default function AdminLayout() {
           })}
 
           {/* Ana Sayfa - Yeni sekmede açılır */}
-          <div className="border-t border-gray-800 mt-2 pt-2">
+          <div className="border-t border-brand-line mt-2 pt-2">
             <a
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 px-6 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+              className="mx-2 flex min-h-11 items-center gap-3 rounded-lg px-3 py-3 text-brand-muted hover:bg-brand-soft hover:text-brand-ink transition-colors"
             >
               <ExternalLink className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm font-medium">Ana Sayfa</span>
@@ -144,13 +145,13 @@ export default function AdminLayout() {
           </div>
         </nav>
 
-        <div className="flex-shrink-0 border-t border-gray-800">
+        <div className="flex-shrink-0 border-t border-brand-line">
           <button
             onClick={() => {
               signOut()
               navigate('/')
             }}
-            className="flex items-center gap-3 px-6 py-4 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full"
+            className="flex min-h-11 items-center gap-3 px-5 py-4 text-brand-muted hover:bg-brand-soft hover:text-brand-ink transition-colors w-full"
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
             <span className="text-sm font-medium">Çıkış Yap</span>
@@ -159,7 +160,7 @@ export default function AdminLayout() {
       </div>
 
       {/* Main Content */}
-      <div className="lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8 min-h-screen">
+      <div className="min-w-0 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 sm:pt-20 lg:pt-8 min-h-screen">
         <Outlet />
       </div>
     </div>

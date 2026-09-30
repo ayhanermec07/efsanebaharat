@@ -200,7 +200,7 @@ export default function AdminBayiSatislari() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -210,7 +210,7 @@ export default function AdminBayiSatislari() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-          <BarChart3 className="w-8 h-8 text-orange-600" />
+          <BarChart3 className="w-8 h-8 text-brand" />
           Bayi Satış Raporları
         </h1>
         <p className="text-gray-600 mt-2">
@@ -275,7 +275,7 @@ export default function AdminBayiSatislari() {
             <select
               value={selectedBayi}
               onChange={(e) => setSelectedBayi(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
             >
               <option value="all">Tüm Bayiler</option>
               {bayiler.map((bayi) => (
@@ -295,7 +295,7 @@ export default function AdminBayiSatislari() {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
             />
           </div>
 
@@ -308,7 +308,7 @@ export default function AdminBayiSatislari() {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
             />
           </div>
 

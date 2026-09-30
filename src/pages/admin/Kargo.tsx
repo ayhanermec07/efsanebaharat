@@ -214,7 +214,7 @@ export default function AdminKargo() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -223,7 +223,7 @@ export default function AdminKargo() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-3">
-          <Truck className="w-8 h-8 text-orange-600" />
+          <Truck className="w-8 h-8 text-brand" />
           Kargo Yönetimi
         </h1>
         <p className="text-gray-600 mt-2">
@@ -240,7 +240,7 @@ export default function AdminKargo() {
         <div className="space-y-6">
           {musteriler.map(musteri => (
             <div key={musteri.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="bg-gradient-to-r from-orange-600 to-orange-500 text-white p-4">
+              <div className="bg-brand text-white p-4">
                 <h2 className="text-xl font-bold">{musteri.ad_soyad}</h2>
                 {/* 'email' alanı kaldırıldı, 'telefon' eklendi */}
                 {musteri.telefon && (
@@ -279,7 +279,7 @@ export default function AdminKargo() {
                                   <p>Takip No: {siparis.kargo_takip_no}</p>
                                   <button
                                     onClick={() => copyToClipboard(siparis.kargo_takip_no || '', siparis.id)}
-                                    className="text-orange-600 hover:text-orange-700"
+                                    className="text-brand hover:text-emerald-800"
                                   >
                                     {copiedId === siparis.id ? (
                                       <Check className="w-4 h-4" />
@@ -298,7 +298,7 @@ export default function AdminKargo() {
 
                         <button
                           onClick={() => openKargoModal(siparis)}
-                          className="w-full sm:w-auto sm:ml-4 min-h-10 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center justify-center gap-2"
+                          className="w-full sm:w-auto sm:ml-4 min-h-10 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition flex items-center justify-center gap-2"
                         >
                           <Truck className="w-4 h-4" />
                           {siparis.kargo_firmasi ? 'Güncelle' : 'Kargo Bilgisi Gir'}
@@ -343,7 +343,7 @@ export default function AdminKargo() {
                 <select
                   value={formData.kargo_firmasi}
                   onChange={(e) => setFormData({ ...formData, kargo_firmasi: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   required
                 >
                   <option value="">Seçiniz...</option>
@@ -364,7 +364,7 @@ export default function AdminKargo() {
                   value={formData.kargo_takip_no}
                   onChange={(e) => setFormData({ ...formData, kargo_takip_no: e.target.value })}
                   placeholder="Kargo takip numarasını girin"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   minLength={5}
                   required
                 />
@@ -382,7 +382,7 @@ export default function AdminKargo() {
                   value={formData.tahmini_teslimat_tarihi}
                   onChange={(e) => setFormData({ ...formData, tahmini_teslimat_tarihi: e.target.value })}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                 />
               </div>
 
@@ -397,7 +397,7 @@ export default function AdminKargo() {
                 <button
                   onClick={handleKargoKaydet}
                   disabled={saving}
-                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {saving ? (
                     <>

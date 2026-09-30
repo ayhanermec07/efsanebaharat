@@ -68,7 +68,7 @@ export default function Kayit() {
         <div className="grid gap-4 sm:grid-cols-2"><Field label="Şifre" name="password" type="password" value={formData.password} onChange={handleChange} required minLength={8} autoComplete="new-password" /><Field label="Şifre tekrarı" name="passwordConfirmation" type="password" value={formData.passwordConfirmation} onChange={handleChange} required minLength={8} autoComplete="new-password" /></div>
         <button type="submit" disabled={loading} className="shop-btn-primary min-h-11 w-full">{loading ? <><span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" /> Kayıt yapılıyor...</> : <><LockKeyhole className="h-5 w-5" /> Kayıt ol</>}</button>
       </form>
-      <div className="mt-6 text-center text-sm text-zinc-600">Zaten hesabınız var mı? <Link to="/giris" className="font-bold text-orange-700 hover:text-orange-800">Giriş yap</Link></div>
+      <div className="mt-6 text-center text-sm text-zinc-600">Zaten hesabınız var mı? <Link to="/giris" className="font-bold text-emerald-800 hover:text-orange-800">Giriş yap</Link></div>
     </div>
   </div></div>
 }

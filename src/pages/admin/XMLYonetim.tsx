@@ -621,7 +621,7 @@ export default function XMLYonetim() {
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
-                <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
             </div>
         )
     }
@@ -630,7 +630,7 @@ export default function XMLYonetim() {
         <div className="max-w-6xl">
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                    <FileCode className="w-8 h-8 text-orange-600" />
+                    <FileCode className="w-8 h-8 text-brand" />
                     <h1 className="text-3xl font-bold text-gray-900">Bayi XML Yönetimi</h1>
                 </div>
                 <button
@@ -647,7 +647,7 @@ export default function XMLYonetim() {
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                            <UploadCloud className="w-5 h-5 text-orange-600" />
+                            <UploadCloud className="w-5 h-5 text-brand" />
                             XML İçe Aktarma
                         </h2>
                         <p className="text-sm text-gray-500 mt-1">
@@ -666,7 +666,7 @@ export default function XMLYonetim() {
                         <button
                             onClick={() => handleImportXML(false)}
                             disabled={importing}
-                            className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50"
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition disabled:opacity-50"
                         >
                             {importing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
                             İçe Aktar
@@ -681,7 +681,7 @@ export default function XMLYonetim() {
                             <select
                                 value={selectedSourceId || ''}
                                 onChange={(e) => handleSelectSource(e.target.value)}
-                                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-orange-100"
                             >
                                 <option value="">Yeni XML kaynağı</option>
                                 {importSources.map(source => (
@@ -706,7 +706,7 @@ export default function XMLYonetim() {
                         value={importSourceName}
                         onChange={(e) => setImportSourceName(e.target.value)}
                         placeholder="Örn. Ana tedarikçi"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-orange-100"
                     />
                 </div>
 
@@ -718,7 +718,7 @@ export default function XMLYonetim() {
                         type="url"
                         value={importUrl}
                         onChange={(e) => setImportUrl(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-orange-100"
                     />
                 </div>
 
@@ -743,7 +743,7 @@ export default function XMLYonetim() {
                         step="1"
                         value={updateIntervalMinutes}
                         onChange={(e) => setUpdateIntervalMinutes(Number(e.target.value))}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-orange-100"
                     />
                     <p className="mt-1 text-xs text-gray-500">Her kaynak için ayrı süre belirleyebilirsiniz.</p>
                 </div>
@@ -811,14 +811,14 @@ export default function XMLYonetim() {
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-orange-600" />
+                        <Activity className="w-5 h-5 text-brand" />
                         Sistem Durum Paneli
                     </h2>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={runHealthCheck}
                             disabled={checking}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                            className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition disabled:opacity-50"
                         >
                             {checking ? (
                                 <RefreshCw className="w-4 h-4 animate-spin" />
@@ -838,7 +838,7 @@ export default function XMLYonetim() {
                             {healthStatus.isHealthy ? (
                                 <CheckCircle className="w-5 h-5 text-green-600" />
                             ) : (
-                                <XCircle className="w-5 h-5 text-red-600" />
+                                <XCircle className="w-5 h-5 text-brand-secondary" />
                             )}
                             <span className={`font-semibold ${healthStatus.isHealthy ? 'text-green-700' : 'text-red-700'}`}>
                                 {healthStatus.isHealthy ? 'Çalışıyor' : 'Hata Var'}
@@ -891,7 +891,7 @@ export default function XMLYonetim() {
                             {healthStatus.errors.length === 0 ? (
                                 <CheckCircle className="w-5 h-5 text-green-600" />
                             ) : (
-                                <XCircle className="w-5 h-5 text-red-600" />
+                                <XCircle className="w-5 h-5 text-brand-secondary" />
                             )}
                             <span className={`font-semibold ${healthStatus.errors.length === 0 ? 'text-green-700' : 'text-red-700'}`}>
                                 Hatalar
@@ -928,7 +928,7 @@ export default function XMLYonetim() {
                             </h3>
                             <button
                                 onClick={clearErrors}
-                                className="text-sm text-red-600 hover:text-red-800 transition"
+                                className="text-sm text-brand-secondary hover:text-red-800 transition"
                             >
                                 Temizle
                             </button>
@@ -954,7 +954,7 @@ export default function XMLYonetim() {
             {/* XML Dışa Aktarma Bağlantısı */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Download className="w-5 h-5 text-orange-600" />
+                    <Download className="w-5 h-5 text-brand" />
                     XML Dışa Aktarma Linki
                 </h2>
                 
@@ -984,7 +984,7 @@ export default function XMLYonetim() {
                     <button
                         onClick={() => exportUrl && window.open(exportUrl, '_blank')}
                         disabled={!exportUrl}
-                        className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center gap-2"
+                        className="px-4 py-3 bg-brand text-white rounded-lg hover:bg-emerald-800 transition flex items-center gap-2"
                     >
                         <Eye className="w-4 h-4" /> Aç
                     </button>

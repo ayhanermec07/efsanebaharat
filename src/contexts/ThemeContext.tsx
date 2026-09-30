@@ -1,12 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { publicSupabase, supabase } from '../lib/supabase'
-
-interface ThemeSettings {
-    primaryColor: string
-    secondaryColor: string
-    backgroundColor: string
-}
+import { colorForWhiteText, defaultTheme, normalizeTheme, THEME_DESIGN, type ThemeSettings } from '../lib/theme'
 
 interface LogoSettings {
     url: string | null
@@ -32,12 +27,6 @@ interface ThemeContextType {
     loading: boolean
 }
 
-const defaultTheme: ThemeSettings = {
-    primaryColor: '#ea580c', // orange-600
-    secondaryColor: '#dc2626', // red-600
-    backgroundColor: '#f9fafb', // gray-50
-}
-
 const defaultLogo: LogoSettings = {
     url: null,
     width: 120,
@@ -47,21 +36,9 @@ const defaultSiteInfo: SiteInfoSettings = {
     siteName: 'Efsane Baharat',
     tagline: 'Premium baharat ve gıda',
     description: 'Günlük mutfaktan profesyonel kullanıma kadar taze, seçili ve güvenilir baharat ürünleri.',
-    phone: '0850 123 45 67',
-    email: 'info@efsanebaharat.com',
-    address: 'İstanbul, Türkiye',
-}
-
-const normalizeColor = (value: unknown, fallback: string) =>
-    typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback
-
-const normalizeTheme = (value: unknown): ThemeSettings => {
-    const setting = value && typeof value === 'object' ? value as Partial<ThemeSettings> : {}
-    return {
-        primaryColor: normalizeColor(setting.primaryColor, defaultTheme.primaryColor),
-        secondaryColor: normalizeColor(setting.secondaryColor, defaultTheme.secondaryColor),
-        backgroundColor: normalizeColor(setting.backgroundColor, defaultTheme.backgroundColor),
-    }
+    phone: '',
+    email: '',
+    address: '',
 }
 
 const normalizeLogo = (value: unknown): LogoSettings => {
@@ -80,15 +57,20 @@ const normalizeText = (value: unknown, fallback: string, maxLength: number) => {
     return normalized || fallback
 }
 
+const normalizeContact = (value: unknown, maxLength: number, oldPlaceholder: string) => {
+    const normalized = typeof value === 'string' ? value.trim().slice(0, maxLength) : ''
+    return normalized === oldPlaceholder ? '' : normalized
+}
+
 const normalizeSiteInfo = (value: unknown): SiteInfoSettings => {
     const setting = value && typeof value === 'object' ? value as Partial<SiteInfoSettings> : {}
     return {
         siteName: normalizeText(setting.siteName, defaultSiteInfo.siteName, 80),
         tagline: normalizeText(setting.tagline, defaultSiteInfo.tagline, 120),
         description: normalizeText(setting.description, defaultSiteInfo.description, 300),
-        phone: normalizeText(setting.phone, defaultSiteInfo.phone, 40),
-        email: normalizeText(setting.email, defaultSiteInfo.email, 160),
-        address: normalizeText(setting.address, defaultSiteInfo.address, 200),
+        phone: normalizeContact(setting.phone, 40, '0850 123 45 67'),
+        email: normalizeContact(setting.email, 160, 'info@efsanebaharat.com'),
+        address: normalizeContact(setting.address, 200, 'İstanbul, Türkiye'),
     }
 }
 
@@ -108,14 +90,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const root = document.documentElement
 
-        // Hex to RGB conversion for Tailwind opacity support if needed
-        // For now, we'll just set the hex values directly/
-        // Note: Tailwind uses specific color names, but we can override some defaults or use
-        // style={} prop in components. A better approach for global theme with Tailwind
-        // is using CSS variables.
-
         root.style.setProperty('--site-primary-color', theme.primaryColor)
+        root.style.setProperty('--site-primary-contrast-color', colorForWhiteText(theme.primaryColor))
         root.style.setProperty('--site-secondary-color', theme.secondaryColor)
+        root.style.setProperty('--site-secondary-contrast-color', colorForWhiteText(theme.secondaryColor))
         root.style.setProperty('--site-background-color', theme.backgroundColor)
         document.body.style.backgroundColor = theme.backgroundColor
 
@@ -149,12 +127,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
 
     const updateTheme = async (settings: ThemeSettings) => {
-        const normalizedSettings = normalizeTheme(settings)
+        const normalizedSettings = normalizeTheme({ ...settings, design: THEME_DESIGN })
         const { error } = await supabase
             .from('site_settings')
             .upsert({
                 setting_key: 'theme',
-                setting_value: normalizedSettings,
+                setting_value: { ...normalizedSettings, design: THEME_DESIGN },
                 updated_at: new Date().toISOString()
             }, { onConflict: 'setting_key' })
 

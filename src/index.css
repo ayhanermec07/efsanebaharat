@@ -1,129 +1,119 @@
+@font-face {
+  font-family: 'DM Sans'; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url('/fonts/dm-sans-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'DM Sans'; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url('/fonts/dm-sans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Source Serif 4'; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url('/fonts/source-serif-4-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Source Serif 4'; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url('/fonts/source-serif-4-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --radius: 0.5rem;
-    --brand-ink: 24 24 27;
-    --brand-green: 34 95 72;
-    --brand-amber: 217 119 6;
+    --radius: 0.75rem;
+    --brand-ink: 41 59 43;
+    --brand-green: 52 81 60;
+    --brand-amber: 168 75 43;
     --brand-red: 185 28 28;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%
-    --site-primary-color: #ea580c;
-    --site-secondary-color: #dc2626;
-    --site-background-color: #f9fafb;
+    --site-primary-color: #34513c;
+    --site-primary-contrast-color: #34513c;
+    --site-secondary-color: #a84b2b;
+    --site-secondary-contrast-color: #a84b2b;
+    --site-background-color: #f7f2e8;
+    --shop-paper: #fffdf8;
+    --shop-soft: #e9e9d9;
+    --shop-ink: #293b2b;
+    --shop-muted: #635f51;
+    --shop-line: #ded9c9;
+    --background: 40 48% 94%;
+    --foreground: 126 18% 20%;
+    --card: 43 100% 99%;
+    --card-foreground: 126 18% 20%;
+    --popover: 43 100% 99%;
+    --popover-foreground: 126 18% 20%;
+    --primary-foreground: 43 100% 99%;
+    --secondary-foreground: 43 100% 99%;
+    --accent-foreground: 43 100% 99%;
+    --muted: 60 24% 88%;
+    --muted-foreground: 47 10% 35%;
+    --destructive: 0 72% 41%;
+    --destructive-foreground: 43 100% 99%;
+    --border: 46 24% 83%;
+    --input: 46 24% 83%;
+    --ring: 137 22% 26%;
   }
 
-  .dark {
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%
+  html { scroll-behavior: smooth; }
+  body { background: var(--site-background-color); color: var(--shop-ink); }
+  ::selection { background: #d0dcc1; color: var(--shop-ink); }
+  .anadolu-ui :where(button, [role='button']) { min-height: 44px; }
+  .anadolu-ui :where(input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='file']), select, textarea) {
+    min-height: 44px; font-size: 16px; border-radius: var(--radius); background-color: var(--shop-paper);
   }
-}
-
-@layer base {
-  html {
-    scroll-behavior: smooth;
+  .anadolu-ui :where(input[type='checkbox'], input[type='radio']) { accent-color: var(--site-primary-color); }
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--site-primary-contrast-color); outline-offset: 3px;
   }
-
-  body {
-    background: var(--site-background-color);
-    color: #18181b;
+  .anadolu-store :where(h1, h2, h3) {
+    font-family: 'Source Serif 4', Georgia, serif; font-weight: 500; letter-spacing: -0.025em; text-transform: none;
   }
 }
 
 @layer components {
-  .shop-shell {
-    background:
-      radial-gradient(circle at top left, color-mix(in srgb, var(--site-primary-color) 12%, transparent), transparent 28rem),
-      linear-gradient(180deg, color-mix(in srgb, var(--site-background-color) 92%, white) 0%, var(--site-background-color) 100%);
-  }
-
-  .shop-container {
-    @apply mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8;
-  }
-
-  .shop-card {
-    @apply rounded-lg border border-zinc-200 bg-white shadow-sm;
-  }
-
+  .shop-shell { background: var(--site-background-color); }
+  .shop-container { @apply mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8; }
+  .shop-card { @apply rounded-lg border border-brand-line bg-brand-paper shadow-sm; }
   .shop-btn-primary {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60;
-    background-color: var(--site-primary-color);
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-transparent px-5 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60;
+    background: var(--site-primary-contrast-color);
   }
-
-  .shop-btn-primary:hover {
-    filter: brightness(0.88);
-  }
-
+  .shop-btn-primary:hover:not(:disabled) { filter: brightness(0.88); }
   .shop-btn-secondary {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-800 transition hover:border-emerald-800 hover:text-emerald-900 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-brand-line bg-brand-paper px-5 py-3 text-sm font-semibold text-brand-ink transition hover:border-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60;
   }
-
+  .shop-icon-button {
+    @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-brand-line bg-brand-paper text-brand-ink transition hover:border-emerald-700 hover:bg-emerald-50;
+  }
   .shop-input {
-    @apply w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:ring-2;
+    @apply min-h-11 w-full min-w-0 rounded-lg border border-brand-line bg-brand-paper px-4 py-3 text-base text-brand-ink transition placeholder:text-zinc-500;
   }
-
-  .shop-input:focus {
-    border-color: var(--site-primary-color);
-    --tw-ring-color: color-mix(in srgb, var(--site-primary-color) 18%, transparent);
-  }
-
+  .shop-input:focus { border-color: var(--site-primary-color); }
   .shop-eyebrow {
-    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em];
-    color: var(--site-secondary-color);
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em];
+    color: var(--site-secondary-contrast-color);
   }
+  .shop-page-heading { @apply mb-6 rounded-lg border border-brand-line bg-brand-soft p-5 text-brand-ink sm:p-7; }
+  .shop-image-placeholder { @apply flex h-full w-full flex-col items-center justify-center gap-3 bg-brand-soft p-5 text-emerald-700; }
+  .shop-hero-art { @apply flex min-w-0 w-full items-center justify-center overflow-hidden rounded-lg bg-brand-soft p-5 text-center; }
 }
 
-.site-primary-bg {
-  background-color: var(--site-primary-color);
-}
+.anadolu-store h1 { font-weight: 500; letter-spacing: -0.035em; }
+.anadolu-store h2, .anadolu-store h3 { font-weight: 500; letter-spacing: -0.025em; }
+.anadolu-store h2.uppercase, .anadolu-store h3.uppercase { text-transform: none; }
+.site-primary-bg { background-color: var(--site-primary-contrast-color); }
+.site-primary-text { color: var(--site-primary-contrast-color); }
+.site-secondary-bg { background-color: var(--site-secondary-contrast-color); }
+.site-secondary-text { color: var(--site-secondary-contrast-color); }
+.site-primary-hover:hover { filter: brightness(0.88); }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
 
-.site-primary-text {
-  color: var(--site-primary-color);
-}
-
-.site-secondary-bg {
-  background-color: var(--site-secondary-color);
-}
-
-.site-secondary-text {
-  color: var(--site-secondary-color);
-}
-
-.site-primary-hover:hover {
-  filter: brightness(0.88);
-}
-
-
-
-img {
-  object-position: top;
-}
-
-.fixed {
-  position: fixed;
-}
-
-/* Hide scrollbar for horizontal scroll */
-.hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }

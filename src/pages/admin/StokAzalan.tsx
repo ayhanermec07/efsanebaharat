@@ -93,7 +93,7 @@ export default function StokAzalan() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <AlertTriangle className="w-8 h-8 text-orange-600" />
+            <AlertTriangle className="w-8 h-8 text-brand" />
             <span>Stoğu Azalan Ürünler</span>
           </h1>
           <p className="text-gray-600 mt-2">Stoğu 3 birimden az olan ürünler (Küçükten büyüğe sıralı)</p>
@@ -102,7 +102,7 @@ export default function StokAzalan() {
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+          <div className="inline-block w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
         </div>
       ) : urunler.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm p-12 text-center">
@@ -146,7 +146,7 @@ export default function StokAzalan() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
-                        <AlertTriangle className="w-4 h-4 text-orange-600" />
+                        <AlertTriangle className="w-4 h-4 text-brand" />
                         <span className="font-semibold text-gray-900">
                           {urun.stok_miktari.toFixed(2)} {urun.stok_birimi?.toUpperCase()}
                         </span>
@@ -168,7 +168,7 @@ export default function StokAzalan() {
                           setSelectedUrun({ id: urun.urun_id, adi: urun.urun_adi })
                           setStokModalOpen(true)
                         }}
-                        className="text-orange-600 hover:text-orange-700 font-medium text-sm"
+                        className="text-brand hover:text-emerald-800 font-medium text-sm"
                       >
                         Stok Ekle →
                       </button>

@@ -66,7 +66,7 @@ export default function UrunSoruModul({ urunId, urunAdi }: UrunSoruModulProps) {
     <div className="mt-12 border-t pt-8">
       <div className="bg-gray-50 rounded-lg p-6">
         <div className="flex items-start space-x-3 mb-4">
-          <MessageSquare className="w-6 h-6 text-orange-600 flex-shrink-0 mt-1" />
+          <MessageSquare className="w-6 h-6 text-brand flex-shrink-0 mt-1" />
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Ürün Hakkında Soru Sorun
@@ -86,7 +86,7 @@ export default function UrunSoruModul({ urunId, urunAdi }: UrunSoruModulProps) {
                     setShowForm(true)
                   }
                 }}
-                className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition text-sm font-medium"
+                className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-emerald-800 transition text-sm font-medium"
               >
                 Soru Sor
               </button>
@@ -96,7 +96,7 @@ export default function UrunSoruModul({ urunId, urunAdi }: UrunSoruModulProps) {
                   <textarea
                     value={soruMetni}
                     onChange={(e) => setSoruMetni(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-y"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-transparent resize-y"
                     placeholder="Sorunuzu buraya yazın..."
                     rows={4}
                     minLength={10}
@@ -109,7 +109,7 @@ export default function UrunSoruModul({ urunId, urunAdi }: UrunSoruModulProps) {
                     </p>
                     <p className={`text-sm ${
                       soruMetni.length > 950 
-                        ? 'text-red-600 font-medium' 
+                        ? 'text-brand-secondary font-medium' 
                         : 'text-gray-500'
                     }`}>
                       {soruMetni.length} / 1000
@@ -121,7 +121,7 @@ export default function UrunSoruModul({ urunId, urunAdi }: UrunSoruModulProps) {
                   <button
                     type="submit"
                     disabled={loading || soruMetni.trim().length < 10}
-                    className="flex-1 bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm font-medium"
+                    className="flex-1 bg-brand text-white py-2 px-4 rounded-lg hover:bg-emerald-800 transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm font-medium"
                   >
                     {loading ? (
                       <>

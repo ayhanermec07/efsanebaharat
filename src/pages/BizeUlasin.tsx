@@ -118,7 +118,7 @@ export default function BizeUlasin() {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                <MessageSquare className="w-8 h-8 text-orange-600" />
+                <MessageSquare className="w-8 h-8 text-brand" />
               </div>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Bize Ulaşın</h1>
@@ -154,7 +154,7 @@ export default function BizeUlasin() {
                 <select
                   value={formData.konu}
                   onChange={(e) => setFormData({ ...formData, konu: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   required
                 >
                   {KONULAR.map((konu) => (
@@ -173,7 +173,7 @@ export default function BizeUlasin() {
                 <textarea
                   value={formData.soru_metni}
                   onChange={(e) => setFormData({ ...formData, soru_metni: e.target.value })}
-                  className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent min-h-[200px] resize-y ${
+                  className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-transparent min-h-[200px] resize-y ${
                     errors.soru_metni ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Sorunuzu veya mesajınızı buraya yazın..."
@@ -184,12 +184,12 @@ export default function BizeUlasin() {
                 <div className="flex items-center justify-between mt-2">
                   <div>
                     {errors.soru_metni && (
-                      <p className="text-sm text-red-600">{errors.soru_metni}</p>
+                      <p className="text-sm text-brand-secondary">{errors.soru_metni}</p>
                     )}
                   </div>
                   <p className={`text-sm ${
                     formData.soru_metni.length > 950 
-                      ? 'text-red-600 font-medium' 
+                      ? 'text-brand-secondary font-medium' 
                       : 'text-gray-500'
                   }`}>
                     {formData.soru_metni.length} / 1000 karakter
@@ -204,7 +204,7 @@ export default function BizeUlasin() {
                 className={`w-full py-3 px-6 rounded-lg font-medium transition flex items-center justify-center space-x-2 ${
                   loading || formData.soru_metni.trim().length < 10
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-orange-600 text-white hover:bg-orange-700'
+                    : 'bg-brand text-white hover:bg-emerald-800'
                 }`}
               >
                 {loading ? (

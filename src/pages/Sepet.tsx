@@ -107,15 +107,15 @@ export default function Sepet() {
 
   return (
     <div className="shop-container py-6 sm:py-8">
-      <div className="mb-6 rounded-lg bg-zinc-950 p-5 text-white shadow-lg sm:p-7">
+      <div className="shop-page-heading mb-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <div className="shop-eyebrow border-white/20 bg-white/10 text-orange-100">
+            <div className="shop-eyebrow">
               <ShoppingBag className="h-4 w-4" />
               Sepet
             </div>
             <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Sepetim</h1>
-            <p className="mt-2 text-sm leading-6 text-zinc-300 sm:text-base">
+            <p className="mt-2 text-sm leading-6 text-brand-muted sm:text-base">
               Seçili sortileri kontrol edin, kampanyayı uygulayın ve ödemeye geçin.
             </p>
           </div>
@@ -130,7 +130,7 @@ export default function Sepet() {
 
       {sepetItems.length === 0 ? (
         <div className="flex min-h-[360px] flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-center shadow-sm">
-          <ShoppingBag className="h-16 w-16 text-zinc-300" />
+          <ShoppingBag className="h-16 w-16 text-brand-muted" />
           <h2 className="mt-4 text-2xl font-bold text-zinc-950">Sepetiniz boş</h2>
           <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">
             Ürünleri inceleyip size uygun sortiyi seçtiğinizde sepet burada hazır olacak.
@@ -153,7 +153,7 @@ export default function Sepet() {
                       {item.gorsel_url ? (
                         <img src={item.gorsel_url} alt={item.urun_adi} className="h-full w-full object-cover" />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-orange-100 text-2xl font-bold text-orange-700">
+                        <div className="flex h-full w-full items-center justify-center bg-orange-100 text-2xl font-bold text-emerald-800">
                           {item.urun_adi.charAt(0)}
                         </div>
                       )}
@@ -169,7 +169,7 @@ export default function Sepet() {
                         </div>
                         <div className="text-left sm:text-right">
                           <p className="text-sm font-semibold text-zinc-500">Birim</p>
-                          <p className="font-bold text-orange-700">{formatPrice(item.birim_fiyat)}</p>
+                          <p className="font-bold text-emerald-800">{formatPrice(item.birim_fiyat)}</p>
                         </div>
                       </div>
 
@@ -215,7 +215,7 @@ export default function Sepet() {
                           <button
                             type="button"
                             onClick={() => sepettenCikar(item.urun_id, item.birim_turu, item.birim_adedi)}
-                            className="grid h-10 w-10 place-items-center rounded-lg border border-red-100 bg-red-50 text-red-600 transition hover:bg-red-100"
+                            className="grid h-10 w-10 place-items-center rounded-lg border border-red-100 bg-red-50 text-brand-secondary transition hover:bg-red-100"
                             aria-label="Sepetten çıkar"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -232,7 +232,7 @@ export default function Sepet() {
           <aside className="min-w-0">
             <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm lg:sticky lg:top-24">
               <div className="mb-5 flex items-center gap-2">
-                <LockKeyhole className="h-5 w-5 text-orange-700" />
+                <LockKeyhole className="h-5 w-5 text-emerald-800" />
                 <h2 className="text-xl font-bold text-zinc-950">Sipariş özeti</h2>
               </div>
 

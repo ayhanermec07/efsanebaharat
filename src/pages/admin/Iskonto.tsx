@@ -362,7 +362,7 @@ export default function Iskonto() {
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition flex items-center gap-2"
+          className="bg-brand text-white px-6 py-3 rounded-lg hover:bg-emerald-800 transition flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
           Yeni İskonto
@@ -380,7 +380,7 @@ export default function Iskonto() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="İskonto veya hedef ara..."
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
               />
             </div>
           </div>
@@ -389,7 +389,7 @@ export default function Iskonto() {
               onClick={() => setFilterTip('all')}
               className={`px-4 py-2 rounded-lg transition ${
                 filterTip === 'all'
-                  ? 'bg-orange-600 text-white'
+                  ? 'bg-brand text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -399,7 +399,7 @@ export default function Iskonto() {
               onClick={() => setFilterTip('musteri')}
               className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${
                 filterTip === 'musteri'
-                  ? 'bg-orange-600 text-white'
+                  ? 'bg-brand text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -410,7 +410,7 @@ export default function Iskonto() {
               onClick={() => setFilterTip('bayi')}
               className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${
                 filterTip === 'bayi'
-                  ? 'bg-orange-600 text-white'
+                  ? 'bg-brand text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -421,7 +421,7 @@ export default function Iskonto() {
               onClick={() => setFilterTip('grup')}
               className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${
                 filterTip === 'grup'
-                  ? 'bg-orange-600 text-white'
+                  ? 'bg-brand text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -435,7 +435,7 @@ export default function Iskonto() {
       {/* İskonto Listesi */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -475,7 +475,7 @@ export default function Iskonto() {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">{iskonto.hedef_adi}</td>
                   <td className="px-6 py-4">
-                    <span className="inline-flex items-center gap-1 text-lg font-bold text-orange-600">
+                    <span className="inline-flex items-center gap-1 text-lg font-bold text-brand">
                       <Percent className="w-4 h-4" />
                       {iskonto.iskonto_orani}
                     </span>
@@ -510,7 +510,7 @@ export default function Iskonto() {
                       </button>
                       <button
                         onClick={() => handleDelete(iskonto.id)}
-                        className="text-red-600 hover:text-red-700 p-1"
+                        className="text-brand-secondary hover:text-red-700 p-1"
                         title="Sil"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -555,7 +555,7 @@ export default function Iskonto() {
                     value={formData.iskonto_adi}
                     onChange={(e) => setFormData({ ...formData, iskonto_adi: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                     placeholder="Örn: VIP Müşteri İndirimi"
                   />
                 </div>
@@ -573,7 +573,7 @@ export default function Iskonto() {
                       }}
                       className={`p-4 border-2 rounded-lg transition ${
                         formData.iskonto_tipi === 'musteri'
-                          ? 'border-orange-600 bg-orange-50'
+                          ? 'border-brand bg-orange-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -588,7 +588,7 @@ export default function Iskonto() {
                       }}
                       className={`p-4 border-2 rounded-lg transition ${
                         formData.iskonto_tipi === 'bayi'
-                          ? 'border-orange-600 bg-orange-50'
+                          ? 'border-brand bg-orange-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -605,7 +605,7 @@ export default function Iskonto() {
                       }}
                       className={`p-4 border-2 rounded-lg transition ${
                         formData.iskonto_tipi === 'grup'
-                          ? 'border-orange-600 bg-orange-50'
+                          ? 'border-brand bg-orange-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -621,7 +621,7 @@ export default function Iskonto() {
                       }}
                       className={`p-4 border-2 rounded-lg transition ${
                         formData.iskonto_tipi === 'musteri_tipi_grubu'
-                          ? 'border-orange-600 bg-orange-50'
+                          ? 'border-brand bg-orange-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -644,7 +644,7 @@ export default function Iskonto() {
                         onClick={() => setFormData({ ...formData, musteri_tipi_secimi: 'musteri' })}
                         className={`p-4 border-2 rounded-lg transition ${
                           formData.musteri_tipi_secimi === 'musteri'
-                            ? 'border-orange-600 bg-orange-50'
+                            ? 'border-brand bg-orange-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
@@ -657,7 +657,7 @@ export default function Iskonto() {
                         onClick={() => setFormData({ ...formData, musteri_tipi_secimi: 'bayi' })}
                         className={`p-4 border-2 rounded-lg transition ${
                           formData.musteri_tipi_secimi === 'bayi'
-                            ? 'border-orange-600 bg-orange-50'
+                            ? 'border-brand bg-orange-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
@@ -682,7 +682,7 @@ export default function Iskonto() {
                       value={formData.hedef_id}
                       onChange={(e) => setFormData({ ...formData, hedef_id: e.target.value })}
                       required
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                     >
                       <option value="">Seçiniz...</option>
                       {formData.iskonto_tipi === 'musteri'
@@ -715,7 +715,7 @@ export default function Iskonto() {
                               type="checkbox"
                               checked={selectedItems.includes(item.id)}
                               onChange={() => handleItemToggle(item.id)}
-                              className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+                              className="w-4 h-4 text-brand rounded focus:ring-emerald-700"
                             />
                             <span className="text-sm">
                               {item.ad} {item.soyad}
@@ -752,7 +752,7 @@ export default function Iskonto() {
                       min="0"
                       max="100"
                       step="0.01"
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                       placeholder="0.00"
                     />
                     <Percent className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -770,7 +770,7 @@ export default function Iskonto() {
                       value={formData.baslangic_tarihi}
                       onChange={(e) => setFormData({ ...formData, baslangic_tarihi: e.target.value })}
                       required
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -782,7 +782,7 @@ export default function Iskonto() {
                       value={formData.bitis_tarihi}
                       onChange={(e) => setFormData({ ...formData, bitis_tarihi: e.target.value })}
                       min={formData.baslangic_tarihi}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -795,7 +795,7 @@ export default function Iskonto() {
                     value={formData.aciklama}
                     onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                     placeholder="İskonto hakkında açıklama..."
                   />
                 </div>
@@ -805,7 +805,7 @@ export default function Iskonto() {
                     type="checkbox"
                     checked={formData.aktif}
                     onChange={(e) => setFormData({ ...formData, aktif: e.target.checked })}
-                    className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+                    className="w-4 h-4 text-brand rounded focus:ring-emerald-700"
                   />
                   <label className="ml-2 text-sm text-gray-700">İskonto aktif</label>
                 </div>
@@ -813,7 +813,7 @@ export default function Iskonto() {
                 <div className="flex gap-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition flex items-center justify-center gap-2"
+                    className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center gap-2"
                   >
                     <Save className="w-5 h-5" />
                     {editingId ? 'Güncelle' : 'Oluştur'}

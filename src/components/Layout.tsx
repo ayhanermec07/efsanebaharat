@@ -11,7 +11,7 @@ export default function Layout() {
   }, [location.pathname, location.search])
 
   return (
-    <div className="shop-shell flex min-h-screen min-w-0 flex-col overflow-x-clip">
+    <div className="anadolu-ui anadolu-store shop-shell flex min-h-screen min-w-0 flex-col">
       <Header />
       <main className="flex-1 min-w-0">
         <Outlet />

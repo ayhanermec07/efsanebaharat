@@ -104,7 +104,7 @@ export default function Markalar() {
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Marka Yönetimi</h1>
         <button
           onClick={() => setModalOpen(true)}
-          className="bg-orange-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-orange-700 transition flex items-center justify-center space-x-2 w-full sm:w-auto"
+          className="bg-brand text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2 w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" />
           <span>Yeni Marka Ekle</span>
@@ -113,7 +113,7 @@ export default function Markalar() {
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+          <div className="inline-block w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
@@ -151,7 +151,7 @@ export default function Markalar() {
                     </button>
                     <button
                       onClick={() => handleDelete(marka.id)}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-brand-secondary hover:text-red-700"
                     >
                       <Trash2 className="w-4 h-4 inline" /> Sil
                     </button>
@@ -189,7 +189,7 @@ export default function Markalar() {
                     maxLength={100}
                     pattern="^[\p{L}0-9\s\/\&\.\-]+$"
                     title="En az 2, en fazla 100 karakter. Sadece harf, rakam, boşluk ve özel karakterler kullanabilirsiniz."
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
                   <p className="text-xs text-gray-500 mt-1">En az 2, en fazla 100 karakter</p>
                 </div>
@@ -211,7 +211,7 @@ export default function Markalar() {
                     type="checkbox"
                     checked={formData.aktif_durum}
                     onChange={(e) => setFormData({ ...formData, aktif_durum: e.target.checked })}
-                    className="w-4 h-4 text-orange-600 rounded"
+                    className="w-4 h-4 text-brand rounded"
                   />
                   <label className="ml-2 text-sm text-gray-700">Aktif</label>
                 </div>
@@ -219,7 +219,7 @@ export default function Markalar() {
                 <div className="flex space-x-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition flex items-center justify-center space-x-2"
+                    className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2"
                   >
                     <Save className="w-5 h-5" />
                     <span>{editingId ? 'Güncelle' : 'Kaydet'}</span>

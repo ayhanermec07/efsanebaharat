@@ -163,14 +163,14 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div className="min-w-0">
           <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Package className="w-6 h-6 text-orange-600" />
+            <Package className="w-6 h-6 text-brand" />
             <span>Stok Yönetimi</span>
           </h3>
           <p className="text-gray-600 mt-1 break-words">{urunAdi}</p>
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="w-full sm:w-auto min-h-10 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition flex items-center justify-center gap-2"
+          className="w-full sm:w-auto min-h-10 bg-brand text-white px-4 py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" />
           <span>Yeni Stok</span>
@@ -179,7 +179,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
 
       {loading ? (
         <div className="text-center py-8">
-          <div className="inline-block w-6 h-6 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+          <div className="inline-block w-6 h-6 border-4 border-brand border-t-transparent rounded-full animate-spin" />
         </div>
       ) : stoklar.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
@@ -214,7 +214,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-medium text-orange-600">
+                    <span className="font-medium text-brand">
                       {stok.fiyat?.toFixed(2)} ₺
                     </span>
                   </td>
@@ -257,7 +257,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                       </button>
                       <button
                         onClick={() => handleDelete(stok.id)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-brand-secondary hover:text-red-800"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -293,7 +293,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                     value={formData.birim_turu}
                     onChange={(e) => handleBirimTuruChange(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   >
                     {BIRIM_TURLERI.map(birim => (
                       <option key={birim.value} value={birim.value}>
@@ -318,7 +318,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                       required
                       min="0"
                       step="0.001"
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       Örnek: 250, 1, 500
@@ -334,7 +334,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                         value={formData.birim_adedi_turu}
                         onChange={(e) => setFormData({ ...formData, birim_adedi_turu: e.target.value })}
                         required
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                       >
                         <option value="gram">Gram</option>
                         <option value="kilogram">Kilogram</option>
@@ -364,7 +364,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                     required
                     min="0"
                     step="0.01"
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
                 </div>
 
@@ -380,7 +380,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                       required
                       min="0"
                       step="0.001"
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       Ondalık değer girebilirsiniz (örn: 10.5)
@@ -396,7 +396,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                         value={formData.stok_birimi}
                         onChange={(e) => setFormData({ ...formData, stok_birimi: e.target.value })}
                         required
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                       >
                         <option value="gram">Gram</option>
                         <option value="kilogram">Kilogram</option>
@@ -425,7 +425,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                       value={formData.min_siparis_miktari}
                       onChange={(e) => setFormData({ ...formData, min_siparis_miktari: parseInt(e.target.value) || 1 })}
                       min="1"
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                     />
                   </div>
 
@@ -437,7 +437,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                       value={formData.stok_grubu}
                       onChange={(e) => setFormData({ ...formData, stok_grubu: e.target.value })}
                       required
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                     >
                       <option value="hepsi">Hepsi</option>
                       <option value="musteri">Müşteri</option>
@@ -454,7 +454,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                     type="checkbox"
                     checked={formData.aktif_durum}
                     onChange={(e) => setFormData({ ...formData, aktif_durum: e.target.checked })}
-                    className="w-4 h-4 text-orange-600 rounded"
+                    className="w-4 h-4 text-brand rounded"
                   />
                   <label className="ml-2 text-sm text-gray-700">Aktif</label>
                 </div>
@@ -462,7 +462,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                 <div className="flex space-x-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition flex items-center justify-center space-x-2"
+                    className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2"
                   >
                     <Save className="w-4 h-4" />
                     <span>{editingId ? 'Güncelle' : 'Kaydet'}</span>

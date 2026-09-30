@@ -154,7 +154,7 @@ export default function Hesabim() {
   if (authLoading || loading) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+        <div className="inline-block w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -197,7 +197,7 @@ export default function Hesabim() {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-brand rounded-full flex items-center justify-center">
                   <UserIcon className="w-8 h-8 text-white" />
                 </div>
                 {!isEditing && (
@@ -220,7 +220,7 @@ export default function Hesabim() {
                     })
                     setIsEditing(true)
                   }}
-                  className="text-gray-400 hover:text-orange-600 transition"
+                  className="text-gray-400 hover:text-brand transition"
                   title="Profili Düzenle"
                 >
                   <Pencil className="w-5 h-5" />
@@ -228,7 +228,7 @@ export default function Hesabim() {
               ) : (
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="text-gray-400 hover:text-red-600 transition"
+                  className="text-gray-400 hover:text-brand-secondary transition"
                   title="İptal"
                 >
                   <X className="w-5 h-5" />
@@ -245,7 +245,7 @@ export default function Hesabim() {
                       type="text"
                       value={formData.ad}
                       onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -254,7 +254,7 @@ export default function Hesabim() {
                       type="text"
                       value={formData.soyad}
                       onChange={(e) => setFormData({ ...formData, soyad: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -265,7 +265,7 @@ export default function Hesabim() {
                     type="tel"
                     value={formData.telefon}
                     onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   />
                 </div>
 
@@ -275,7 +275,7 @@ export default function Hesabim() {
                     rows={3}
                     value={formData.adres}
                     onChange={(e) => setFormData({ ...formData, adres: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent resize-none"
                   />
                 </div>
 
@@ -300,7 +300,7 @@ export default function Hesabim() {
                       }
                     }}
                     disabled={saving}
-                    className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition disabled:opacity-50 flex items-center gap-2"
+                    className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-emerald-800 transition disabled:opacity-50 flex items-center gap-2"
                   >
                     {saving ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -414,7 +414,7 @@ export default function Hesabim() {
                               href={`${kargoFirmalari[siparis.kargo_firmasi].url}${siparis.kargo_takip_no}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition"
+                              className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 bg-brand text-white text-sm rounded-lg hover:bg-emerald-800 transition"
                             >
                               <ExternalLink className="w-4 h-4" />
                               Kargonu Takip Et
@@ -437,7 +437,7 @@ export default function Hesabim() {
 
                     <div className="border-t pt-4 flex justify-between items-center">
                       <span className="font-semibold text-gray-900">Toplam</span>
-                      <span className="text-xl font-bold text-orange-600">
+                      <span className="text-xl font-bold text-brand">
                         {siparis.toplam_tutar?.toFixed(2)} TL
                       </span>
                     </div>

@@ -156,7 +156,7 @@ export default function Musteriler() {
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+          <div className="inline-block w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filteredMusteriler.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm p-12 text-center">
@@ -221,7 +221,7 @@ export default function Musteriler() {
                     </button>
                     <button
                       onClick={() => handleDuzenle(musteri)}
-                      className="text-orange-600 hover:text-orange-700"
+                      className="text-brand hover:text-emerald-800"
                     >
                       <Edit className="w-4 h-4 inline" /> Düzenle
                     </button>
@@ -330,7 +330,7 @@ export default function Musteriler() {
                       setFormErrors((errors) => ({ ...errors, musteri_tipi: '' }))
                     }}
                     disabled={saving}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   >
                     <option value="musteri">Müşteri</option>
                     <option value="bayi">Toptan Müşteri</option>
@@ -349,7 +349,7 @@ export default function Musteriler() {
                     disabled={saving}
                     aria-invalid={Boolean(formErrors.fiyat_grubu_id)}
                     aria-describedby={formErrors.fiyat_grubu_id ? 'fiyat-grubu-hatasi' : undefined}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 ${formErrors.fiyat_grubu_id ? 'border-red-500' : ''}`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 ${formErrors.fiyat_grubu_id ? 'border-red-500' : ''}`}
                   >
                     <option value="">Atanmamış</option>
                     {fiyatGruplari.map(fg => (
@@ -358,7 +358,7 @@ export default function Musteriler() {
                       </option>
                     ))}
                   </select>
-                  {formErrors.fiyat_grubu_id ? <p id="fiyat-grubu-hatasi" className="mt-1 text-xs text-red-600">{formErrors.fiyat_grubu_id}</p> : <p className="text-xs text-gray-500 mt-1">Müşterinin iskonto grubu (atanmamış bırakılabilir)</p>}
+                  {formErrors.fiyat_grubu_id ? <p id="fiyat-grubu-hatasi" className="mt-1 text-xs text-brand-secondary">{formErrors.fiyat_grubu_id}</p> : <p className="text-xs text-gray-500 mt-1">Müşterinin iskonto grubu (atanmamış bırakılabilir)</p>}
                 </div>
 
                 <div>
@@ -378,9 +378,9 @@ export default function Musteriler() {
                     disabled={saving}
                     aria-invalid={Boolean(formErrors.ozel_iskonto_orani)}
                     aria-describedby={formErrors.ozel_iskonto_orani ? 'ozel-iskonto-hatasi' : undefined}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 ${formErrors.ozel_iskonto_orani ? 'border-red-500' : ''}`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 ${formErrors.ozel_iskonto_orani ? 'border-red-500' : ''}`}
                   />
-                  {formErrors.ozel_iskonto_orani ? <p id="ozel-iskonto-hatasi" className="mt-1 text-xs text-red-600">{formErrors.ozel_iskonto_orani}</p> : <p className="text-xs text-gray-500 mt-1">
+                  {formErrors.ozel_iskonto_orani ? <p id="ozel-iskonto-hatasi" className="mt-1 text-xs text-brand-secondary">{formErrors.ozel_iskonto_orani}</p> : <p className="text-xs text-gray-500 mt-1">
                     Grup iskontosuna ek olarak uygulanır (0 = ek iskonto yok)
                   </p>}
                 </div>
@@ -429,7 +429,7 @@ export default function Musteriler() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {saving ? 'Kaydediliyor...' : formData.aktif_durum ? 'Kaydet ve Onayla' : 'Taslak Olarak Kaydet'}
                   </button>

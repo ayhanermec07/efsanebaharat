@@ -260,7 +260,7 @@ export default function UrunlerYonetim() {
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Ürün Yönetimi</h1>
         <button
           onClick={() => setModalOpen(true)}
-          className="bg-orange-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-orange-700 transition flex items-center justify-center space-x-2 w-full sm:w-auto"
+          className="bg-brand text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2 w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" />
           <span>Yeni Ürün Ekle</span>
@@ -269,7 +269,7 @@ export default function UrunlerYonetim() {
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+          <div className="inline-block w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
@@ -303,7 +303,7 @@ export default function UrunlerYonetim() {
                     </button>
                     <button
                       onClick={() => handleDelete(urun.id)}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-brand-secondary hover:text-red-700"
                     >
                       <Trash2 className="w-4 h-4 inline" /> Sil
                     </button>
@@ -336,7 +336,7 @@ export default function UrunlerYonetim() {
                     minLength={3}
                     maxLength={200}
                     title="En az 3, en fazla 200 karakter"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
                   <p className="text-xs text-gray-500 mt-1">En az 3, en fazla 200 karakter</p>
                 </div>
@@ -348,7 +348,7 @@ export default function UrunlerYonetim() {
                     onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
                     rows={3}
                     maxLength={500}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
                 </div>
 
@@ -359,7 +359,7 @@ export default function UrunlerYonetim() {
                       value={formData.kategori_id}
                       onChange={(e) => setFormData({ ...formData, kategori_id: e.target.value })}
                       required
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                     >
                       <option value="">Seçiniz</option>
                       {kategoriler.map(k => (
@@ -374,7 +374,7 @@ export default function UrunlerYonetim() {
                       value={formData.marka_id}
                       onChange={(e) => setFormData({ ...formData, marka_id: e.target.value })}
                       required
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                     >
                       <option value="">Seçiniz</option>
                       {markalar.map(m => (
@@ -389,7 +389,7 @@ export default function UrunlerYonetim() {
                     type="checkbox"
                     checked={formData.aktif_durum}
                     onChange={(e) => setFormData({ ...formData, aktif_durum: e.target.checked })}
-                    className="w-4 h-4 text-orange-600 rounded"
+                    className="w-4 h-4 text-brand rounded"
                   />
                   <label className="ml-2 text-sm text-gray-700">Aktif</label>
                 </div>
@@ -414,7 +414,7 @@ export default function UrunlerYonetim() {
                     <button
                       type="button"
                       onClick={addStok}
-                      className="text-orange-600 hover:text-orange-700 text-sm"
+                      className="text-brand hover:text-emerald-800 text-sm"
                     >
                       + Stok Ekle
                     </button>
@@ -565,7 +565,7 @@ export default function UrunlerYonetim() {
                             type="checkbox"
                             checked={stok.xml_export || false}
                             onChange={(e) => updateStok(index, 'xml_export', e.target.checked)}
-                            className="w-4 h-4 text-orange-600 rounded cursor-pointer"
+                            className="w-4 h-4 text-brand rounded cursor-pointer"
                             title="XML'e gönder"
                           />
                         </div>
@@ -573,7 +573,7 @@ export default function UrunlerYonetim() {
                           <button
                             type="button"
                             onClick={() => removeStok(index)}
-                            className="text-red-600 hover:text-red-700"
+                            className="text-brand-secondary hover:text-red-700"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -586,7 +586,7 @@ export default function UrunlerYonetim() {
                 <div className="flex space-x-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition flex items-center justify-center space-x-2"
+                    className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2"
                   >
                     <Save className="w-5 h-5" />
                     <span>{editingId ? 'Güncelle' : 'Kaydet'}</span>

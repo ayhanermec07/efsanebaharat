@@ -182,7 +182,7 @@ export default function Siparisler() {
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
+          <div className="inline-block w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
         </div>
       ) : siparisler.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm p-12 text-center">
@@ -316,7 +316,7 @@ export default function Siparisler() {
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold text-gray-900">Genel Toplam:</span>
-                    <span className="text-2xl font-bold text-orange-600">
+                    <span className="text-2xl font-bold text-brand">
                       {secilenSiparis.toplam_tutar?.toFixed(2)} ₺
                     </span>
                   </div>
