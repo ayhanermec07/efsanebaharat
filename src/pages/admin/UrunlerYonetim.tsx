@@ -586,7 +586,7 @@ export default function UrunlerYonetim() {
                           }}
                           required
                           disabled={xmlKilitli || stok.birim_turu === 'kg'}
-                          step="0.01"
+                          step="0.00001"
                           min="0"
                           className="min-w-0 min-h-10 px-2 py-1 border rounded text-sm disabled:bg-gray-100"
                         />

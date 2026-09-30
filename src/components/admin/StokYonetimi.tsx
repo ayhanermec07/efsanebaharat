@@ -388,7 +388,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                     onChange={(e) => setFormData({ ...formData, fiyat: parseFloat(e.target.value) || 0 })}
                     required
                     min="0"
-                    step="0.01"
+                    step="0.00001"
                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
