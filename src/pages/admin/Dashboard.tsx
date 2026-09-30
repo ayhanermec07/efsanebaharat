@@ -108,67 +108,28 @@ export default function Dashboard() {
   const [period, setPeriod] = useState(30)
 
   useEffect(() => {
-    loadDashboardData()
-  }, [period])
+    async function loadDashboardData() {
+      try {
+        setLoading(true)
 
-  async function loadDashboardData() {
-    try {
-      setLoading(true)
-
-      // Gerçek verileri çek
-      const [
-        { count: toplamUrun },
-        { count: toplamSiparis },
-        { count: toplamMusteri },
-        { count: bekleyenSorular },
-        { count: aktifKampanyalar },
-        { count: aktifBayiler },
-        { count: bannerSayisi },
-        { count: onerilenUrunler }
-      ] = await Promise.all([
-        supabase.from('urunler').select('*', { count: 'exact', head: true }).eq('aktif_durum', true),
-        supabase.from('siparisler').select('*', { count: 'exact', head: true }),
-        supabase.from('musteriler').select('*', { count: 'exact', head: true }).eq('aktif_durum', true),
-        supabase.from('sorular').select('*', { count: 'exact', head: true }).eq('durum', 'beklemede'),
-        supabase.from('kampanyalar').select('*', { count: 'exact', head: true }).eq('aktif_durum', true),
-        supabase.from('bayiler').select('*', { count: 'exact', head: true }).eq('aktif', true),
-        supabase.from('bannerlar').select('*', { count: 'exact', head: true }).eq('aktif_durum', true),
-        supabase.from('onerilen_urunler').select('*', { count: 'exact', head: true })
-      ])
-
-      const { data: orderSummary, error: orderSummaryError } = await supabase
-        .rpc('admin_order_status_summary')
-      if (orderSummaryError) throw orderSummaryError
-      const orderStats = orderSummary?.[0]
-      if (!orderStats) throw new Error('Sipariş özeti alınamadı')
-
-      const stats: Stats = {
-        toplamUrun: toplamUrun || 0,
-        toplamSiparis: Number(orderStats.toplam_siparis || 0),
-        toplamMusteri: toplamMusteri || 0,
-        toplamGelir: Number(orderStats.toplam_gelir || 0),
-        bekleyenSorular: bekleyenSorular || 0,
-        aktifKampanyalar: aktifKampanyalar || 0,
-        aktifBayiler: aktifBayiler || 0,
-        kargoBekleyen: Number(orderStats.kargo_bekleyen || 0),
-        bannerSayisi: bannerSayisi || 0,
-        onerilenUrunler: onerilenUrunler || 0
+        // Canlıdaki admin oturumunu doğrulayan servis, istatistikleri sunucuda toplar.
+        const { data, error } = await supabase.functions.invoke('dashboard-data', {
+          body: { period }
+        })
+        if (error) throw error
+        if (data?.error || !data?.data?.stats) {
+          throw new Error(data?.error?.message || 'Dashboard verileri alınamadı')
+        }
+        setDashboardData(data.data)
+      } catch (error: any) {
+        console.error('Dashboard veri yükleme hatası:', error)
+        toast.error('Dashboard verileri yüklenemedi')
+      } finally {
+        setLoading(false)
       }
-
-      setDashboardData({
-        stats,
-        enCokSatanlar: [],
-        enCokZiyaretEdilen: [],
-        gunlukSatislar: [],
-        aylikSatislar: []
-      })
-    } catch (error: any) {
-      console.error('Dashboard veri yükleme hatası:', error)
-      toast.error('Dashboard verileri yüklenemedi')
-    } finally {
-      setLoading(false)
     }
-  }
+    void loadDashboardData()
+  }, [period])
 
 
 
