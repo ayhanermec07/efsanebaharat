@@ -189,9 +189,11 @@ export default function Siparisler() {
   const izinliDurumlar = (siparis: any) => {
     const durumlar = [siparis.siparis_durumu]
     if (siparis.odeme_durumu === 'fis_kontrol_bekliyor') durumlar.push('hazirlaniyor', 'iptal_edildi')
-    else if (siparis.odeme_durumu === 'onaylandi' && siparis.siparis_durumu !== 'iptal_edildi') durumlar.push('iptal_edildi')
-    else if (['odendi', 'onaylandi'].includes(siparis.odeme_durumu) && siparis.siparis_durumu === 'beklemede') durumlar.push('hazirlaniyor')
-    else if (['odendi', 'onaylandi'].includes(siparis.odeme_durumu) && siparis.siparis_durumu === 'kargoda') durumlar.push('teslim_edildi')
+    else {
+      if (siparis.odeme_durumu === 'onaylandi' && siparis.siparis_durumu !== 'iptal_edildi') durumlar.push('iptal_edildi')
+      if (['odendi', 'onaylandi'].includes(siparis.odeme_durumu) && siparis.siparis_durumu === 'beklemede') durumlar.push('hazirlaniyor')
+      if (['odendi', 'onaylandi'].includes(siparis.odeme_durumu) && siparis.siparis_durumu === 'kargoda') durumlar.push('teslim_edildi')
+    }
     return [...new Set(durumlar)]
   }
 
