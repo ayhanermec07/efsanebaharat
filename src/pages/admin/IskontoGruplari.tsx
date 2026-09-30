@@ -126,7 +126,7 @@ export default function IskontoGruplari() {
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition flex items-center space-x-2"
+          className="bg-brand text-white px-6 py-3 rounded-lg hover:bg-emerald-800 transition flex items-center space-x-2"
         >
           <Plus className="w-5 h-5" />
           <span>Yeni Grup Ekle</span>
@@ -168,7 +168,7 @@ export default function IskontoGruplari() {
               <div className="flex space-x-2">
                 <button
                   onClick={() => handleEdit(grup)}
-                  className="flex-1 flex items-center justify-center space-x-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+                  className="flex-1 flex items-center justify-center space-x-1 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition text-sm"
                 >
                   <Edit className="w-4 h-4" />
                   <span>Düzenle</span>
@@ -210,7 +210,7 @@ export default function IskontoGruplari() {
                     onChange={(e) => setFormData({ ...formData, grup_adi: e.target.value })}
                     required
                     placeholder="Örn: Müşteri İskonto Grubu"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
                 </div>
 
@@ -223,7 +223,7 @@ export default function IskontoGruplari() {
                     onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
                     rows={3}
                     placeholder="Grup hakkında açıklama..."
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
                 </div>
 
@@ -240,7 +240,7 @@ export default function IskontoGruplari() {
                       min="0"
                       max="100"
                       step="0.01"
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                     />
                     <Percent className="absolute right-3 top-2.5 w-5 h-5 text-gray-400" />
                   </div>
@@ -260,7 +260,7 @@ export default function IskontoGruplari() {
                 <div className="flex space-x-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition flex items-center justify-center space-x-2"
+                    className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2"
                   >
                     <Save className="w-5 h-5" />
                     <span>{editingId ? 'Güncelle' : 'Kaydet'}</span>

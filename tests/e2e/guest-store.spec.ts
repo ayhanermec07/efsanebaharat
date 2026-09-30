@@ -53,18 +53,42 @@ test('ziyaretçi giriş ve iletişim sayfalarına ulaşır', async ({ page }) =>
   await expectNoHorizontalOverflow(page)
 })
 
+test('Anadolu Aktarı teması, görünür arama ve mobil menü klavyesi birlikte çalışır', async ({ page }) => {
+  test.setTimeout(90_000)
+  await page.route('**/rest/v1/kampanyalar*', (route) => route.fulfill({ json: [] }))
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.getByRole('heading', { name: 'Sofranın sırrı, bir tutam baharat.' })).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('header input[aria-label="Ürün ara"]')).toBeVisible()
+  await expect.poll(() => page.locator('header .font-display').evaluate(element => getComputedStyle(element).fontFamily)).toContain('Source Serif 4')
+  await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--site-primary-color').trim())).toBe('#34513c')
+  await expectNoHorizontalOverflow(page)
+
+  if ((page.viewportSize()?.width ?? 1440) < 1024) {
+    const opener = page.getByRole('button', { name: 'Menüyü aç', exact: true })
+    await opener.click()
+    const menu = page.getByRole('dialog', { name: 'Mobil menü', exact: true })
+    await expect(menu).toBeVisible()
+    await expect(menu.getByRole('button', { name: 'Menüyü kapat', exact: true })).toBeFocused()
+    await page.keyboard.press('Shift+Tab')
+    await expect(menu.getByRole('link', { name: 'Giriş Yap', exact: true })).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(menu).not.toBeVisible()
+    await expect(opener).toBeFocused()
+  }
+
+  await page.locator('header input[aria-label="Ürün ara"]').fill('Baharat')
+  await page.locator('header input[aria-label="Ürün ara"]').press('Enter')
+  await expect(page).toHaveURL(/\/urunler\?q=Baharat$/)
+  await expectNoHorizontalOverflow(page)
+})
+
 test('logo ayarı yüklenirken yapay zeka simgesi görünmez', async ({ page }) => {
   let releaseSettings!: () => void
   const settingsGate = new Promise<void>((resolve) => { releaseSettings = resolve })
   await page.route('**/rest/v1/site_settings*', async (route) => {
     await settingsGate
-    const response = await route.fetch()
-    const rows = await response.json() as Array<{ setting_key: string; setting_value: unknown }>
     await route.fulfill({
-      response,
-      json: rows.map((row) => row.setting_key === 'logo'
-        ? { ...row, setting_value: { url: '/icon.svg', width: 120 } }
-        : row),
+      json: [{ setting_key: 'logo', setting_value: { url: '/icon.svg', width: 120 } }],
     })
   })
 
@@ -77,4 +101,14 @@ test('logo ayarı yüklenirken yapay zeka simgesi görünmez', async ({ page }) 
     releaseSettings()
   }
   await expect(page.locator('header img[src="/icon.svg"]')).toBeVisible()
+})
+
+
+test('bütün açık sayfalar dar ekranlarda taşmadan açılır', async ({ page }) => {
+  test.setTimeout(90_000)
+  for (const route of ['/kayit', '/sifre-sifirla', '/sifre-yenile', '/kampanyalar', '/en-cok-satan', '/odeme-basarili', '/odeme-basarisiz', '/bulunamayan-sayfa']) {
+    await page.goto(route, { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('main h1, main h2').first()).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+  }
 })

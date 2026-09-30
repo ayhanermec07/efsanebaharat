@@ -169,7 +169,7 @@ export default function AdminAsortiStok() {
               <span className="mb-1.5 block text-sm font-semibold text-gray-800">3. Hazırlanan paket adedi</span>
               <input type="number" inputMode="numeric" min="1" step="1" value={packageQuantity} onChange={(event) => setPackageQuantity(event.target.value)} placeholder="Örn. 40" className="min-h-11 w-full rounded-lg border border-gray-300 px-3 text-gray-900" />
             </label>
-            <button type="button" disabled={!canPrepare || saving} onClick={() => void prepareStock()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-orange-600 px-5 py-2.5 font-semibold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="button" disabled={!canPrepare || saving} onClick={() => void prepareStock()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">
               <ArrowRightLeft className="h-5 w-5" /> {saving ? 'Aktarılıyor...' : 'Stoğa aktar'}
             </button>
           </div>

@@ -337,7 +337,7 @@ export default function Musteriler() {
                       setFormErrors((errors) => ({ ...errors, musteri_tipi: '' }))
                     }}
                     disabled={saving}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   >
                     <option value="musteri">Müşteri</option>
                     <option value="bayi">Toptan Müşteri</option>
@@ -356,7 +356,7 @@ export default function Musteriler() {
                     disabled={saving}
                     aria-invalid={Boolean(formErrors.fiyat_grubu_id)}
                     aria-describedby={formErrors.fiyat_grubu_id ? 'fiyat-grubu-hatasi' : undefined}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 ${formErrors.fiyat_grubu_id ? 'border-red-500' : ''}`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 ${formErrors.fiyat_grubu_id ? 'border-red-500' : ''}`}
                   >
                     <option value="">Atanmamış</option>
                     {fiyatGruplari.map(fg => (
@@ -385,7 +385,7 @@ export default function Musteriler() {
                     disabled={saving}
                     aria-invalid={Boolean(formErrors.ozel_iskonto_orani)}
                     aria-describedby={formErrors.ozel_iskonto_orani ? 'ozel-iskonto-hatasi' : undefined}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 ${formErrors.ozel_iskonto_orani ? 'border-red-500' : ''}`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700 ${formErrors.ozel_iskonto_orani ? 'border-red-500' : ''}`}
                   />
                   {formErrors.ozel_iskonto_orani ? <p id="ozel-iskonto-hatasi" className="mt-1 text-xs text-red-600">{formErrors.ozel_iskonto_orani}</p> : <p className="text-xs text-gray-500 mt-1">
                     Grup iskontosuna ek olarak uygulanır (0 = ek iskonto yok)
@@ -436,7 +436,7 @@ export default function Musteriler() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {saving ? 'Kaydediliyor...' : formData.aktif_durum ? 'Kaydet ve Onayla' : 'Taslak Olarak Kaydet'}
                   </button>

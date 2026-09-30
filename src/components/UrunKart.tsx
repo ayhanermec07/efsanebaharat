@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Check, Eye, ShoppingCart } from 'lucide-react'
+import { ArrowUpRight, Check, PackageOpen, ShoppingBag } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
 import { kademeliIskontoUygula } from '../utils/iskonto'
@@ -34,7 +34,7 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
     setImgError(false)
   }, [urun])
 
-  const ilkGorsel = getImageUrl(urun.urun_gorselleri?.[0]?.gorsel_url)
+  const ilkGorsel = getImageUrl(urun.urun_gorselleri?.[0]?.gorsel_url || urun.ana_gorsel_url)
 
   const fiyatBilgisi = useMemo(() => {
     if (!secilenStok) {
@@ -103,28 +103,27 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
   }
 
   return (
-    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-lg">
-      <Link to={`/urun/${urun.id}`} className="relative block bg-zinc-100">
-        <div className="aspect-[4/5] w-full overflow-hidden">
+    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-brand-line bg-brand-paper transition hover:border-emerald-300 hover:shadow-md">
+      <Link to={`/urun/${urun.id}`} className="relative block bg-brand-soft">
+        <div className="aspect-square w-full overflow-hidden">
           {ilkGorsel && !imgError ? (
             <img
               src={ilkGorsel}
               alt={urun.urun_adi}
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+              className="h-full w-full object-contain p-3 transition duration-300 group-hover:scale-[1.03] sm:p-5"
               loading="lazy"
               onError={() => setImgError(true)}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_50%_35%,#fed7aa,#fafaf9_55%,#e7e5e4)] p-6">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-zinc-950 text-3xl font-bold text-white shadow-lg">
-                {urun.urun_adi?.charAt(0) || 'E'}
-              </div>
+            <div className="shop-image-placeholder">
+              <PackageOpen className="h-10 w-10 opacity-60" aria-hidden="true" />
+              <span className="text-center text-xs text-brand-muted">Görsel hazırlanıyor</span>
             </div>
           )}
         </div>
 
         {fiyatBilgisi.indirimVar && (
-          <span className="absolute left-2 top-2 rounded-full bg-red-600 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+          <span className="site-secondary-bg absolute left-2 top-2 rounded-md px-2.5 py-1 text-xs font-semibold text-white">
             %{Math.max(0, Math.round(fiyatBilgisi.indirimOrani))} indirim
           </span>
         )}
@@ -139,7 +138,7 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
       <div className="flex flex-1 flex-col gap-3 p-3 sm:p-4">
         <div className="min-w-0 flex-1">
           <Link to={`/urun/${urun.id}`} className="block min-w-0">
-            <h3 className="line-clamp-2 min-h-[2.75rem] text-sm font-bold leading-snug text-zinc-950 transition group-hover:text-orange-700 sm:text-base">
+            <h3 className="line-clamp-2 min-h-[2.75rem] text-base leading-snug text-brand-ink transition group-hover:text-emerald-700 sm:text-lg">
               {urun.urun_adi}
             </h3>
           </Link>
@@ -149,15 +148,16 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
         </div>
 
         {urun.urun_stoklari && urun.urun_stoklari.length > 0 && (
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
+          <div className="flex flex-wrap gap-1.5">
             {urun.urun_stoklari.map((stok: any) => (
               <button
                 key={stok.id}
                 type="button"
                 onClick={() => setSecilenStok(stok)}
-                className={`min-h-[36px] shrink-0 rounded-full border px-3 text-xs font-bold transition ${secilenStok?.id === stok.id
-                  ? 'border-orange-700 bg-orange-700 text-white shadow-sm'
-                  : 'border-zinc-200 bg-white text-zinc-700 hover:border-orange-300'
+                aria-pressed={secilenStok?.id === stok.id}
+                className={`min-h-11 min-w-0 rounded-lg border px-2 py-1.5 text-xs font-medium transition ${secilenStok?.id === stok.id
+                  ? 'border-emerald-700 bg-emerald-700 text-white'
+                  : 'border-brand-line bg-brand-paper text-brand-muted hover:border-emerald-300'
                   }`}
               >
                 {stok.birim_adedi || 1} {(stok.birim_adedi_turu || stok.birim_turu || '').toUpperCase()}
@@ -170,7 +170,7 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
           <div className="min-w-0">
             {secilenStok ? (
               <>
-                <div className="text-lg font-bold leading-none text-zinc-950">
+                <div className="break-words text-lg font-semibold leading-tight tabular-nums text-brand-ink sm:text-xl">
                   {formatPrice(fiyatBilgisi.satisFiyati)}
                 </div>
                 {fiyatBilgisi.indirimVar && (
@@ -193,19 +193,19 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
             aria-busy={ekleniyor}
             className={`flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg px-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500 ${eklendi
               ? 'bg-emerald-600 text-white'
-              : 'bg-zinc-950 text-white hover:bg-orange-700'
+              : 'site-primary-bg site-primary-hover text-white'
               }`}
           >
-            {eklendi ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
+            {eklendi ? <Check className="h-4 w-4" aria-hidden="true" /> : <ShoppingBag className="h-4 w-4" aria-hidden="true" />}
             <span>{eklendi ? 'Eklendi' : 'Sepete ekle'}</span>
           </button>
         ) : (
           <button
             type="button"
             onClick={() => navigate(`/urun/${urun.id}`)}
-            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-bold text-zinc-800 transition hover:border-orange-300 hover:bg-orange-50"
+            className="shop-btn-secondary w-full gap-1.5 px-2 text-xs sm:text-sm"
           >
-            <Eye className="h-4 w-4" />
+            <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>Ürünü incele</span>
           </button>
         )}

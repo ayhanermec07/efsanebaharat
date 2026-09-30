@@ -143,7 +143,7 @@ export default function BizeUlasin() {
           {!user ? (
             <div className="rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm md:p-8">
               <p className="text-gray-700">Mesaj göndermek için hesabınıza giriş yapın. Sorunuzun yanıtını hesabınızdan takip edebilirsiniz.</p>
-              <Link to="/giris" state={{ from: '/bize-ulasin' }} className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-orange-600 px-6 py-3 font-semibold text-white hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700">Giriş yap</Link>
+              <Link to="/giris" state={{ from: '/bize-ulasin' }} className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-brand px-6 py-3 font-semibold text-white hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700">Giriş yap</Link>
             </div>
           ) : <div className="bg-white rounded-lg shadow-sm p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -156,7 +156,7 @@ export default function BizeUlasin() {
                   id="iletisim-konu"
                   value={formData.konu}
                   onChange={(e) => setFormData({ ...formData, konu: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   required
                 >
                   {KONULAR.map((konu) => (
@@ -178,7 +178,7 @@ export default function BizeUlasin() {
                   aria-describedby={errors.soru_metni ? 'iletisim-mesaj-hata' : undefined}
                   value={formData.soru_metni}
                   onChange={(e) => setFormData({ ...formData, soru_metni: e.target.value })}
-                  className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent min-h-[200px] resize-y ${
+                  className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-transparent min-h-[200px] resize-y ${
                     errors.soru_metni ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Sorunuzu veya mesajınızı buraya yazın..."
@@ -209,7 +209,7 @@ export default function BizeUlasin() {
                 className={`w-full py-3 px-6 rounded-lg font-medium transition flex items-center justify-center space-x-2 ${
                   loading || formData.soru_metni.trim().length < 10
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-orange-600 text-white hover:bg-orange-700'
+                    : 'bg-brand text-white hover:bg-emerald-800'
                 }`}
               >
                 {loading ? (

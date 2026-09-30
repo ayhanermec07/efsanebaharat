@@ -279,7 +279,7 @@ export default function UrunlerYonetim() {
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Ürün Yönetimi</h1>
         <button
           onClick={() => setModalOpen(true)}
-          className="bg-orange-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-orange-700 transition flex items-center justify-center space-x-2 w-full sm:w-auto"
+          className="bg-brand text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2 w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" />
           <span>Yeni Ürün Ekle</span>
@@ -289,7 +289,7 @@ export default function UrunlerYonetim() {
       <form onSubmit={event => { event.preventDefault(); setPage(1); setSearch(searchInput) }} className="mb-4 flex min-w-0 flex-wrap gap-2">
         <label htmlFor="urun-ara" className="sr-only">Ürün adına göre ara</label>
         <input id="urun-ara" value={searchInput} onChange={event => setSearchInput(event.target.value)} maxLength={100} placeholder="Ürün adına göre ara" className="min-h-10 min-w-0 flex-1 rounded-lg border border-gray-300 px-3" />
-        <button type="submit" className="min-h-10 rounded-lg bg-orange-600 px-4 text-white">Ara</button>
+        <button type="submit" className="min-h-10 rounded-lg bg-brand px-4 text-white">Ara</button>
         {search && <button type="button" onClick={() => { setSearchInput(''); setSearch(''); setPage(1) }} className="min-h-10 px-3 text-orange-700">Temizle</button>}
       </form>
 
@@ -378,7 +378,7 @@ export default function UrunlerYonetim() {
                     minLength={3}
                     maxLength={200}
                     title="En az 3, en fazla 200 karakter"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
                   <p className="text-xs text-gray-500 mt-1">En az 3, en fazla 200 karakter</p>
                 </div>
@@ -390,7 +390,7 @@ export default function UrunlerYonetim() {
                     onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
                     rows={3}
                     maxLength={500}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
                 </div>
 
@@ -401,7 +401,7 @@ export default function UrunlerYonetim() {
                       value={formData.kategori_id}
                       onChange={(e) => setFormData({ ...formData, kategori_id: e.target.value })}
                       required
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                     >
                       <option value="">Seçiniz</option>
                       {kategoriler.map(k => (
@@ -416,7 +416,7 @@ export default function UrunlerYonetim() {
                       value={formData.marka_id}
                       onChange={(e) => setFormData({ ...formData, marka_id: e.target.value })}
                       required
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                     >
                       <option value="">Seçiniz</option>
                       {markalar.map(m => (
@@ -692,7 +692,7 @@ export default function UrunlerYonetim() {
                   <button
                     type="submit"
                     disabled={saving || formYukleniyor}
-                    className="min-h-11 flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="min-h-11 flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <Save className="w-5 h-5" />
                     <span>{saving ? 'Kaydediliyor…' : editingId ? 'Güncelle' : 'Kaydet'}</span>

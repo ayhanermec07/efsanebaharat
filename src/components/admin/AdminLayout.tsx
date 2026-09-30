@@ -20,6 +20,7 @@ import {
   Settings,
   FileCode,
   Boxes,
+  AlertTriangle,
   Menu,
   X
 } from 'lucide-react'
@@ -94,6 +95,7 @@ export default function AdminLayout() {
       { path: '/admin/kategoriler', icon: FolderTree, label: 'Kategoriler' },
       { path: '/admin/markalar', icon: Tag, label: 'Markalar' },
       { path: '/admin/asorti-stok', icon: Boxes, label: 'Asorti Stok' },
+      { path: '/admin/stok-azalan', icon: AlertTriangle, label: 'Azalan Stok' },
       { path: '/admin/kampanyalar', icon: Megaphone, label: 'Kampanyalar' }
     ] },
     { label: 'Sipariş', items: [
@@ -117,15 +119,15 @@ export default function AdminLayout() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="anadolu-ui anadolu-admin min-h-screen min-w-0 bg-brand-cream">
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-gray-900 flex items-center justify-between px-4 z-40">
-        <h1 className="text-lg font-bold text-white">Admin Panel</h1>
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 border-b border-brand-line bg-brand-paper flex items-center justify-between gap-3 px-4 z-40">
+        <div className="min-w-0"><p className="truncate text-sm font-semibold text-brand-ink">Efsane Baharat</p><p className="text-xs text-brand-muted">Yönetim paneli</p></div>
         <button
           ref={menuButtonRef}
           type="button"
           onClick={() => setSidebarOpen(true)}
-          className="min-h-10 min-w-10 p-2 text-white hover:bg-gray-800 rounded-lg transition-colors"
+          className="shop-icon-button"
           aria-label="Yönetim menüsünü aç"
           aria-controls="admin-sidebar"
           aria-expanded={sidebarOpen}
@@ -143,15 +145,15 @@ export default function AdminLayout() {
       )}
 
       {/* Sidebar */}
-      <div ref={sidebarRef} id="admin-sidebar" role={sidebarOpen ? 'dialog' : undefined} aria-modal={sidebarOpen ? 'true' : undefined} aria-label={sidebarOpen ? 'Yönetim menüsü' : undefined} className={`fixed inset-y-0 left-0 w-64 bg-gray-900 text-white flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'visible translate-x-0' : 'invisible -translate-x-full'
+      <div ref={sidebarRef} id="admin-sidebar" role={sidebarOpen ? 'dialog' : undefined} aria-modal={sidebarOpen ? 'true' : undefined} aria-label={sidebarOpen ? 'Yönetim menüsü' : undefined} className={`fixed inset-y-0 left-0 w-64 border-r border-brand-line bg-brand-paper text-brand-ink flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'visible translate-x-0' : 'invisible -translate-x-full'
         } lg:visible lg:translate-x-0`}>
-        <div className="p-6 flex-shrink-0 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Admin Panel</h1>
+        <div className="border-b border-brand-line p-5 flex-shrink-0 flex items-center justify-between gap-3">
+          <div><p className="font-display text-2xl font-medium">Efsane Baharat</p><p className="mt-1 text-xs text-brand-muted">Yönetim paneli</p></div>
           <button
             ref={closeButtonRef}
             type="button"
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden min-h-10 min-w-10 p-1 text-gray-400 hover:text-white"
+            className="shop-icon-button lg:hidden"
             aria-label="Yönetim menüsünü kapat"
           >
             <X className="w-5 h-5" />
@@ -160,8 +162,8 @@ export default function AdminLayout() {
 
         <nav className="flex-1 overflow-y-auto py-4 space-y-1">
           {menuGroups.map(group => (
-            <div key={group.label} className="border-t border-gray-800 pt-3 first:border-0 first:pt-0">
-              <p className="px-6 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{group.label}</p>
+            <div key={group.label} className="border-t border-brand-line pt-3 first:border-0 first:pt-0">
+              <p className="px-5 pb-1 text-[11px] font-medium uppercase tracking-[0.12em] text-brand-muted">{group.label}</p>
               {group.items.map(item => {
                 const Icon = item.icon
                 const isActive = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(`${item.path}/`))
@@ -170,9 +172,9 @@ export default function AdminLayout() {
                     key={item.path}
                     to={item.path}
                     aria-current={isActive ? 'page' : undefined}
-                    className={`flex min-h-11 items-center gap-3 px-6 py-2 transition-colors ${isActive
-                      ? 'bg-orange-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    className={`mx-2 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 transition-colors ${isActive
+                      ? 'site-primary-bg text-white'
+                      : 'text-brand-muted hover:bg-brand-soft hover:text-brand-ink'
                       }`}
                   >
                     <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
@@ -184,12 +186,12 @@ export default function AdminLayout() {
           ))}
 
           {/* Ana Sayfa - Yeni sekmede açılır */}
-          <div className="border-t border-gray-800 mt-2 pt-2">
+          <div className="border-t border-brand-line mt-2 pt-2">
             <a
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 px-6 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+              className="mx-2 flex min-h-11 items-center gap-3 rounded-lg px-3 py-3 text-brand-muted hover:bg-brand-soft hover:text-brand-ink transition-colors"
             >
               <ExternalLink className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm font-medium">Ana Sayfa</span>
@@ -197,13 +199,13 @@ export default function AdminLayout() {
           </div>
         </nav>
 
-        <div className="flex-shrink-0 border-t border-gray-800">
+        <div className="flex-shrink-0 border-t border-brand-line">
           <button
             onClick={() => {
               signOut()
               navigate('/')
             }}
-            className="flex items-center gap-3 px-6 py-4 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full"
+            className="flex min-h-11 items-center gap-3 px-5 py-4 text-brand-muted hover:bg-brand-soft hover:text-brand-ink transition-colors w-full"
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
             <span className="text-sm font-medium">Çıkış Yap</span>
@@ -212,7 +214,7 @@ export default function AdminLayout() {
       </div>
 
       {/* Main Content */}
-      <div className="lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 sm:pt-20 lg:pt-8 min-h-screen">
+      <div className="min-w-0 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 sm:pt-20 lg:pt-8 min-h-screen">
         <Outlet />
       </div>
     </div>

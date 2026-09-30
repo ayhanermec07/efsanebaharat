@@ -132,31 +132,31 @@ export default function EnCokSatan() {
 
   return (
     <div className="shop-container py-6 sm:py-8">
-      <div className="mb-6 rounded-lg bg-zinc-950 p-5 text-white shadow-lg sm:p-7">
+      <div className="shop-page-heading mb-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <div className="shop-eyebrow border-white/20 bg-white/10 text-orange-100">
+            <div className="shop-eyebrow">
               <TrendingUp className="h-4 w-4" />
               Populer raf
             </div>
             <h1 className="mt-3 text-3xl font-bold sm:text-4xl">En çok satanlar</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-brand-muted">
               {siralama === 'otomatik' ? 'Satış verilerine göre öne çıkan ürünler.' : 'Panelden özel seçilmiş ürünler.'}
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-1 rounded-lg bg-white/10 p-1">
+          <div className="grid grid-cols-2 gap-1 rounded-lg bg-brand-paper p-1">
             <button
               type="button"
               onClick={() => setSiralama('otomatik')}
-              className={`min-h-[40px] rounded-md px-4 text-sm font-bold transition ${siralama === 'otomatik' ? 'bg-white text-zinc-950' : 'text-white'}`}
+              className={`min-h-[40px] rounded-md px-4 text-sm font-bold transition ${siralama === 'otomatik' ? 'bg-brand text-white' : 'text-brand-muted'}`}
             >
               Otomatik
             </button>
             <button
               type="button"
               onClick={() => setSiralama('manuel')}
-              className={`flex min-h-[40px] items-center justify-center gap-2 rounded-md px-4 text-sm font-bold transition ${siralama === 'manuel' ? 'bg-white text-zinc-950' : 'text-white'}`}
+              className={`flex min-h-[40px] items-center justify-center gap-2 rounded-md px-4 text-sm font-bold transition ${siralama === 'manuel' ? 'bg-brand text-white' : 'text-brand-muted'}`}
             >
               <Star className="h-4 w-4" />
               Önerilen
@@ -180,7 +180,7 @@ export default function EnCokSatan() {
         </div>
       ) : urunler.length === 0 ? (
         <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center">
-          <PackageSearch className="h-12 w-12 text-zinc-300" />
+          <PackageSearch className="h-12 w-12 text-brand-muted" />
           <h2 className="mt-3 text-xl font-bold text-zinc-950">Henüz ürün yok</h2>
           <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">Bu raf için gösterilecek ürün bulunamadı.</p>
         </div>

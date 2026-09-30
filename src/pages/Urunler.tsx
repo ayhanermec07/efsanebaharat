@@ -153,15 +153,15 @@ export default function Urunler() {
 
   return (
     <div className="shop-container py-6 sm:py-8">
-      <div className="mb-6 rounded-lg bg-zinc-950 p-5 text-white shadow-lg sm:p-7">
+      <div className="shop-page-heading mb-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">
-            <div className="shop-eyebrow border-white/20 bg-white/10 text-orange-100">
+            <div className="shop-eyebrow">
               <PackageSearch className="h-4 w-4" />
               Ürün kataloğu
             </div>
             <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Ürünler</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-brand-muted sm:text-base">
               Baharat, kahve ve gurme ürünleri kategori, marka ve kampanya filtresiyle hızlı bulun.
             </p>
           </div>
@@ -169,7 +169,7 @@ export default function Urunler() {
             type="button"
             onClick={() => setFiltersOpen((value) => !value)}
             aria-expanded={filtersOpen}
-            className="shop-btn-secondary border-white/20 bg-white/10 text-white hover:bg-white hover:text-zinc-950 lg:hidden"
+            className="shop-btn-secondary lg:hidden"
           >
             {filtersOpen ? <X className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />}
             Filtreler
@@ -326,7 +326,7 @@ export default function Urunler() {
             </div>
           ) : urunler.length === 0 ? (
             <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center">
-              <PackageSearch className="h-12 w-12 text-zinc-300" />
+              <PackageSearch className="h-12 w-12 text-brand-muted" />
               <h2 className="mt-3 text-xl font-bold text-zinc-950">Ürün bulunamadı</h2>
               <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">
                 Arama veya filtreleri değiştirerek tekrar deneyebilirsiniz.

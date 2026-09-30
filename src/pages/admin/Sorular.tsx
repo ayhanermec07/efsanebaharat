@@ -358,7 +358,7 @@ export default function AdminSorular() {
             placeholder="Soru veya kullanıcı ara..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-700"
           />
         </div>
 
@@ -367,7 +367,7 @@ export default function AdminSorular() {
           <select
             value={durumFilter}
             onChange={(e) => setDurumFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-700"
           >
             <option value="hepsi">Tüm Durumlar</option>
             <option value="beklemede">Beklemede</option>
@@ -545,7 +545,7 @@ export default function AdminSorular() {
                 <textarea
                   value={cevapMetni}
                   onChange={(e) => setCevapMetni(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-y"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-transparent resize-y"
                   rows={8}
                   placeholder="Cevabınızı buraya yazın..."
                   minLength={10}
@@ -559,7 +559,7 @@ export default function AdminSorular() {
                 <button
                   onClick={saveCevap}
                   disabled={savingCevap || cevapMetni.trim().length < 10}
-                  className="flex-1 bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className="flex-1 bg-brand text-white py-3 rounded-lg hover:bg-emerald-800 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   {savingCevap ? 'Kaydediliyor...' : 'Cevabı Kaydet'}
                 </button>

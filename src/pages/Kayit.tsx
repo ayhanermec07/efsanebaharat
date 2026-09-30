@@ -56,10 +56,10 @@ export default function Kayit() {
   }
 
   return <div className="shop-container py-8 sm:py-12"><div className="mx-auto max-w-3xl overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg">
-    <div className="bg-zinc-950 p-5 text-white sm:p-8">
-      <div className="shop-eyebrow border-white/20 bg-white/10 text-orange-100"><UserPlus className="h-4 w-4" /> Yeni hesap</div>
+    <div className="bg-brand-soft p-5 text-brand-ink sm:p-8">
+      <div className="shop-eyebrow"><UserPlus className="h-4 w-4" /> Yeni hesap</div>
       <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Kayıt ol</h1>
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300">Perakende hesabınız hemen açılır. Bayi ve XML müşteri başvuruları yönetici onayına gönderilir.</p>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-brand-muted">Perakende hesabınız hemen açılır. Bayi ve XML müşteri başvuruları yönetici onayına gönderilir.</p>
     </div>
     <div className="p-5 sm:p-8">
       <div className="mb-6 flex gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-900"><Info className="mt-0.5 h-5 w-5 shrink-0" /><p>Bayi ve XML sipariş özellikleri başvurunuz onaylandıktan sonra açılır.</p></div>

@@ -80,7 +80,7 @@ export default function AdminSearchBar({
 
           <button
             onClick={() => handleSearch(query)}
-            className="px-6 py-3 bg-orange-600 text-white rounded-full hover:bg-orange-700 transition font-medium"
+            className="px-6 py-3 bg-brand text-white rounded-full hover:bg-emerald-800 transition font-medium"
           >
             Ara
           </button>

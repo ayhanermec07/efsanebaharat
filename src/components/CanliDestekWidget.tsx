@@ -32,7 +32,7 @@ export default function CanliDestekWidget() {
             </button>
           </div>
           <p className="mb-3 text-sm text-gray-600">Sorunuz için iletişim sayfamızı kullanabilirsiniz.</p>
-          <Link to="/bize-ulasin" onClick={() => setIsOpen(false)} className="flex min-h-11 items-center justify-center rounded-lg bg-orange-600 px-4 text-sm font-semibold text-white hover:bg-orange-700">
+          <Link to="/bize-ulasin" onClick={() => setIsOpen(false)} className="shop-btn-primary w-full">
             İletişim sayfası
           </Link>
           {whatsapp && (
@@ -48,7 +48,7 @@ export default function CanliDestekWidget() {
         aria-label="İletişim seçenekleri"
         aria-expanded={isOpen}
         aria-controls={isOpen ? 'iletisim-secenekleri' : undefined}
-        className="ml-auto flex min-h-14 min-w-14 items-center justify-center rounded-full bg-orange-600 text-white shadow-lg hover:bg-orange-700"
+        className="site-primary-bg site-primary-hover ml-auto flex min-h-14 min-w-14 items-center justify-center rounded-full text-white shadow-lg"
       >
         <MessageCircle className="h-6 w-6" aria-hidden="true" />
       </button>

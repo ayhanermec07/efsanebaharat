@@ -1,6 +1,6 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { ChevronDown, LayoutDashboard, LogOut, Menu, Search, ShoppingCart, User, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { ChevronDown, LayoutDashboard, LogOut, Menu, Search, ShoppingBag, Sprout, User, X } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
 import { useTheme } from '../contexts/ThemeContext'
@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase'
 import { getImageUrl } from '../utils/imageUtils'
 import { loadPublicCatalog } from '../lib/catalog'
 import { formatPrice } from '../lib/currency'
+import AccessibleModal from './admin/AccessibleModal'
 
 const navLinks = [
   { to: '/', label: 'Ana Sayfa' },
@@ -45,6 +46,7 @@ export default function Header() {
     function handleClickOutside(e: MouseEvent) {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
         setSearchResults([])
+        setSearchOpen(false)
       }
       if (categoryMenuRef.current && !categoryMenuRef.current.contains(e.target as Node)) setShowCategoryMenu(false)
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setShowUserMenu(false)
@@ -121,6 +123,7 @@ export default function Header() {
 
   function handleSearchChange(value: string) {
     setSearchQuery(value)
+    setSearchOpen(true)
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current)
     }
@@ -135,13 +138,13 @@ export default function Header() {
     }, 250)
   }
 
-  function closeMenus() {
+  const closeMenus = useCallback(() => {
     setMenuOpen(false)
     setSearchOpen(false)
     setShowCategoryMenu(false)
     setShowUserMenu(false)
     setSearchResults([])
-  }
+  }, [])
 
   const cartCount = toplamAdet || sepetItems.length
   const logoSetting = Math.min(240, Math.max(50, Number(logo.width) || 120))
@@ -150,12 +153,15 @@ export default function Header() {
   const canAccessAdmin = isAdmin || musteriData?.musteri_tipi === 'admin'
 
   return (
-    <header className="sticky top-0 z-50 relative border-b border-zinc-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-brand-line bg-brand-paper">
+      <div className="site-primary-bg px-4 py-2 text-center text-[11px] font-medium uppercase tracking-[0.14em] text-white">
+        Sofranıza bir tutam lezzet
+      </div>
       <div className="shop-container">
-        <div className="flex h-16 min-w-0 items-center gap-2 sm:gap-3">
-          <Link to="/" className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3" onClick={closeMenus}>
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 py-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,420px)_auto] lg:gap-x-6 lg:py-5">
+          <Link to="/" className="order-1 flex min-w-0 items-center gap-2 sm:gap-3" onClick={closeMenus}>
             <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg text-white shadow-sm ${logo.url ? 'border border-zinc-100 bg-white' : themeLoading ? 'bg-zinc-100' : 'site-primary-bg'}`}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg ${logo.url ? 'border border-brand-line bg-brand-paper' : 'text-emerald-700'}`}
               style={logo.url ? { width: logoSize, height: logoSize } : undefined}
             >
               {logo.url ? (
@@ -163,17 +169,17 @@ export default function Header() {
                   src={getImageUrl(logo.url)}
                   alt={`${siteInfo.siteName} logosu`}
                   fetchPriority="high"
-                  className="h-full w-full object-cover object-center"
+                  className="h-full w-full object-contain object-center"
                 />
-              ) : themeLoading ? null : <span aria-hidden="true" className="text-sm font-bold">EB</span>}
+              ) : themeLoading ? null : <Sprout aria-hidden="true" className="h-7 w-7" />}
             </div>
             <div className="min-w-0">
-              <div className="truncate text-base font-bold leading-tight tracking-tight text-zinc-950 sm:text-xl">{siteInfo.siteName}</div>
-              <div className="hidden truncate text-xs font-medium text-zinc-500 sm:block">{siteInfo.tagline}</div>
+              <div className="line-clamp-2 break-words font-display text-xl font-semibold leading-tight tracking-tight text-brand-ink sm:text-2xl">{siteInfo.siteName}</div>
+              <div className="mt-1 hidden truncate text-[11px] font-medium tracking-wide text-brand-muted sm:block">{siteInfo.tagline}</div>
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-1 lg:flex">
+          <nav className="order-4 col-span-full hidden flex-wrap items-center justify-center gap-1 border-t border-brand-line pt-3 lg:flex" aria-label="Ana gezinme">
             {navLinks.map((link) => (
               <NavLink
                 key={link.to}
@@ -193,7 +199,7 @@ export default function Header() {
                 type="button"
                 onClick={() => setShowCategoryMenu((value) => !value)}
                 aria-expanded={showCategoryMenu}
-                className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-950"
+                className="flex min-h-11 items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-brand-ink transition hover:bg-brand-soft"
               >
                 Kategoriler
                 <ChevronDown className="h-4 w-4" />
@@ -237,26 +243,14 @@ export default function Header() {
             )}
           </nav>
 
-          <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setSearchOpen((value) => !value)
-                setSearchResults([])
-              }}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-zinc-700 transition hover:bg-zinc-100"
-              aria-label="Arama"
-            >
-              <Search className="h-5 w-5" />
-            </button>
-
+          <div className="order-2 flex shrink-0 items-center gap-2 lg:order-3">
             <Link
               to="/sepet"
               onClick={closeMenus}
-              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-zinc-700 transition hover:bg-zinc-100"
+              className="shop-icon-button relative"
               aria-label="Sepet"
             >
-              <ShoppingCart className="h-5 w-5" />
+              <ShoppingBag className="h-5 w-5" aria-hidden="true" />
               {cartCount > 0 && (
                 <span className="site-secondary-bg absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold text-white">
                   {cartCount}
@@ -270,7 +264,7 @@ export default function Header() {
                   type="button"
                   onClick={() => setShowUserMenu((value) => !value)}
                   aria-expanded={showUserMenu}
-                  className="flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100"
+                  className="shop-btn-secondary gap-2 px-3"
                 >
                   <User className="h-5 w-5" />
                   Hesabım
@@ -297,35 +291,33 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <Link to="/giris" onClick={closeMenus} className="site-primary-bg site-primary-hover hidden rounded-lg px-4 py-2 text-sm font-semibold text-white transition sm:inline-flex">
-                Giriş Yap
+              <Link to="/giris" onClick={closeMenus} className="shop-icon-button" aria-label="Giriş yap">
+                <User className="h-5 w-5" aria-hidden="true" />
               </Link>
             )}
 
             <button
               type="button"
               onClick={() => setMenuOpen((value) => !value)}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-zinc-700 transition hover:bg-zinc-100 lg:hidden"
+              className="shop-icon-button lg:hidden"
               aria-label={menuOpen ? 'Menüyü kapat' : 'Menüyü aç'}
               aria-expanded={menuOpen}
+              aria-controls={menuOpen ? 'store-mobile-menu' : undefined}
             >
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
-        </div>
-
-        {searchOpen && (
-          <div ref={searchContainerRef} className="border-t border-zinc-100 py-4">
-            <form onSubmit={handleSearchSubmit} className="relative mx-auto max-w-3xl">
+          <div ref={searchContainerRef} className="relative order-3 col-span-full min-w-0 lg:order-2 lg:col-span-1">
+            <form onSubmit={handleSearchSubmit} className="relative">
               <Search className="absolute left-4 top-3.5 h-5 w-5 text-zinc-400" />
               <input
                 type="text"
                 aria-label="Ürün ara"
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Baharat, marka, kategori veya ürün ara..."
-                className="shop-input pl-12 pr-28"
-                autoFocus
+                onFocus={() => setSearchOpen(true)}
+                placeholder="Hangi baharatı arıyorsunuz?"
+                className="shop-input bg-brand-cream pl-12 pr-28 text-sm"
               />
               {searchQuery && (
                 <button
@@ -340,12 +332,12 @@ export default function Header() {
                   <X className="h-5 w-5" />
                 </button>
               )}
-              <button type="submit" className="site-primary-bg site-primary-hover absolute right-1.5 top-1.5 min-h-0 rounded-lg px-4 py-2 text-sm font-semibold text-white">
+              <button type="submit" className="absolute bottom-1 right-1 top-1 min-h-0 rounded-lg px-3 text-sm font-medium text-emerald-800 transition hover:bg-brand-soft">
                 Ara
               </button>
 
-              {(searchResults.length > 0 || searchLoading || searchQuery.trim().length >= 2) && (
-                <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-xl">
+              {searchOpen && (searchResults.length > 0 || searchLoading || searchQuery.trim().length >= 2) && (
+                <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[min(24rem,45dvh)] overflow-y-auto overscroll-contain rounded-lg border border-zinc-200 bg-white shadow-xl">
                   {searchLoading ? (
                     <div className="px-4 py-5 text-center text-sm text-zinc-500">Aranıyor...</div>
                   ) : searchResults.length > 0 ? (
@@ -362,7 +354,7 @@ export default function Header() {
                         >
                           <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-zinc-100">
                             {urun.ana_gorsel_url ? (
-                              <img src={getImageUrl(urun.ana_gorsel_url)} alt={urun.urun_adi} className="h-full w-full object-cover" />
+                              <img src={getImageUrl(urun.ana_gorsel_url)} alt={urun.urun_adi} className="h-full w-full object-contain" />
                             ) : (
                               <div className="site-primary-bg flex h-full w-full items-center justify-center text-white">{urun.urun_adi.charAt(0)}</div>
                             )}
@@ -390,16 +382,11 @@ export default function Header() {
               )}
             </form>
           </div>
-        )}
+        </div>
 
-        {menuOpen && (
-          <div
-            className="absolute inset-x-0 top-full z-[60] max-h-[calc(100dvh-4rem)] touch-pan-y overflow-y-auto overscroll-contain border-t border-zinc-100 bg-white shadow-xl lg:hidden"
-            role="dialog"
-            aria-label="Mobil menü"
-          >
-            <div className="shop-container py-4">
-              <div className="grid gap-1 pb-6">
+        <AccessibleModal open={menuOpen} title="Mobil menü" closeLabel="Menüyü kapat" onClose={closeMenus} className="anadolu-store max-w-md sm:ml-auto sm:mr-0">
+              <div id="store-mobile-menu" className="grid gap-2 pb-2">
+                <p className="shop-eyebrow mb-2">Mutfağınıza ne lazım?</p>
               {navLinks.map((link) => (
                 <Link key={link.to} to={link.to} onClick={closeMenus} className="rounded-lg px-3 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-100">
                   {link.label}
@@ -410,7 +397,7 @@ export default function Header() {
                 <div className="grid gap-1">
                   {kategoriler.slice(0, 8).map((kategori) => (
                     <Link key={kategori.id} to={`/urunler?kategori=${kategori.id}`} onClick={closeMenus} className="rounded-md px-2 py-2 text-sm text-zinc-700 hover:bg-white">
-                      {kategori.kategori_adi}
+                  {kategori.kategori_adi}
                     </Link>
                   ))}
                 </div>
@@ -454,9 +441,7 @@ export default function Header() {
                 </Link>
               )}
               </div>
-            </div>
-          </div>
-        )}
+        </AccessibleModal>
       </div>
     </header>
   )

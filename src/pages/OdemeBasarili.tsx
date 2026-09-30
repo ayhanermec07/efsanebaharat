@@ -51,9 +51,9 @@ export default function OdemeBasarili() {
         <h1 className="text-2xl font-bold text-gray-900">{authLoading || state === 'loading' ? 'Ödeme durumu kontrol ediliyor' : content.title}</h1>
         <p className="mt-4 text-gray-600">{authLoading || state === 'loading' ? 'Lütfen bekleyin.' : content.message}</p>
         <div className="mt-8 space-y-3">
-          {state === 'pending' || state === 'error' ? <button type="button" onClick={() => void loadOrder()} className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 py-3 text-white transition hover:bg-orange-700"><RefreshCw className="h-4 w-4" /> Durumu yenile</button> : null}
-          {state === 'unauthenticated' ? <Link to="/giris?redirect=/hesabim" className="block w-full rounded-lg bg-orange-600 py-3 text-white transition hover:bg-orange-700">Giriş yap</Link> : null}
-          {state === 'paid' ? <Link to="/hesabim" className="block w-full rounded-lg bg-orange-600 py-3 text-white transition hover:bg-orange-700">Siparişlerimi görüntüle</Link> : null}
+          {state === 'pending' || state === 'error' ? <button type="button" onClick={() => void loadOrder()} className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand py-3 text-white transition hover:bg-emerald-800"><RefreshCw className="h-4 w-4" /> Durumu yenile</button> : null}
+          {state === 'unauthenticated' ? <Link to="/giris?redirect=/hesabim" className="block w-full rounded-lg bg-brand py-3 text-white transition hover:bg-emerald-800">Giriş yap</Link> : null}
+          {state === 'paid' ? <Link to="/hesabim" className="block w-full rounded-lg bg-brand py-3 text-white transition hover:bg-emerald-800">Siparişlerimi görüntüle</Link> : null}
           <Link to={state === 'failed' ? '/sepet' : '/urunler'} className="block w-full rounded-lg bg-gray-100 py-3 text-gray-700 transition hover:bg-gray-200">{state === 'failed' ? 'Sepete dön' : 'Alışverişe devam et'}</Link>
         </div>
       </section>

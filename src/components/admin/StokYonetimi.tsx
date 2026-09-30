@@ -195,7 +195,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="w-full sm:w-auto min-h-10 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition flex items-center justify-center gap-2"
+          className="w-full sm:w-auto min-h-10 bg-brand text-white px-4 py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" />
           <span>Yeni Stok</span>
@@ -318,7 +318,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                     value={formData.birim_turu}
                     onChange={(e) => handleBirimTuruChange(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   >
                     {BIRIM_TURLERI.map(birim => (
                       <option key={birim.value} value={birim.value}>
@@ -343,7 +343,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                       required
                       min="0"
                       step="0.001"
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       Örnek: 250, 1, 500
@@ -359,7 +359,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                         value={formData.birim_adedi_turu}
                         onChange={(e) => setFormData({ ...formData, birim_adedi_turu: e.target.value })}
                         required
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                       >
                         <option value="gram">Gram</option>
                         <option value="kilogram">Kilogram</option>
@@ -389,7 +389,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                     required
                     min="0"
                     step="0.00001"
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
                 </div>
 
@@ -405,7 +405,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                       required
                       min="0"
                       step="0.001"
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       Ondalık değer girebilirsiniz (örn: 10.5)
@@ -421,7 +421,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                         value={formData.stok_birimi}
                         onChange={(e) => setFormData({ ...formData, stok_birimi: e.target.value })}
                         required
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                       >
                         <option value="gram">Gram</option>
                         <option value="kilogram">Kilogram</option>
@@ -450,7 +450,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                       value={formData.min_siparis_miktari}
                       onChange={(e) => setFormData({ ...formData, min_siparis_miktari: parseInt(e.target.value) || 1 })}
                       min="1"
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                     />
                   </div>
 
@@ -462,7 +462,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                       value={formData.stok_grubu}
                       onChange={(e) => setFormData({ ...formData, stok_grubu: e.target.value })}
                       required
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                     >
                       <option value="hepsi">Hepsi</option>
                       <option value="musteri">Müşteri</option>
@@ -487,7 +487,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                 <div className="flex space-x-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition flex items-center justify-center space-x-2"
+                    className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2"
                   >
                     <Save className="w-4 h-4" />
                     <span>{editingId ? 'Güncelle' : 'Kaydet'}</span>

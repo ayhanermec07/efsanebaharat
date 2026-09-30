@@ -216,20 +216,20 @@ export default function Sepet() {
 
   return (
     <div className="shop-container py-6 sm:py-8">
-      <div className="mb-6 rounded-lg bg-zinc-950 p-5 text-white shadow-lg sm:p-7">
+      <div className="shop-page-heading mb-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <div className="shop-eyebrow border-white/20 bg-white/10 text-orange-100">
+            <div className="shop-eyebrow">
               <ShoppingBag className="h-4 w-4" />
               Sepet
             </div>
             <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Sepetim</h1>
-            <p className="mt-2 text-sm leading-6 text-zinc-300 sm:text-base">
+            <p className="mt-2 text-sm leading-6 text-brand-muted sm:text-base">
               Seçili sortileri kontrol edin, kampanyayı uygulayın ve ödemeye geçin.
             </p>
           </div>
           {sepetItems.length > 0 && (
-            <button type="button" onClick={() => { if (window.confirm('Sepetinizdeki tüm ürünler kaldırılsın mı?')) void sepetiTemizle() }} disabled={sepetMesgul} className="shop-btn-secondary border-white/20 bg-white/10 text-white hover:bg-white hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-60">
+            <button type="button" onClick={() => { if (window.confirm('Sepetinizdeki tüm ürünler kaldırılsın mı?')) void sepetiTemizle() }} disabled={sepetMesgul} className="shop-btn-secondary disabled:cursor-not-allowed disabled:opacity-60">
               <Trash2 className="h-4 w-4" />
               Sepeti temizle
             </button>
@@ -252,7 +252,7 @@ export default function Sepet() {
 
       {sepetItems.length === 0 ? (
         <div className="flex min-h-[360px] flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-center shadow-sm">
-          <ShoppingBag className="h-16 w-16 text-zinc-300" />
+          <ShoppingBag className="h-16 w-16 text-brand-muted" />
           <h2 className="mt-4 text-2xl font-bold text-zinc-950">Sepetiniz boş</h2>
           <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">
             Ürünleri inceleyip size uygun sortiyi seçtiğinizde sepet burada hazır olacak.

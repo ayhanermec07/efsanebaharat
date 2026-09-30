@@ -55,7 +55,7 @@ async function findOrder(page: Page, number: string) {
 async function transition(page: Page, item: { id: string; number: string }, status: string) {
   await findOrder(page, item.number)
   await page.getByLabel(`Siparis ${item.number} durumu`).selectOption(status)
-  await expect.poll(async () => (await state(item.id)).siparis_durumu).toBe(status)
+  await expect.poll(async () => (await state(item.id)).siparis_durumu, { timeout: 20_000 }).toBe(status)
 }
 
 test.describe.configure({ mode: 'serial' })

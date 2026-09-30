@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { AlertCircle, Check, Minus, Plus, RotateCcw, ShoppingCart, Sparkles } from 'lucide-react'
+import { AlertCircle, Check, Minus, Plus, RotateCcw, ShoppingBag, Sprout } from 'lucide-react'
 import UrunSoruModul from '../components/UrunSoruModul'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
@@ -158,10 +158,10 @@ export default function UrunDetay() {
                 <img
                   src={getImageUrl(gorseller[secilenGorsel]?.gorsel_url)}
                   alt={urun.urun_adi}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain p-3"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_50%_35%,#fed7aa,#fafaf9_55%,#e7e5e4)]">
+                <div className="flex h-full w-full items-center justify-center bg-brand-soft">
                   <div className="flex h-28 w-28 items-center justify-center rounded-full bg-zinc-950 text-5xl font-bold text-white">
                     {urun.urun_adi?.charAt(0) || 'E'}
                   </div>
@@ -179,7 +179,7 @@ export default function UrunDetay() {
                   onClick={() => setSecilenGorsel(index)}
                   className={`h-20 w-20 shrink-0 overflow-hidden rounded-lg border-2 bg-white ${index === secilenGorsel ? 'border-orange-600' : 'border-zinc-200'}`}
                 >
-                  <img src={getImageUrl(gorsel.gorsel_url)} alt={`${urun.urun_adi} ${index + 1}`} className="h-full w-full object-cover" />
+                  <img src={getImageUrl(gorsel.gorsel_url)} alt={`${urun.urun_adi} ${index + 1}`} className="h-full w-full object-contain p-3" />
                 </button>
               ))}
             </div>
@@ -189,7 +189,7 @@ export default function UrunDetay() {
         <aside className="min-w-0">
           <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 lg:sticky lg:top-24">
             <div className="shop-eyebrow">
-              <Sparkles className="h-4 w-4" />
+              <Sprout className="h-4 w-4" />
               {urun.markalar?.marka_adi || urun.kategoriler?.kategori_adi || 'Efsane Baharat'}
             </div>
             <h1 className="mt-3 break-words text-3xl font-bold leading-tight text-zinc-950 sm:text-4xl">
@@ -205,7 +205,7 @@ export default function UrunDetay() {
                   <div className="text-sm font-bold text-zinc-500 line-through">{formatPrice(iskontoInfo.eskiFiyat)}</div>
                   <div className="mt-1 flex flex-wrap items-end justify-between gap-2">
                     <span className="text-3xl font-bold text-zinc-950">{formatPrice(fiyat)}</span>
-                    <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">%{iskontoInfo.oran} indirim</span>
+                    <span className="rounded-full bg-brand-clay px-3 py-1 text-xs font-bold text-white">%{iskontoInfo.oran} indirim</span>
                   </div>
                 </>
               ) : (
@@ -227,7 +227,7 @@ export default function UrunDetay() {
                         type="button"
                         onClick={() => selectStok(stok)}
                         className={`min-h-[74px] rounded-lg border p-3 text-left transition ${secilenStok?.id === stok.id
-                          ? 'border-orange-600 bg-orange-50 shadow-sm'
+                          ? 'border-emerald-700 bg-emerald-50 shadow-sm'
                           : 'border-zinc-200 bg-white hover:border-orange-300'
                           }`}
                       >
@@ -280,10 +280,10 @@ export default function UrunDetay() {
               aria-busy={ekleniyor}
               className={`mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg px-4 font-bold transition disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500 ${eklendi
                 ? 'bg-emerald-600 text-white'
-                : 'bg-zinc-950 text-white hover:bg-orange-700'
+                : 'bg-brand text-white hover:bg-emerald-800'
                 }`}
             >
-              {eklendi ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
+              {eklendi ? <Check className="h-5 w-5" /> : <ShoppingBag className="h-5 w-5" />}
               {eklendi ? 'Sepete eklendi' : 'Sepete ekle'}
             </button>
 

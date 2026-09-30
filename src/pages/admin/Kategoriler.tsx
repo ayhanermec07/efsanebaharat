@@ -139,7 +139,7 @@ export default function Kategoriler() {
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Kategori Yönetimi</h1>
         <button
           onClick={() => setModalOpen(true)}
-          className="bg-orange-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-orange-700 transition flex items-center justify-center space-x-2 w-full sm:w-auto"
+          className="bg-brand text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2 w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" />
           <span>Yeni Kategori Ekle</span>
@@ -150,7 +150,7 @@ export default function Kategoriler() {
         <label htmlFor="kategori-ara" className="sr-only">Kategori adı ara</label>
         <input id="kategori-ara" value={searchInput} onChange={event => setSearchInput(event.target.value)} maxLength={100} placeholder="Kategori adı ara" className="min-h-10 min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 text-sm" />
         <div className="flex gap-2">
-          <button type="submit" className="min-h-10 flex-1 rounded-lg bg-orange-600 px-4 text-sm font-medium text-white sm:flex-none">Ara</button>
+          <button type="submit" className="min-h-10 flex-1 rounded-lg bg-brand px-4 text-sm font-medium text-white sm:flex-none">Ara</button>
           {search && <button type="button" onClick={() => { setSearchInput(''); setSearch(''); setPage(1) }} className="min-h-10 flex-1 rounded-lg border border-gray-300 bg-white px-4 text-sm sm:flex-none">Temizle</button>}
         </div>
       </form>
@@ -254,7 +254,7 @@ export default function Kategoriler() {
                     maxLength={100}
                     pattern="^[\p{L}0-9\s\/\-]+$"
                     title="En az 2, en fazla 100 karakter. Sadece harf, rakam, boşluk ve tire kullanabilirsiniz."
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
                   <p className="text-xs text-gray-500 mt-1">En az 2, en fazla 100 karakter</p>
                 </div>
@@ -266,7 +266,7 @@ export default function Kategoriler() {
                     onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
                     rows={3}
                     maxLength={500}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
                   <p className="text-xs text-gray-500 mt-1">Maksimum 500 karakter ({formData.aciklama.length}/500)</p>
                 </div>
@@ -279,7 +279,7 @@ export default function Kategoriler() {
                     onChange={(e) => setFormData({ ...formData, sira_no: parseInt(e.target.value) })}
                     min={0}
                     max={999}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
                   <p className="text-xs text-gray-500 mt-1">0-999 arası bir sayı girin</p>
                 </div>
@@ -308,7 +308,7 @@ export default function Kategoriler() {
                 <div className="flex space-x-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition flex items-center justify-center space-x-2"
+                    className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2"
                   >
                     <Save className="w-5 h-5" />
                     <span>{editingId ? 'Güncelle' : 'Kaydet'}</span>

@@ -304,7 +304,7 @@ export default function AdminBayiler() {
         </div>
         <button
           onClick={openCreateModal}
-          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center justify-center gap-2 w-full sm:w-auto"
+          className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" />
           Yeni Bayi Ekle
@@ -314,7 +314,7 @@ export default function AdminBayiler() {
       <form onSubmit={event => { event.preventDefault(); setPage(1); setSearch(searchInput) }} className="mb-4 flex min-w-0 flex-wrap gap-2">
         <label htmlFor="bayi-ara" className="sr-only">Bayi adına göre ara</label>
         <input id="bayi-ara" value={searchInput} onChange={event => setSearchInput(event.target.value)} maxLength={100} placeholder="Bayi adına göre ara" className="min-h-10 min-w-0 flex-1 rounded-lg border border-gray-300 px-3" />
-        <button type="submit" className="min-h-10 rounded-lg bg-orange-600 px-4 text-white">Ara</button>
+        <button type="submit" className="min-h-10 rounded-lg bg-brand px-4 text-white">Ara</button>
         {search && <button type="button" onClick={() => { setSearchInput(''); setSearch(''); setPage(1) }} className="min-h-10 px-3 text-orange-700">Temizle</button>}
       </form>
 
@@ -328,7 +328,7 @@ export default function AdminBayiler() {
           <p className="text-gray-600">{search ? 'Aramayla eşleşen bayi bulunmuyor' : 'Henüz bayi bulunmuyor'}</p>
           <button
             onClick={openCreateModal}
-            className="mt-4 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+            className="mt-4 px-6 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800"
           >
             İlk Bayiyi Ekle
           </button>
@@ -464,7 +464,7 @@ export default function AdminBayiler() {
                     type="text"
                     value={formData.bayii_kodu}
                     onChange={(e) => setFormData({ ...formData, bayii_kodu: e.target.value.toUpperCase() })}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent font-mono"
                     placeholder="BAY123456"
                     required
                     minLength={5}
@@ -494,7 +494,7 @@ export default function AdminBayiler() {
                   type="text"
                   value={formData.bayi_adi}
                   onChange={(e) => setFormData({ ...formData, bayi_adi: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   placeholder="ABC Gıda Ltd. Şti."
                   required
                   minLength={3}
@@ -509,7 +509,7 @@ export default function AdminBayiler() {
                   type="text"
                   value={formData.yetkili_kisi}
                   onChange={(e) => setFormData({ ...formData, yetkili_kisi: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   placeholder="Ahmet Yılmaz"
                   required
                 />
@@ -523,7 +523,7 @@ export default function AdminBayiler() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   placeholder="info@abcgida.com"
                   required
                   disabled={modal === 'edit' && Boolean(selectedBayi?.kullanici_id)}
@@ -539,7 +539,7 @@ export default function AdminBayiler() {
                   type="tel"
                   value={formData.telefon}
                   onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   placeholder="0 (555) 123 45 67"
                 />
               </div>
@@ -551,7 +551,7 @@ export default function AdminBayiler() {
                 <textarea
                   value={formData.adres}
                   onChange={(e) => setFormData({ ...formData, adres: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   placeholder="İş adresi"
                   rows={3}
                 />
@@ -563,7 +563,7 @@ export default function AdminBayiler() {
                   id="aktif"
                   checked={formData.aktif}
                   onChange={(e) => setFormData({ ...formData, aktif: e.target.checked })}
-                  className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                  className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-emerald-700"
                 />
                 <label htmlFor="aktif" className="text-sm font-medium text-gray-700">
                   Bayi aktif
@@ -582,7 +582,7 @@ export default function AdminBayiler() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {saving ? (
                     <>

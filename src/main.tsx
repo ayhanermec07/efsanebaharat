@@ -12,21 +12,24 @@ createRoot(document.getElementById('root')!).render(
       toastOptions={{
         duration: 3000,
         style: {
-          background: '#363636',
-          color: '#fff',
+          background: '#fffdf8',
+          color: '#293b2b',
+          border: '1px solid #ded9c9',
+          borderRadius: '12px',
+          fontFamily: 'DM Sans, Arial, sans-serif',
         },
         success: {
           duration: 3000,
           iconTheme: {
-            primary: '#10b981',
-            secondary: '#fff',
+            primary: '#34513c',
+            secondary: '#fffdf8',
           },
         },
         error: {
           duration: 4000,
           iconTheme: {
-            primary: '#ef4444',
-            secondary: '#fff',
+            primary: '#b91c1c',
+            secondary: '#fffdf8',
           },
         },
       }}

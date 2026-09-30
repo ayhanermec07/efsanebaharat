@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, Sprout } from 'lucide-react'
 import CanliDestekWidget from '../components/CanliDestekWidget'
 import UrunKart from '../components/UrunKart'
 import { publicSupabase } from '../lib/supabase'
-import { loadPublicCatalog } from '../lib/catalog'
+import { loadPublicCatalog, type CatalogCategory } from '../lib/catalog'
 import { getImageUrl } from '../utils/imageUtils'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -16,6 +16,7 @@ export default function AnaSayfa() {
   const [enCokSatanlar, setEnCokSatanlar] = useState<any[]>([])
   const [yeniEklenenler, setYeniEklenenler] = useState<any[]>([])
   const [markalar, setMarkalar] = useState<any[]>([])
+  const [kategoriler, setKategoriler] = useState<CatalogCategory[]>([])
   const [currentBanner, setCurrentBanner] = useState(0)
   const [bestsellerPage, setBestsellerPage] = useState(0)
   const [newProductsPage, setNewProductsPage] = useState(0)
@@ -53,6 +54,7 @@ export default function AnaSayfa() {
         setEnCokSatanlar(products.slice(0, 12))
         setYeniEklenenler(products)
         setMarkalar(catalog.markalar || [])
+        setKategoriler(catalog.kategoriler || [])
         if (campaignResponse.error) {
           console.error('Ana sayfa kampanyaları yüklenemedi:', campaignResponse.error)
         } else {
@@ -73,7 +75,7 @@ export default function AnaSayfa() {
   useEffect(() => {
     setCurrentBanner((current) => Math.min(current, Math.max(banners.length - 1, 0)))
 
-    if (banners.length < 2) return
+    if (banners.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     const interval = window.setInterval(() => {
       setCurrentBanner((current) => (current + 1) % banners.length)
@@ -83,9 +85,10 @@ export default function AnaSayfa() {
   }, [banners.length])
 
   const activeBanner = banners[currentBanner]
-  const heroImage = getImageUrl(activeBanner?.banner_gorseli || oneCikanUrunler[0]?.urun_gorselleri?.[0]?.gorsel_url)
-  const heroTitle = activeBanner?.ad || 'Mutfakta fark yaratan lezzetler'
-  const heroText = activeBanner?.aciklama || 'Özenle seçilmiş baharatlar, kahveler ve gurme ürünler tek yerde.'
+  const heroProduct = oneCikanUrunler.find(product => product.urun_gorselleri?.[0]?.gorsel_url || product.ana_gorsel_url)
+  const heroImage = getImageUrl(activeBanner?.banner_gorseli || heroProduct?.urun_gorselleri?.[0]?.gorsel_url || heroProduct?.ana_gorsel_url)
+  const heroTitle = activeBanner?.ad || 'Sofranın sırrı, bir tutam baharat.'
+  const heroText = activeBanner?.aciklama || 'Tanıdık tatları yeniden keşfedin. Mutfağınızın vazgeçilmez baharatları bir arada.'
   
   let heroLink = '/urunler'
   if (activeBanner) {
@@ -128,63 +131,57 @@ export default function AnaSayfa() {
 
   return (
     <div className="min-w-0">
-      <section className="shop-container pt-5 sm:pt-8">
-        <div className="relative overflow-hidden rounded-lg bg-zinc-950 text-white shadow-xl">
-          {heroImage && (
-            <img
-              src={heroImage}
-              alt={heroTitle}
-              className="absolute inset-0 h-full w-full object-cover opacity-45"
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/80 to-zinc-950/20" />
-
-          <div className="relative flex min-h-[370px] items-end p-5 sm:min-h-[420px] sm:p-8 lg:min-h-[500px] lg:p-12">
-            <div className="max-w-2xl pb-8 sm:pb-7">
-              <p className="text-xs font-extrabold tracking-[0.18em] text-orange-200">
-                {activeBanner ? 'ÖNE ÇIKAN KAMPANYA' : 'EFSANE BAHARAT'}
+      <section className="shop-container py-7 sm:py-10 lg:py-12">
+        <div className="grid items-center gap-7 md:grid-cols-2 md:gap-10 lg:gap-16">
+            <div className="min-w-0 py-2">
+              <p className="shop-eyebrow">
+                {activeBanner ? 'Öne çıkan kampanya' : 'Günlük mutfağınıza'}
               </p>
-              <h1 className="mt-3 text-3xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
+              <h1 className="mt-4 max-w-xl text-4xl leading-[1.12] text-brand-ink sm:text-5xl lg:text-6xl">
                 {heroTitle}
               </h1>
-              <p className="mt-4 max-w-xl text-base font-medium leading-7 text-zinc-200 sm:text-lg">
+              <p className="mt-5 max-w-md text-base leading-7 text-brand-muted">
                 {heroText}
               </p>
-              <div className="mt-7">
+              <div className="mt-7 flex flex-wrap gap-3">
                 <Link to={heroLink} className="shop-btn-primary">
-                  {activeBanner ? 'Kampanyayı incele' : 'Ürünleri incele'}
+                  {activeBanner ? 'Kampanyayı incele' : 'Baharatları keşfet'}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
+                <Link to="/en-cok-satan" className="shop-btn-secondary">Çok satanlar</Link>
               </div>
             </div>
+          <div className="shop-hero-art aspect-[4/3] md:aspect-square lg:aspect-[4/3]">
+            {heroImage ? <img src={heroImage} alt={activeBanner?.banner_gorseli ? activeBanner.ad : heroProduct?.urun_adi || 'Baharat seçkimiz'} className="h-full w-full object-contain" fetchPriority="high" /> : <div className="flex flex-col items-center gap-4 text-emerald-700"><Sprout className="h-16 w-16 stroke-1" aria-hidden="true" /><span className="font-display text-2xl">Sofranıza bir tutam lezzet</span></div>}
           </div>
-
+        </div>
           {banners.length > 1 && (
-            <div className="absolute bottom-4 left-5 right-4 flex items-center justify-between gap-3 sm:left-8 lg:left-12">
-              <div className="flex gap-2" aria-label="Kampanya seçimi">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap gap-1" aria-label="Kampanya seçimi">
                 {banners.map((banner, index) => (
                   <button
                     key={banner.id}
                   type="button"
                   onClick={() => setCurrentBanner(index)}
-                    className="grid h-10 w-10 place-items-center"
+                    className="grid h-11 w-11 place-items-center rounded-lg"
                     aria-label={`${index + 1}. kampanyayı göster`}
                     aria-current={index === currentBanner}
                   >
-                    <span className={`h-3 min-w-3 rounded-full transition-all ${index === currentBanner ? 'w-8 bg-white' : 'bg-white/50 hover:bg-white/80'}`} />
+                    <span className={`h-2 min-w-2 rounded-full transition-all ${index === currentBanner ? 'site-primary-bg w-6' : 'bg-zinc-300'}`} />
                   </button>
                 ))}
               </div>
               <div className="flex gap-2">
-                <button type="button" onClick={prevBanner} className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-zinc-950 shadow-sm" aria-label="Önceki banner">
+                <button type="button" onClick={prevBanner} className="shop-icon-button" aria-label="Önceki banner">
                   <ChevronLeft className="h-5 w-5" />
                 </button>
-                <button type="button" onClick={nextBanner} className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-zinc-950 shadow-sm" aria-label="Sonraki banner">
+                <button type="button" onClick={nextBanner} className="shop-icon-button" aria-label="Sonraki banner">
                   <ChevronRight className="h-5 w-5" />
                 </button>
               </div>
             </div>
           )}
-        </div>
+        {kategoriler.length > 0 && <nav aria-label="Ürün kategorileri" className="mt-7 flex flex-wrap gap-2 border-b border-brand-line pb-7 sm:mt-10"><Link to="/urunler" className="shop-btn-primary px-4">Tüm ürünler</Link>{kategoriler.slice(0, 8).map(kategori => <Link key={kategori.id} to={`/urunler?kategori=${kategori.id}`} className="shop-btn-secondary px-4">{kategori.kategori_adi}</Link>)}</nav>}
       </section>
 
       {oneCikanUrunler.length > 0 && (
@@ -217,7 +214,7 @@ export default function AnaSayfa() {
         <section className="shop-container py-10">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
-              <h2 className="text-2xl font-extrabold uppercase tracking-[0.02em] text-zinc-950 sm:text-3xl">GÜVENİLEN SEÇİMLER</h2>
+              <h2 className="text-2xl text-brand-ink sm:text-3xl">Markalarımız</h2>
             </div>
             <Link to="/urunler" className="shop-btn-secondary min-h-[40px] px-4 py-2 text-sm">
               Tümü
@@ -280,7 +277,7 @@ function ProductRail({ title, link, products, total, page = 0, onPageChange }: P
     <section className="shop-container py-8 sm:py-10">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h2 className="text-2xl font-extrabold uppercase tracking-[0.02em] text-zinc-950 sm:text-3xl">{title.toLocaleUpperCase('tr-TR')}</h2>
+          <h2 className="text-2xl text-brand-ink sm:text-3xl">{title}</h2>
         </div>
         <div className="flex items-center gap-2">
           {onPageChange && pageCount > 1 && (

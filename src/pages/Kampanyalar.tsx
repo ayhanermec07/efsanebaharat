@@ -88,13 +88,13 @@ export default function Kampanyalar() {
 
   return (
     <div className="shop-container py-6 sm:py-8">
-      <div className="mb-6 rounded-lg bg-zinc-950 p-5 text-white shadow-lg sm:p-7">
-        <div className="shop-eyebrow border-white/20 bg-white/10 text-orange-100">
+      <div className="shop-page-heading mb-6">
+        <div className="shop-eyebrow">
           <Tag className="h-4 w-4" />
           Fırsatlar
         </div>
         <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Kampanyalı ürünler</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300">
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-brand-muted">
           Aktif indirimler ve avantajlı ürün rafları burada listelenir.
         </p>
       </div>
@@ -114,7 +114,7 @@ export default function Kampanyalar() {
         </div>
       ) : kampanyalar.length === 0 ? (
         <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center">
-          <PackageSearch className="h-12 w-12 text-zinc-300" />
+          <PackageSearch className="h-12 w-12 text-brand-muted" />
           <h2 className="mt-3 text-xl font-bold text-zinc-950">Aktif kampanya yok</h2>
           <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">Yeni kampanyalar eklendiğinde burada görünür.</p>
         </div>
@@ -147,7 +147,7 @@ export default function Kampanyalar() {
                     {kampanya.toplam > kampanya.urunler.length && (
                       <Link
                         to={`/urunler?kampanya=${kampanya.id}`}
-                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-lg bg-zinc-950 px-3 text-xs font-bold text-white hover:bg-orange-700"
+                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-lg bg-zinc-950 px-3 text-xs font-bold text-white hover:bg-emerald-800"
                       >
                         Tümünü gör ({kampanya.toplam})
                         <ArrowRight className="h-4 w-4" />

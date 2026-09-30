@@ -1,12 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { publicSupabase, supabase } from '../lib/supabase'
-
-interface ThemeSettings {
-    primaryColor: string
-    secondaryColor: string
-    backgroundColor: string
-}
+import { colorForWhiteText, defaultTheme, normalizeTheme, THEME_DESIGN, type ThemeSettings } from '../lib/theme'
 
 interface LogoSettings {
     url: string | null
@@ -32,12 +27,6 @@ interface ThemeContextType {
     loading: boolean
 }
 
-const defaultTheme: ThemeSettings = {
-    primaryColor: '#c2410c', // orange-700; white text meets WCAG AA
-    secondaryColor: '#dc2626', // red-600
-    backgroundColor: '#f9fafb', // gray-50
-}
-
 const defaultLogo: LogoSettings = {
     url: null,
     width: 120,
@@ -50,31 +39,6 @@ const defaultSiteInfo: SiteInfoSettings = {
     phone: '',
     email: '',
     address: '',
-}
-
-const normalizeColor = (value: unknown, fallback: string) =>
-    typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback
-
-const colorForWhiteText = (color: string) => {
-    const channels = [1, 3, 5].map(offset => parseInt(color.slice(offset, offset + 2), 16))
-    const contrast = () => {
-        const [red, green, blue] = channels.map(value => {
-            const normalized = value / 255
-            return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
-        })
-        return 1.05 / (0.2126 * red + 0.7152 * green + 0.0722 * blue + 0.05)
-    }
-    while (contrast() < 4.5) channels.forEach((value, index) => { channels[index] = Math.floor(value * 0.95) })
-    return `#${channels.map(value => value.toString(16).padStart(2, '0')).join('')}`
-}
-
-const normalizeTheme = (value: unknown): ThemeSettings => {
-    const setting = value && typeof value === 'object' ? value as Partial<ThemeSettings> : {}
-    return {
-        primaryColor: normalizeColor(setting.primaryColor, defaultTheme.primaryColor),
-        secondaryColor: normalizeColor(setting.secondaryColor, defaultTheme.secondaryColor),
-        backgroundColor: normalizeColor(setting.backgroundColor, defaultTheme.backgroundColor),
-    }
 }
 
 const normalizeLogo = (value: unknown): LogoSettings => {
@@ -126,15 +90,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const root = document.documentElement
 
-        // Hex to RGB conversion for Tailwind opacity support if needed
-        // For now, we'll just set the hex values directly/
-        // Note: Tailwind uses specific color names, but we can override some defaults or use
-        // style={} prop in components. A better approach for global theme with Tailwind
-        // is using CSS variables.
-
         root.style.setProperty('--site-primary-color', theme.primaryColor)
         root.style.setProperty('--site-primary-contrast-color', colorForWhiteText(theme.primaryColor))
         root.style.setProperty('--site-secondary-color', theme.secondaryColor)
+        root.style.setProperty('--site-secondary-contrast-color', colorForWhiteText(theme.secondaryColor))
         root.style.setProperty('--site-background-color', theme.backgroundColor)
         document.body.style.backgroundColor = theme.backgroundColor
 
@@ -168,12 +127,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
 
     const updateTheme = async (settings: ThemeSettings) => {
-        const normalizedSettings = normalizeTheme(settings)
+        const normalizedSettings = normalizeTheme({ ...settings, design: THEME_DESIGN })
         const { error } = await supabase
             .from('site_settings')
             .upsert({
                 setting_key: 'theme',
-                setting_value: normalizedSettings,
+                setting_value: { ...normalizedSettings, design: THEME_DESIGN },
                 updated_at: new Date().toISOString()
             }, { onConflict: 'setting_key' })
 

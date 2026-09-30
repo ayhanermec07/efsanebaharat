@@ -15,7 +15,7 @@ export default function Ayarlar() {
     // Tasarım form state
     const [primaryColor, setPrimaryColor] = useState(theme.primaryColor)
     const [secondaryColor, setSecondaryColor] = useState(theme.secondaryColor)
-    const [backgroundColor, setBackgroundColor] = useState(theme.backgroundColor || '#f9fafb')
+    const [backgroundColor, setBackgroundColor] = useState(theme.backgroundColor || '#f7f2e8')
     const [logoWidth, setLogoWidth] = useState(logo.width)
     const [siteName, setSiteName] = useState(siteInfo.siteName)
     const [tagline, setTagline] = useState(siteInfo.tagline)
@@ -29,7 +29,7 @@ export default function Ayarlar() {
     useEffect(() => {
         setPrimaryColor(theme.primaryColor)
         setSecondaryColor(theme.secondaryColor)
-        setBackgroundColor(theme.backgroundColor || '#f9fafb')
+        setBackgroundColor(theme.backgroundColor || '#f7f2e8')
     }, [theme])
 
     useEffect(() => {
@@ -318,7 +318,7 @@ export default function Ayarlar() {
                                     <button
                                         onClick={handleThemeSave}
                                         disabled={loading}
-                                        className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50"
+                                        className="flex items-center justify-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition disabled:opacity-50"
                                     >
                                         <Save className="w-4 h-4" />
                                         {loading ? 'Kaydediliyor...' : 'Renkleri Kaydet'}
@@ -450,7 +450,7 @@ export default function Ayarlar() {
                                                 autoComplete="new-password"
                                                 value={currentAdminPassword}
                                                 onChange={(event) => setCurrentAdminPassword(event.target.value)}
-                                                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-orange-500 focus:ring-orange-500"
+                                                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-emerald-700 focus:ring-emerald-700"
                                                 placeholder="En az 12 karakter"
                                             />
                                         </label>
@@ -463,7 +463,7 @@ export default function Ayarlar() {
                                                 autoComplete="new-password"
                                                 value={currentAdminPasswordConfirm}
                                                 onChange={(event) => setCurrentAdminPasswordConfirm(event.target.value)}
-                                                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-orange-500 focus:ring-orange-500"
+                                                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-emerald-700 focus:ring-emerald-700"
                                                 placeholder="Şifreyi tekrar yazın"
                                             />
                                         </label>
@@ -495,7 +495,7 @@ export default function Ayarlar() {
                                                 required
                                                 value={newItemName}
                                                 onChange={e => setNewItemName(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-700 focus:border-emerald-700"
                                             />
                                         </div>
                                         <div>
@@ -504,7 +504,7 @@ export default function Ayarlar() {
                                                 type="text"
                                                 value={newItemSurname}
                                                 onChange={e => setNewItemSurname(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-700 focus:border-emerald-700"
                                             />
                                         </div>
                                     </div>
@@ -516,7 +516,7 @@ export default function Ayarlar() {
                                             required
                                             value={newItemEmail}
                                             onChange={e => setNewItemEmail(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-700 focus:border-emerald-700"
                                         />
                                     </div>
 
@@ -528,7 +528,7 @@ export default function Ayarlar() {
                                             minLength={12}
                                             value={newItemPassword}
                                             onChange={e => setNewItemPassword(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-700 focus:border-emerald-700"
                                             placeholder="En az 12 karakter"
                                         />
                                     </div>
@@ -573,13 +573,13 @@ export default function Ayarlar() {
                                             placeholder="Örn: a0eebc99-9c0b..."
                                             value={adminEmail}
                                             onChange={(e) => setAdminEmail(e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                                         />
                                     </div>
                                     <button
                                         type="submit"
                                         disabled={adminLoading}
-                                        className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50 w-full"
+                                        className="flex items-center justify-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition disabled:opacity-50 w-full"
                                     >
                                         <UserPlus className="w-4 h-4" />
                                         {adminLoading ? 'İşleniyor...' : 'Mevcut Kullanıcıyı Admin Yap'}

@@ -8,17 +8,21 @@ type AccessibleModalProps = {
   onClose: () => void
   children: ReactNode
   className?: string
+  closeLabel?: string
 }
 
-export default function AccessibleModal({ open, title, onClose, children, className = 'max-w-4xl' }: AccessibleModalProps) {
+export default function AccessibleModal({ open, title, onClose, children, className = 'max-w-4xl', closeLabel = `${title} penceresini kapat` }: AccessibleModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
   const openerRef = useRef<HTMLElement | null>(null)
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose }, [onClose])
 
   useEffect(() => {
     if (!open) return
     openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') onCloseRef.current()
       if (event.key !== 'Tab') return
       const focusable = dialogRef.current?.querySelectorAll<HTMLElement>('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')
       if (!focusable?.length) return
@@ -28,17 +32,25 @@ export default function AccessibleModal({ open, title, onClose, children, classN
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
     }
     const root = document.getElementById('root')
+    const previousOverflow = document.body.style.overflow
     root?.setAttribute('inert', '')
+    document.body.style.overflow = 'hidden'
     document.addEventListener('keydown', onKeyDown)
-    window.setTimeout(() => dialogRef.current?.focus(), 0)
-    return () => { document.removeEventListener('keydown', onKeyDown); root?.removeAttribute('inert'); openerRef.current?.focus() }
-  }, [onClose, open])
+    const focusTimer = window.setTimeout(() => closeRef.current?.focus(), 0)
+    return () => {
+      window.clearTimeout(focusTimer)
+      document.removeEventListener('keydown', onKeyDown)
+      root?.removeAttribute('inert')
+      document.body.style.overflow = previousOverflow
+      openerRef.current?.focus()
+    }
+  }, [open])
 
   if (!open) return null
-  return createPortal(<div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-0 sm:items-center sm:p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} className={`my-0 min-h-screen w-full bg-white outline-none sm:my-8 sm:min-h-0 sm:rounded-lg ${className}`}>
-      <div className="flex items-center justify-between border-b p-4 sm:p-6"><h2 className="text-xl font-bold text-gray-900 sm:text-2xl">{title}</h2><button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-lg text-gray-500 hover:bg-gray-100" aria-label={`${title} penceresini kapat`}><X className="h-5 w-5" /></button></div>
-      <div className="max-h-[calc(100vh-73px)] overflow-y-auto p-4 sm:max-h-[80vh] sm:p-6">{children}</div>
+  return createPortal(<div className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto bg-zinc-950/40 p-0 sm:items-center sm:p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} className={`anadolu-ui my-0 min-h-[100dvh] w-full bg-brand-paper outline-none sm:my-8 sm:min-h-0 sm:rounded-lg ${className}`}>
+      <div className="flex items-center justify-between gap-3 border-b border-brand-line p-4 sm:p-6"><h2 className="text-xl font-semibold text-brand-ink sm:text-2xl">{title}</h2><button ref={closeRef} type="button" onClick={onClose} className="shop-icon-button" aria-label={closeLabel}><X className="h-5 w-5" aria-hidden="true" /></button></div>
+      <div className="max-h-[calc(100dvh-89px)] overflow-y-auto overscroll-contain p-4 sm:max-h-[75dvh] sm:p-6">{children}</div>
     </div>
   </div>, document.body)
 }

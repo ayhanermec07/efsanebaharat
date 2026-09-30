@@ -21,7 +21,7 @@ export class ErrorBoundary extends React.Component<
             <h1 className="text-2xl font-bold text-stone-900">Sayfa yüklenemedi</h1>
             <p className="mt-3 text-sm leading-6 text-stone-600">Geçici bir sorun oluştu. Sayfayı yenileyebilir veya ana sayfaya dönebilirsiniz.</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <button type="button" onClick={() => window.location.reload()} className="min-h-11 rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700">Yenile</button>
+              <button type="button" onClick={() => window.location.reload()} className="min-h-11 rounded-lg bg-brand px-5 py-3 font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700">Yenile</button>
               <a href="/" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-stone-300 px-5 py-3 font-semibold text-stone-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700">Ana sayfa</a>
             </div>
           </div>

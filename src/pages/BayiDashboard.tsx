@@ -148,7 +148,7 @@ export default function BayiDashboard() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-brand rounded-full flex items-center justify-center">
                 <Store className="w-6 h-6 text-white" />
               </div>
               <div className="min-w-0">

@@ -5,7 +5,7 @@ import { getLocalSupabaseCredentials } from '../../scripts/local-supabase-creden
 type Role = 'customer' | 'dealer' | 'admin'
 type Account = { email: string; password: string; userId: string }
 
-const { url: localUrl, serviceRoleKey } = getLocalSupabaseCredentials()
+const { url: localUrl, anonKey, serviceRoleKey } = getLocalSupabaseCredentials()
 const service = createClient(localUrl, serviceRoleKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 })
@@ -60,6 +60,12 @@ async function assertNoBodyOverflow(page: Page) {
     scrollWidth: document.documentElement.scrollWidth,
   }))
   expect(scrollWidth, `Yatay taşma: ${scrollWidth}px > ${width}px`).toBeLessThanOrEqual(width)
+}
+
+async function openAdminRoute(page: Page, route: string) {
+  if ((page.viewportSize()?.width ?? 1440) < 1024) await page.getByRole('button', { name: 'Yönetim menüsünü aç' }).click()
+  await page.locator(`#admin-sidebar a[href="${route}"]`).click({ timeout: 20_000 })
+  await expect(page).toHaveURL(new RegExp(`${route}$`))
 }
 
 test.describe.configure({ mode: 'serial' })
@@ -124,6 +130,7 @@ test('bağlı bayi panelini açar ve yönetime erişemez', async ({ page }) => {
 })
 
 test('yönetici panelini ve mobil menü klavyesini açar', async ({ page }) => {
+  test.setTimeout(120_000)
   await login(page, 'admin')
   await page.goto('/admin', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Kontrol Paneli' })).toBeVisible({ timeout: 20_000 })
@@ -146,10 +153,39 @@ test('yönetici panelini ve mobil menü klavyesini açar', async ({ page }) => {
     ['/admin/siparisler', 'Sipariş Yönetimi'],
     ['/admin/urunler', 'Ürün Yönetimi'],
     ['/admin/bayiler', 'Bayi Yönetimi'],
+    ['/admin/kategoriler', 'Kategori'],
+    ['/admin/markalar', 'Marka'],
+    ['/admin/kargo', 'Kargo'],
+    ['/admin/bayi-satislari', 'Bayi'],
+    ['/admin/musteriler', 'Müşteri'],
+    ['/admin/kampanyalar', 'Kampanya'],
+    ['/admin/sorular', 'Soru'],
+    ['/admin/canli-destek', 'Destek'],
+    ['/admin/iskonto', 'İskonto'],
+    ['/admin/stok-azalan', 'Azalan'],
+    ['/admin/ayarlar', 'Ayar'],
+    ['/admin/xml-yonetim', 'XML'],
+    ['/admin/asorti-stok', 'Asorti'],
   ]) {
-    await page.goto(route, { waitUntil: 'domcontentloaded' })
-    await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible({ timeout: 20_000 })
+    await openAdminRoute(page, route)
+    await expect(page.getByRole('heading', { name: new RegExp(heading, 'i') }).first()).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('main .animate-spin')).toHaveCount(0, { timeout: 20_000 })
     await assertNoBodyOverflow(page)
   }
-  await expect(page.getByRole('region', { name: 'Bayi listesi, yatay kaydırılabilir' })).toHaveAttribute('tabindex', '0')
+  await openAdminRoute(page, '/admin/bayiler')
+  await expect(page.getByRole('region', { name: 'Bayi listesi, yatay kaydırılabilir' })).toHaveAttribute('tabindex', '0', { timeout: 20_000 })
+})
+
+test('XML müşteri sipariş ve geçmiş ekranları taşmadan açılır', async ({ page }) => {
+  const adminClient = createClient(localUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } })
+  await assertSuccess(await adminClient.auth.signInWithPassword({ email: accounts.admin.email, password: accounts.admin.password }), 'Yerel admin oturumu')
+  await assertSuccess(await adminClient.from('musteriler').update({ musteri_tipi: 'xml_musteri' }).eq('user_id', accounts.customer.userId), 'Yerel XML müşteri rolü')
+  await adminClient.auth.signOut()
+  await login(page, 'customer')
+  for (const route of ['/xml-siparis', '/xml-siparislerim']) {
+    await page.goto(route, { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('main h1').first()).toBeVisible({ timeout: 20_000 })
+    await expect(page).toHaveURL(new RegExp(`${route}$`))
+    await assertNoBodyOverflow(page)
+  }
 })

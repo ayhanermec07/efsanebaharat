@@ -208,7 +208,7 @@ export default function Sorularim() {
                 onClick={() => setDurumFilter('hepsi')}
                 className={`min-h-10 px-4 py-2 rounded-md transition ${
                   durumFilter === 'hepsi'
-                    ? 'bg-orange-600 text-white'
+                    ? 'bg-brand text-white'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -218,7 +218,7 @@ export default function Sorularim() {
                 onClick={() => setDurumFilter('beklemede')}
                 className={`min-h-10 px-4 py-2 rounded-md transition ${
                   durumFilter === 'beklemede'
-                    ? 'bg-orange-600 text-white'
+                    ? 'bg-brand text-white'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -228,7 +228,7 @@ export default function Sorularim() {
                 onClick={() => setDurumFilter('cevaplandi')}
                 className={`min-h-10 px-4 py-2 rounded-md transition ${
                   durumFilter === 'cevaplandi'
-                    ? 'bg-orange-600 text-white'
+                    ? 'bg-brand text-white'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -238,7 +238,7 @@ export default function Sorularim() {
                 onClick={() => setDurumFilter('kapatildi')}
                 className={`min-h-10 px-4 py-2 rounded-md transition ${
                   durumFilter === 'kapatildi'
-                    ? 'bg-orange-600 text-white'
+                    ? 'bg-brand text-white'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -261,7 +261,7 @@ export default function Sorularim() {
               </p>
               <button
                 onClick={() => navigate('/bize-ulasin')}
-                className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition"
+                className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-emerald-800 transition"
               >
                 Yeni Soru Sor
               </button>
@@ -335,7 +335,7 @@ export default function Sorularim() {
             <div className="mt-8 text-center">
               <button
                 onClick={() => navigate('/bize-ulasin')}
-                className="bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-orange-700 transition font-medium inline-flex items-center space-x-2"
+                className="bg-brand text-white px-8 py-3 rounded-lg hover:bg-emerald-800 transition font-medium inline-flex items-center space-x-2"
               >
                 <MessageSquare className="w-5 h-5" />
                 <span>Yeni Soru Sor</span>

@@ -208,7 +208,7 @@ export default function Siparisler() {
           <label htmlFor="siparis-ara" className="mb-1 block text-sm font-medium text-gray-700">Sipariş no ara</label>
           <div className="flex min-w-0 gap-2">
             <input id="siparis-ara" value={searchInput} onChange={event => setSearchInput(event.target.value)} maxLength={50} placeholder="Sipariş no" className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-            <button type="submit" className="min-h-10 rounded-lg bg-orange-600 px-3 text-sm font-medium text-white">Ara</button>
+            <button type="submit" className="min-h-10 rounded-lg bg-brand px-3 text-sm font-medium text-white">Ara</button>
           </div>
         </form>
         <div className="min-w-0">

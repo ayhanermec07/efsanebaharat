@@ -791,7 +791,7 @@ export default function XMLYonetim() {
                             type="button"
                             onClick={handleApplyImport}
                             disabled={importing || !runActive}
-                            className="flex min-h-[44px] items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50"
+                            className="flex min-h-[44px] items-center justify-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition disabled:opacity-50"
                         >
                             {importing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
                             {importRun?.status === 'applying' ? 'Devam Et' : 'Uygula'}
@@ -817,7 +817,7 @@ export default function XMLYonetim() {
                             <select
                                 value={selectedSourceId || ''}
                                 onChange={(e) => handleSelectSource(e.target.value)}
-                                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-orange-100"
                             >
                                 <option value="">Yeni XML kaynağı</option>
                                 {importSources.map(source => (
@@ -842,7 +842,7 @@ export default function XMLYonetim() {
                         value={importSourceName}
                         onChange={(e) => setImportSourceName(e.target.value)}
                         placeholder="Örn. Ana tedarikçi"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-orange-100"
                     />
                 </div>
 
@@ -854,7 +854,7 @@ export default function XMLYonetim() {
                         type="url"
                         value={importUrl}
                         onChange={(e) => setImportUrl(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-orange-100"
                     />
                 </div>
 
@@ -879,7 +879,7 @@ export default function XMLYonetim() {
                         step="1"
                         value={updateIntervalMinutes}
                         onChange={(e) => setUpdateIntervalMinutes(Number(e.target.value))}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-orange-100"
                     />
                     <p className="mt-1 text-xs text-gray-500">Her kaynak için ayrı süre belirleyebilirsiniz.</p>
                 </div>
@@ -908,7 +908,7 @@ export default function XMLYonetim() {
                         </div>
 
                         <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-200" role="progressbar" aria-valuenow={runPercent} aria-valuemin={0} aria-valuemax={100}>
-                            <div className="h-full rounded-full bg-orange-600 transition-all" style={{ width: `${runPercent}%` }} />
+                            <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${runPercent}%` }} />
                         </div>
                         <p className="mt-1 text-xs text-gray-600">
                             {runProcessed} / {importRun.total_items} satır işlendi · kalan {runRemaining} · checkpoint #{importRun.checkpoint_seq}
@@ -1011,7 +1011,7 @@ export default function XMLYonetim() {
                         <button
                             onClick={runHealthCheck}
                             disabled={checking}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                            className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition disabled:opacity-50"
                         >
                             {checking ? (
                                 <RefreshCw className="w-4 h-4 animate-spin" />
@@ -1177,7 +1177,7 @@ export default function XMLYonetim() {
                     <button
                         onClick={() => exportUrl && window.open(exportUrl, '_blank')}
                         disabled={!exportUrl}
-                        className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center gap-2"
+                        className="px-4 py-3 bg-brand text-white rounded-lg hover:bg-emerald-800 transition flex items-center gap-2"
                     >
                         <Eye className="w-4 h-4" /> Aç
                     </button>
