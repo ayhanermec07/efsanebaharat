@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ChevronLeft, ChevronRight, Sprout, Truck, ShieldCheck, ShoppingBag } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, Sprout } from 'lucide-react'
 import CanliDestekWidget from '../components/CanliDestekWidget'
 import UrunKart from '../components/UrunKart'
-import { publicSupabase, loadPublicCatalog } from '../lib/supabase'
-interface CatalogCategory { id: string; kategori_adi: string }
+import { publicSupabase } from '../lib/supabase'
+import { loadPublicCatalog, type CatalogCategory } from '../lib/catalog'
 import { getImageUrl } from '../utils/imageUtils'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -37,7 +37,7 @@ export default function AnaSayfa() {
         const now = new Date().toISOString()
 
         const [catalog, campaignResponse] = await Promise.all([
-          loadPublicCatalog(16),
+          loadPublicCatalog({ limit: 16, sirala: 'yeni', meta: true }),
           publicSupabase
             .from('kampanyalar')
             .select('id, ad, aciklama, banner_gorseli, kapsam, kategori_id, marka_id, kod, hedef_grup, sira_no')
@@ -48,14 +48,8 @@ export default function AnaSayfa() {
             .gte('bitis_tarihi', now)
             .order('sira_no')
         ])
-        const enrichProduct = (urun: any) => ({
-          ...urun,
-          urun_gorselleri: (catalog.gorseller || []).filter((gorsel: any) => gorsel.urun_id === urun.id),
-          urun_stoklari: (catalog.stoklar || []).filter((stok: any) => stok.urun_id === urun.id),
-          kategoriler: (catalog.kategoriler || []).find((kategori: any) => kategori.id === urun.kategori_id),
-          markalar: (catalog.markalar || []).find((marka: any) => marka.id === urun.marka_id)
-        })
-        const products = (catalog.urunler || []).map(enrichProduct)
+        // DTO ürün, görsel ve yalnız izinli satış satırlarını iç içe döndürür.
+        const products = catalog.urunler
         setOneCikanUrunler(products.slice(0, 4))
         setEnCokSatanlar(products.slice(0, 12))
         setYeniEklenenler(products)
@@ -261,29 +255,6 @@ export default function AnaSayfa() {
           </div>
         </section>
       )}
-
-      <section className="shop-container pb-12 pt-4">
-        <div className="grid gap-3 md:grid-cols-3">
-          {[
-            { icon: Truck, title: 'Hızlı operasyon', text: 'Siparişler stok ve kargo akışı için hazırlanır.' },
-            { icon: ShieldCheck, title: 'Güvenli alışveriş', text: 'Ödeme ve sipariş süreci server taraflı doğrulamaya hazır.' },
-            { icon: ShoppingBag, title: 'Bayi uyumlu', text: 'Bayi fiyatları, XML stokları ve seçili sortiler desteklenir.' }
-          ].map((item) => {
-            const Icon = item.icon
-            return (
-              <div key={item.title} className="flex min-w-0 gap-4 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
-                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-orange-100 text-orange-700">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-bold text-zinc-950">{item.title}</h3>
-                  <p className="mt-1 text-sm leading-6 text-zinc-600">{item.text}</p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </section>
 
       <CanliDestekWidget />
     </div>

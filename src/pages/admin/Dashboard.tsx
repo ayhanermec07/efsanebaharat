@@ -83,7 +83,7 @@ interface DashboardData {
 function SkeletonCard() {
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 animate-pulse">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <div className="w-12 h-12 bg-gray-200 rounded-lg" />
         <div className="w-16 h-6 bg-gray-200 rounded" />
       </div>
@@ -162,8 +162,6 @@ export default function Dashboard() {
       value: `${stats.toplamGelir.toFixed(2)} TL`,
       icon: TrendingUp,
       color: 'bg-green-500',
-      trend: '+12%',
-      trendUp: true,
       link: '/admin/siparisler'
     },
     {
@@ -171,8 +169,6 @@ export default function Dashboard() {
       value: stats.kargoBekleyen,
       icon: Truck,
       color: 'bg-orange-500',
-      trend: stats.kargoBekleyen > 0 ? `${stats.kargoBekleyen}` : '0',
-      trendUp: false,
       link: '/admin/kargo'
     },
     {
@@ -180,8 +176,6 @@ export default function Dashboard() {
       value: stats.toplamSiparis,
       icon: ShoppingCart,
       color: 'bg-green-500',
-      trend: '+18',
-      trendUp: true,
       link: '/admin/siparisler'
     },
     {
@@ -189,8 +183,6 @@ export default function Dashboard() {
       value: '!',
       icon: TrendingDown,
       color: 'bg-red-500',
-      trend: 'Kritik',
-      trendUp: false,
       link: '/admin/stok-azalan'
     }
   ]
@@ -216,18 +208,14 @@ export default function Dashboard() {
               <Link
                 key={stat.title}
                 to={stat.link}
-                className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-all hover:scale-105 cursor-pointer"
+                className="bg-white rounded-lg shadow-sm min-w-0 p-3 sm:p-6 hover:shadow-md transition-all hover:scale-105 cursor-pointer"
               >
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                   <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}>
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <div className={`flex items-center gap-1 text-sm ${stat.trendUp ? 'text-green-600' : 'text-brand-secondary'}`}>
-                    {stat.trendUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                    <span>{stat.trend}</span>
-                  </div>
                 </div>
-                <div className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
+                <div className="break-words text-xl sm:text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
                 <div className="text-sm text-gray-600">{stat.title}</div>
               </Link>
             )
@@ -351,7 +339,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Günlük Satış Trendi */}
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <h2 className="text-xl font-semibold text-gray-900">Satış Trendi</h2>
               <div className="flex gap-2">
                 <button
@@ -430,39 +418,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Recent Activity */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Son Aktiviteler</h2>
-        <div className="space-y-3">
-          <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-              <ShoppingCart className="w-5 h-5 text-green-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Yeni sipariş alındı</p>
-              <p className="text-xs text-gray-500">2 dakika önce</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <Users className="w-5 h-5 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Yeni müşteri kaydı</p>
-              <p className="text-xs text-gray-500">15 dakika önce</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-              <MessageSquare className="w-5 h-5 text-purple-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Yeni soru geldi</p>
-              <p className="text-xs text-gray-500">1 saat önce</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
+

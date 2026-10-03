@@ -6,11 +6,8 @@ import { useSepet } from '../contexts/SepetContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { supabase } from '../lib/supabase'
 import { getImageUrl } from '../utils/imageUtils'
-import {
-  getMatchingBrandIds,
-  getMatchingCategoryIds,
-  scoreProductRelevance,
-} from '../utils/categorySearch'
+import { loadPublicCatalog } from '../lib/catalog'
+import { formatPrice } from '../lib/currency'
 import AccessibleModal from './admin/AccessibleModal'
 
 const navLinks = [
@@ -36,7 +33,10 @@ export default function Header() {
   const navigate = useNavigate()
 
   const searchContainerRef = useRef<HTMLDivElement>(null)
+  const categoryMenuRef = useRef<HTMLDivElement>(null)
+  const userMenuRef = useRef<HTMLDivElement>(null)
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const searchRequestRef = useRef(0)
 
   useEffect(() => {
     loadKategoriler()
@@ -48,11 +48,16 @@ export default function Header() {
         setSearchResults([])
         setSearchOpen(false)
       }
+      if (categoryMenuRef.current && !categoryMenuRef.current.contains(e.target as Node)) setShowCategoryMenu(false)
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setShowUserMenu(false)
     }
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         setSearchOpen(false)
         setSearchResults([])
+        setShowCategoryMenu(false)
+        setShowUserMenu(false)
+        setMenuOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -83,86 +88,24 @@ export default function Header() {
       return
     }
 
+    const requestId = ++searchRequestRef.current
     setSearchLoading(true)
     try {
-      const [{ data: allCategories }, { data: allBrands }] = await Promise.all([
-        supabase.from('kategoriler').select('id, kategori_adi, ust_kategori_id').eq('aktif_durum', true),
-        supabase.from('markalar').select('id, marka_adi').eq('aktif_durum', true),
-      ])
-
-      const matchingCategoryIds = getMatchingCategoryIds(allCategories || [], searchTerm)
-      const matchingBrandIds = getMatchingBrandIds(allBrands || [], searchTerm)
-      const categoryNameById = new Map((allCategories || []).map((category) => [category.id, category.kategori_adi]))
-
-      const productFields = 'id, urun_adi, ana_gorsel_url, kategori_id, aciklama'
-      const nameSearch = supabase
-        .from('urunler')
-        .select(productFields)
-        .eq('aktif_durum', true)
-        .ilike('urun_adi', `%${searchTerm}%`)
-        .limit(8)
-
-      const categorySearch = matchingCategoryIds.length > 0
-        ? supabase
-          .from('urunler')
-          .select(productFields)
-          .eq('aktif_durum', true)
-          .in('kategori_id', matchingCategoryIds)
-          .limit(8)
-        : Promise.resolve({ data: [], error: null })
-
-      const brandSearch = matchingBrandIds.length > 0
-        ? supabase
-          .from('urunler')
-          .select(productFields)
-          .eq('aktif_durum', true)
-          .in('marka_id', matchingBrandIds)
-          .limit(8)
-        : Promise.resolve({ data: [], error: null })
-
-      const [nameResult, categoryResult, brandResult] = await Promise.all([nameSearch, categorySearch, brandSearch])
-
-      if (nameResult.error || categoryResult.error || brandResult.error) {
-        console.error('Arama sorgusu hatası:', nameResult.error || categoryResult.error || brandResult.error)
-      }
-
-      const uniqueProducts = new Map<string, any>()
-      for (const product of [...(nameResult.data || []), ...(categoryResult.data || []), ...(brandResult.data || [])]) {
-        uniqueProducts.set(product.id, product)
-      }
-
-      const urunlerData = Array.from(uniqueProducts.values())
-
-      if (urunlerData.length === 0) {
-        setSearchResults([])
-        setSearchLoading(false)
-        return
-      }
-
-      const sortedUrunler = [...urunlerData].sort((a, b) => scoreProductRelevance(b, searchTerm) - scoreProductRelevance(a, searchTerm))
-      const urunler = sortedUrunler.slice(0, 6)
-
-      const results = await Promise.all(
-        urunler.map(async (urun) => {
-          const { data: stok } = await supabase
-            .from('urun_stoklari')
-            .select('fiyat, birim_turu')
-            .eq('urun_id', urun.id)
-            .eq('aktif_durum', true)
-            .order('fiyat', { ascending: true })
-            .limit(1)
-            .maybeSingle()
-
-          return { ...urun, ilkStok: stok, kategoriAdi: categoryNameById.get(urun.kategori_id) }
-        }),
-      )
-
-      setSearchResults(results)
+      // Tek sunucu isteği: ad/açıklama/kategori/marka araması, sıralama ve
+      // yalnız izinli satış satırı fiyatı public-catalog içinde hesaplanır.
+      const page = await loadPublicCatalog({ q: searchTerm, limit: 6 })
+      if (requestId !== searchRequestRef.current) return
+      setSearchResults(page.urunler.map((urun) => ({
+        ...urun,
+        ilkStok: urun.urun_stoklari[0] || null,
+        kategoriAdi: urun.kategoriler?.kategori_adi,
+      })))
     } catch (error) {
+      if (requestId !== searchRequestRef.current) return
       console.error('Arama hatası:', error)
       setSearchResults([])
     } finally {
-      setSearchLoading(false)
+      if (requestId === searchRequestRef.current) setSearchLoading(false)
     }
   }
 
@@ -251,7 +194,7 @@ export default function Header() {
               </NavLink>
             ))}
 
-            <div className="relative">
+            <div ref={categoryMenuRef} className="relative">
               <button
                 type="button"
                 onClick={() => setShowCategoryMenu((value) => !value)}
@@ -316,7 +259,7 @@ export default function Header() {
             </Link>
 
             {user ? (
-              <div className="relative hidden sm:block">
+              <div ref={userMenuRef} className="relative hidden sm:block">
                 <button
                   type="button"
                   onClick={() => setShowUserMenu((value) => !value)}
@@ -370,7 +313,7 @@ export default function Header() {
               <input
                 type="text"
                 aria-label="Ürün ara"
-                  value={searchQuery}
+                value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onFocus={() => setSearchOpen(true)}
                 placeholder="Hangi baharatı arıyorsunuz?"
@@ -383,7 +326,8 @@ export default function Header() {
                     setSearchQuery('')
                     setSearchResults([])
                   }}
-                  className="absolute right-20 top-3 text-zinc-400 hover:text-zinc-600"
+                  aria-label="Aramayı temizle"
+                  className="absolute right-16 top-1 flex h-10 w-10 items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-700"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -418,7 +362,7 @@ export default function Header() {
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-sm font-semibold text-zinc-900">{urun.urun_adi}</div>
                             {urun.kategoriAdi && <div className="truncate text-xs text-zinc-500">{urun.kategoriAdi}</div>}
-                            {urun.ilkStok && <div className="text-sm font-bold text-amber-700">{Number(urun.ilkStok.fiyat).toFixed(2)} TL</div>}
+                            {urun.ilkStok && <div className="text-sm font-bold text-amber-700">{formatPrice(Number(urun.ilkStok.fiyat))}</div>}
                           </div>
                         </button>
                       ))}

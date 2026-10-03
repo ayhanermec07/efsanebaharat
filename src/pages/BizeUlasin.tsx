@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { supabase } from '../lib/supabase'
-import { MessageSquare, Send, CheckCircle } from 'lucide-react'
+import { MessageSquare, Send, CheckCircle, Mail, MapPin, Phone } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const KONULAR = [
@@ -15,7 +16,7 @@ const KONULAR = [
 
 export default function BizeUlasin() {
   const { user, loading: authLoading } = useAuth()
-  const navigate = useNavigate()
+  const { siteInfo } = useTheme()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   
@@ -27,13 +28,6 @@ export default function BizeUlasin() {
   const [errors, setErrors] = useState({
     soru_metni: ''
   })
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      toast.error('Bu sayfayı görüntülemek için giriş yapmalısınız')
-      navigate('/giris', { state: { from: '/bize-ulasin' } })
-    }
-  }, [user, authLoading, navigate])
 
   function validateForm() {
     const newErrors = { soru_metni: '' }
@@ -90,7 +84,7 @@ export default function BizeUlasin() {
       }, 5000)
     } catch (error: any) {
       console.error('Soru gönderme hatası:', error)
-      toast.error(error.message || 'Bir hata oluştu')
+      toast.error('Mesajınız gönderilemedi. Lütfen tekrar deneyin.')
     } finally {
       setLoading(false)
     }
@@ -106,10 +100,6 @@ export default function BizeUlasin() {
     )
   }
 
-  if (!user) {
-    return null
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="container mx-auto px-4">
@@ -118,15 +108,22 @@ export default function BizeUlasin() {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                <MessageSquare className="w-8 h-8 text-brand" />
+                <MessageSquare className="w-8 h-8 text-orange-600" />
               </div>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Bize Ulaşın</h1>
             <p className="text-gray-600">
-              Sorularınızı, önerilerinizi veya sorunlarınızı bizimle paylaşın. 
-              En kısa sürede size geri dönüş yapacağız.
+              Sorularınızı, önerilerinizi veya sorunlarınızı bizimle paylaşın.
             </p>
           </div>
+
+          {(siteInfo.phone || siteInfo.email || siteInfo.address) && (
+            <div className="mb-6 grid gap-3 rounded-lg border border-gray-200 bg-white p-5 text-sm text-gray-700 sm:grid-cols-2">
+              {siteInfo.phone && <a href={`tel:${siteInfo.phone.replace(/[^+\d]/g, '')}`} className="flex min-w-0 items-center gap-2 break-words"><Phone className="h-5 w-5 shrink-0 text-orange-600" />{siteInfo.phone}</a>}
+              {siteInfo.email && <a href={`mailto:${siteInfo.email}`} className="flex min-w-0 items-center gap-2 break-all"><Mail className="h-5 w-5 shrink-0 text-orange-600" />{siteInfo.email}</a>}
+              {siteInfo.address && <p className="flex min-w-0 items-center gap-2 break-words sm:col-span-2"><MapPin className="h-5 w-5 shrink-0 text-orange-600" />{siteInfo.address}</p>}
+            </div>
+          )}
 
           {/* Success Message */}
           {success && (
@@ -136,22 +133,27 @@ export default function BizeUlasin() {
                 <div>
                   <h3 className="font-semibold text-green-900">Mesajınız Alındı</h3>
                   <p className="text-sm text-green-700">
-                    Sorunuz başarıyla iletildi. En kısa sürede size geri dönüş yapacağız.
+                    Sorunuz başarıyla iletildi. Yanıt durumunu hesabınızdan takip edebilirsiniz.
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Form */}
-          <div className="bg-white rounded-lg shadow-sm p-6 md:p-8">
+          {!user ? (
+            <div className="rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm md:p-8">
+              <p className="text-gray-700">Mesaj göndermek için hesabınıza giriş yapın. Sorunuzun yanıtını hesabınızdan takip edebilirsiniz.</p>
+              <Link to="/giris" state={{ from: '/bize-ulasin' }} className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-brand px-6 py-3 font-semibold text-white hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700">Giriş yap</Link>
+            </div>
+          ) : <div className="bg-white rounded-lg shadow-sm p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Konu Seçimi */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="iletisim-konu" className="block text-sm font-medium text-gray-700 mb-2">
                   Konu <span className="text-red-500">*</span>
                 </label>
                 <select
+                  id="iletisim-konu"
                   value={formData.konu}
                   onChange={(e) => setFormData({ ...formData, konu: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
@@ -167,10 +169,13 @@ export default function BizeUlasin() {
 
               {/* Soru Metni */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="iletisim-mesaj" className="block text-sm font-medium text-gray-700 mb-2">
                   Sorunuz veya Mesajınız <span className="text-red-500">*</span>
                 </label>
                 <textarea
+                  id="iletisim-mesaj"
+                  aria-invalid={Boolean(errors.soru_metni)}
+                  aria-describedby={errors.soru_metni ? 'iletisim-mesaj-hata' : undefined}
                   value={formData.soru_metni}
                   onChange={(e) => setFormData({ ...formData, soru_metni: e.target.value })}
                   className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-transparent min-h-[200px] resize-y ${
@@ -184,12 +189,12 @@ export default function BizeUlasin() {
                 <div className="flex items-center justify-between mt-2">
                   <div>
                     {errors.soru_metni && (
-                      <p className="text-sm text-brand-secondary">{errors.soru_metni}</p>
+                      <p id="iletisim-mesaj-hata" className="text-sm text-red-600">{errors.soru_metni}</p>
                     )}
                   </div>
                   <p className={`text-sm ${
                     formData.soru_metni.length > 950 
-                      ? 'text-brand-secondary font-medium' 
+                      ? 'text-red-600 font-medium' 
                       : 'text-gray-500'
                   }`}>
                     {formData.soru_metni.length} / 1000 karakter
@@ -225,20 +230,12 @@ export default function BizeUlasin() {
                 )}
               </button>
             </form>
-          </div>
+          </div>}
 
           {/* Info Box */}
-          <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          {user && <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
             <h3 className="font-semibold text-blue-900 mb-3">Bilgilendirme</h3>
             <ul className="space-y-2 text-sm text-blue-800">
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Sorularınız en geç 24 saat içerisinde cevaplanacaktır.</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Acil durumlar için telefon ile iletişime geçebilirsiniz.</span>
-              </li>
               <li className="flex items-start">
                 <span className="mr-2">•</span>
                 <span>Ürün hakkında özel sorularınız için ürün detay sayfasındaki soru-cevap bölümünü kullanabilirsiniz.</span>
@@ -248,7 +245,7 @@ export default function BizeUlasin() {
                 <span>Sorunuzun durumunu hesabınızdan takip edebilirsiniz.</span>
               </li>
             </ul>
-          </div>
+          </div>}
         </div>
       </div>
     </div>

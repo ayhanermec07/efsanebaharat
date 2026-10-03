@@ -80,6 +80,9 @@ export default function AdminKargo() {
       const { data: siparisler, error: siparisError } = await supabase
         .from('siparisler')
         .select('*')
+        .in('odeme_durumu', ['odendi', 'onaylandi'])
+        .eq('stok_dusuldu', true)
+        .neq('siparis_durumu', 'iptal_edildi')
         .order('olusturma_tarihi', { ascending: false })
 
       if (siparisError) throw siparisError
@@ -296,13 +299,13 @@ export default function AdminKargo() {
                           </div>
                         </div>
 
-                        <button
+                        {['beklemede', 'hazirlaniyor'].includes(siparis.siparis_durumu) && <button
                           onClick={() => openKargoModal(siparis)}
                           className="w-full sm:w-auto sm:ml-4 min-h-10 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition flex items-center justify-center gap-2"
                         >
                           <Truck className="w-4 h-4" />
                           {siparis.kargo_firmasi ? 'Güncelle' : 'Kargo Bilgisi Gir'}
-                        </button>
+                        </button>}
                       </div>
                     </div>
                   ))}

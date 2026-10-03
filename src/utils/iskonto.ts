@@ -83,7 +83,7 @@ export function iskontoUygula(fiyat: number, iskontoOrani: number): IskontoInfo 
   return {
     varMi: true,
     oran: iskontoOrani,
-    yeniFiyat: Math.round(yeniFiyat * 100) / 100,
+    yeniFiyat: Math.round(yeniFiyat * 100000) / 100000,
     eskiFiyat: fiyat
   }
 }
@@ -128,7 +128,7 @@ export function kademeliIskontoUygula(
   return {
     varMi: true,
     oran: Math.round(toplamIskontoOrani * 100) / 100,
-    yeniFiyat: Math.round(mevcutFiyat * 100) / 100,
+    yeniFiyat: Math.round(mevcutFiyat * 100000) / 100000,
     eskiFiyat: fiyat
   }
 }

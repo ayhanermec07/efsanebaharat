@@ -1,300 +1,155 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { PackageSearch, Search, SlidersHorizontal, X } from 'lucide-react'
+import { AlertCircle, ArrowUpDown, Loader2, PackageSearch, RotateCcw, Search, SlidersHorizontal, Tag, X } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
 import { useAuth } from '../contexts/AuthContext'
-import { loadPublicCatalog, publicSupabase } from '../lib/supabase'
 import {
-  getMatchingBrandIds,
-  getMatchingCategoryIds,
-  sanitizePostgrestSearchTerm,
-  scoreProductRelevance,
-} from '../utils/categorySearch'
-import { fetchInBatches } from '../utils/supabaseBatch'
+  CATALOG_SORTS,
+  isCatalogSort,
+  loadPublicCatalog,
+  type CatalogBrand,
+  type CatalogCampaign,
+  type CatalogCategory,
+  type CatalogProduct,
+} from '../lib/catalog'
 
-const INITIAL_PRODUCT_LIMIT = 48
+const PAGE_SIZE = 24
+const SEARCH_DEBOUNCE_MS = 350
+
+type FilterKey = 'q' | 'kategori' | 'marka' | 'kampanya' | 'sirala'
+
+function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === 'AbortError'
+}
 
 export default function Urunler() {
-  const { musteriData } = useAuth()
+  const { user, musteriData } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [urunler, setUrunler] = useState<any[]>([])
-  const [kategoriler, setKategoriler] = useState<any[]>([])
-  const [markalar, setMarkalar] = useState<any[]>([])
+
+  const q = searchParams.get('q') || ''
+  const kategori = searchParams.get('kategori') || ''
+  const marka = searchParams.get('marka') || ''
+  const kampanya = searchParams.get('kampanya') || ''
+  const siralaParam = searchParams.get('sirala')
+  const sirala = isCatalogSort(siralaParam) ? siralaParam : 'onerilen'
+
+  const [urunler, setUrunler] = useState<CatalogProduct[]>([])
+  const [toplam, setToplam] = useState(0)
+  const [sonrakiImlec, setSonrakiImlec] = useState<string | null>(null)
+  const [kategoriler, setKategoriler] = useState<CatalogCategory[]>([])
+  const [markalar, setMarkalar] = useState<CatalogBrand[]>([])
+  const [activeCampaign, setActiveCampaign] = useState<CatalogCampaign | null>(null)
+  const [campaignInvalid, setCampaignInvalid] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [visibleProductLimit, setVisibleProductLimit] = useState(INITIAL_PRODUCT_LIMIT)
-  const [hasMoreProducts, setHasMoreProducts] = useState(false)
-  const [aramaText, setAramaText] = useState(searchParams.get('q') || '')
-  const [secilenKategori, setSecilenKategori] = useState(searchParams.get('kategori') || '')
-  const [secilenMarka, setSecilenMarka] = useState(searchParams.get('marka') || '')
-  const [secilenKampanya, setSecilenKampanya] = useState(searchParams.get('kampanya') || '')
-  const [activeCampaign, setActiveCampaign] = useState<any>(null)
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null)
+  const [aramaText, setAramaText] = useState(q)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const latestLoadRequestRef = useRef(0)
+  const [reloadKey, setReloadKey] = useState(0)
+  const pageControllerRef = useRef<AbortController | null>(null)
+  const metaLoadedRef = useRef(false)
 
-  const syncSearchParams = useCallback((nextValues: { q?: string; kategori?: string; marka?: string; kampanya?: string }) => {
-    const nextParams = new URLSearchParams(searchParams)
-
-    if (nextValues.q !== undefined) {
-      const trimmed = nextValues.q.trim()
-      if (trimmed) {
-        nextParams.set('q', trimmed)
-      } else {
-        nextParams.delete('q')
+  const updateParams = useCallback((values: Partial<Record<FilterKey, string>>, replace = false) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current)
+      for (const [key, value] of Object.entries(values)) {
+        const trimmed = (value || '').trim()
+        if (trimmed && !(key === 'sirala' && trimmed === 'onerilen')) next.set(key, trimmed)
+        else next.delete(key)
       }
-    }
+      return next
+    }, { replace })
+  }, [setSearchParams])
 
-    if (nextValues.kategori !== undefined) {
-      if (nextValues.kategori) {
-        nextParams.set('kategori', nextValues.kategori)
-      } else {
-        nextParams.delete('kategori')
-      }
-    }
-
-    if (nextValues.marka !== undefined) {
-      if (nextValues.marka) {
-        nextParams.set('marka', nextValues.marka)
-      } else {
-        nextParams.delete('marka')
-      }
-    }
-
-    if (nextValues.kampanya !== undefined) {
-      if (nextValues.kampanya) {
-        nextParams.set('kampanya', nextValues.kampanya)
-      } else {
-        nextParams.delete('kampanya')
-      }
-    }
-
-    setSearchParams(nextParams, { replace: true })
-  }, [searchParams, setSearchParams])
+  // URL dışarıdan değişirse (geri tuşu, header araması) input'u eşitle.
+  useEffect(() => {
+    setAramaText((current) => (current.trim() === q ? current : q))
+  }, [q])
 
   useEffect(() => {
-    loadKategoriler()
-    loadMarkalar()
-  }, [])
+    if (aramaText.trim() === q.trim()) return
+    const timeout = window.setTimeout(() => updateParams({ q: aramaText }, true), SEARCH_DEBOUNCE_MS)
+    return () => window.clearTimeout(timeout)
+  }, [aramaText, q, updateParams])
+
+  const viewerKey = `${user?.id || 'anon'}:${musteriData?.musteri_tipi || ''}`
 
   useEffect(() => {
-    const kategoriParam = searchParams.get('kategori')
-    const markaParam = searchParams.get('marka')
-    const kampanyaParam = searchParams.get('kampanya')
-    const qParam = searchParams.get('q')
-
-    setSecilenKategori(kategoriParam || '')
-    setSecilenMarka(markaParam || '')
-    setSecilenKampanya(kampanyaParam || '')
-    setAramaText(qParam || '')
-  }, [searchParams])
-
-  async function loadKategoriler() {
-    const { data } = await publicSupabase
-      .from('kategoriler')
-      .select('*')
-      .eq('aktif_durum', true)
-      .order('kategori_adi')
-
-    if (data) setKategoriler(data)
-  }
-
-  async function loadMarkalar() {
-    const { data } = await publicSupabase
-      .from('markalar')
-      .select('*')
-      .eq('aktif_durum', true)
-      .order('marka_adi')
-
-    if (data) setMarkalar(data)
-  }
-
-  const loadUrunler = useCallback(async () => {
-    const requestId = ++latestLoadRequestRef.current
-    const isLatestRequest = () => latestLoadRequestRef.current === requestId
+    const controller = new AbortController()
+    pageControllerRef.current?.abort()
+    pageControllerRef.current = controller
 
     setLoading(true)
     setLoadError(null)
-    let query = publicSupabase
-      .from('urunler')
-      .select('*')
-      .eq('aktif_durum', true)
+    setLoadMoreError(null)
+    setCampaignInvalid(false)
 
-    const searchTerm = aramaText.trim()
-    const matchingCategoryIds = searchTerm ? getMatchingCategoryIds(kategoriler, searchTerm) : []
-    const matchingBrandIds = searchTerm ? getMatchingBrandIds(markalar, searchTerm) : []
-
-    if (secilenKategori) query = query.eq('kategori_id', secilenKategori)
-    if (secilenMarka) query = query.eq('marka_id', secilenMarka)
-
-    if (searchTerm) {
-      const safeSearchTerm = sanitizePostgrestSearchTerm(searchTerm)
-      const searchFilters = [`urun_adi.ilike.%${safeSearchTerm}%`]
-
-      if (matchingCategoryIds.length > 0) {
-        searchFilters.push(`kategori_id.in.(${matchingCategoryIds.join(',')})`)
-      }
-
-      if (matchingBrandIds.length > 0) {
-        searchFilters.push(`marka_id.in.(${matchingBrandIds.join(',')})`)
-      }
-
-      query = query.or(searchFilters.join(','))
-    }
-
-    try {
-      const catalog = await loadPublicCatalog(visibleProductLimit, searchTerm)
-      if (!isLatestRequest()) return
-
-      if (kategoriler.length === 0) setKategoriler(catalog.kategoriler || [])
-      if (markalar.length === 0) setMarkalar(catalog.markalar || [])
-      setActiveCampaign(null)
-
-      let catalogProducts = (catalog.urunler || []).filter((urun: any) => (
-        (!secilenKategori || urun.kategori_id === secilenKategori) &&
-        (!secilenMarka || urun.marka_id === secilenMarka)
-      ))
-      if (searchTerm) catalogProducts = catalogProducts.sort((a: any, b: any) => scoreProductRelevance(b, searchTerm) - scoreProductRelevance(a, searchTerm))
-
-      const catalogMusteriTipi = musteriData?.musteri_tipi || 'musteri'
-      setUrunler(catalogProducts.map((urun: any) => ({
-        ...urun,
-        urun_gorselleri: (catalog.gorseller || []).filter((gorsel: any) => gorsel.urun_id === urun.id),
-        urun_stoklari: (catalog.stoklar || []).filter((stok: any) => stok.urun_id === urun.id && (!stok.stok_grubu || stok.stok_grubu === 'hepsi' || stok.stok_grubu === catalogMusteriTipi)),
-        kategoriler: (catalog.kategoriler || []).find((kategori: any) => kategori.id === urun.kategori_id),
-        markalar: (catalog.markalar || []).find((marka: any) => marka.id === urun.marka_id)
-      })))
-      setHasMoreProducts(Boolean(catalog.hasMore))
-      return
-
-      if (secilenKampanya) {
-      const { data: camp } = await publicSupabase
-        .from('kampanyalar')
-        .select('*')
-        .eq('id', secilenKampanya)
-        .single()
-
-      if (camp) {
-        if (!isLatestRequest()) return
-        setActiveCampaign(camp)
-
-        if (camp.kapsam === 'secili_urunler') {
-          const { data: pids } = await publicSupabase
-            .from('kampanya_urunler')
-            .select('urun_id')
-            .eq('kampanya_id', secilenKampanya)
-
-          const ids = pids?.map(p => p.urun_id) || []
-          query = ids.length > 0
-            ? query.in('id', ids)
-            : query.eq('id', '00000000-0000-0000-0000-000000000000')
-        } else if (camp.kapsam === 'kategori' && camp.kategori_id) {
-          query = query.eq('kategori_id', camp.kategori_id)
-        } else if (camp.kapsam === 'marka' && camp.marka_id) {
-          query = query.eq('marka_id', camp.marka_id)
-        }
-      }
-      } else if (isLatestRequest()) {
-        setActiveCampaign(null)
-      }
-
-      const requestTimeout = new Promise<never>((_, reject) => {
-        window.setTimeout(() => reject(new Error('Ürün listesi zamanında yüklenemedi.')), 20_000)
+    loadPublicCatalog({
+      q, kategori, marka, kampanya, sirala,
+      limit: PAGE_SIZE,
+      meta: !metaLoadedRef.current,
+    }, controller.signal)
+      .then((page) => {
+        if (controller.signal.aborted) return
+        if (page.kategoriler) setKategoriler(page.kategoriler)
+        if (page.markalar) setMarkalar(page.markalar)
+        if (page.kategoriler || page.markalar) metaLoadedRef.current = true
+        setUrunler(page.urunler)
+        setToplam(page.toplam)
+        setSonrakiImlec(page.sonrakiImlec)
+        setActiveCampaign(page.kampanya)
+        setCampaignInvalid(page.kampanyaGecersiz)
       })
-      let { data } = await Promise.race([
-        query.order('urun_adi').limit(visibleProductLimit),
-        requestTimeout
-      ])
-
-      if (!isLatestRequest()) return
-
-      if (!data || data.length === 0) {
+      .catch((error) => {
+        if (controller.signal.aborted || isAbortError(error)) return
+        console.error('Ürün yükleme hatası:', error)
         setUrunler([])
-        setHasMoreProducts(false)
-        return
-      }
-
-      setHasMoreProducts(data.length === visibleProductLimit)
-
-      if (searchTerm) {
-        data = data.filter(
-          (p) =>
-            scoreProductRelevance(p, searchTerm) > 0 ||
-            matchingCategoryIds.includes(p.kategori_id) ||
-            matchingBrandIds.includes(p.marka_id)
-        )
-        data.sort((a, b) => scoreProductRelevance(b, searchTerm) - scoreProductRelevance(a, searchTerm))
-      }
-
-      const urunIds = data.map(u => u.id)
-      const kategoriIds = [...new Set(data.map(u => u.kategori_id).filter(Boolean))]
-      const markaIds = [...new Set(data.map(u => u.marka_id).filter(Boolean))]
-
-      const [
-      { data: gorseller, error: gorsellerError },
-      { data: stoklar, error: stoklarError },
-      { data: kategorilerData },
-      { data: markalarData }
-      ] = await Promise.all([
-      fetchInBatches(urunIds, ids =>
-        publicSupabase.from('urun_gorselleri').select('*').in('urun_id', ids).order('sira_no')
-      ),
-      fetchInBatches(urunIds, ids =>
-        publicSupabase.from('urun_stoklari').select('*').in('urun_id', ids).eq('aktif_durum', true)
-      ),
-      fetchInBatches(kategoriIds, ids =>
-        publicSupabase.from('kategoriler').select('id, kategori_adi').in('id', ids)
-      ),
-      fetchInBatches(markaIds, ids =>
-        publicSupabase.from('markalar').select('id, marka_adi').in('id', ids)
-      )
-      ])
-
-      if (!isLatestRequest()) return
-
-      if (gorsellerError) console.error('Ürün görselleri yükleme hatası:', gorsellerError)
-      if (stoklarError) console.error('Ürün stokları yükleme hatası:', stoklarError)
-
-      const musteriTipi = musteriData?.musteri_tipi || 'musteri'
-
-      const urunlerWithData = data.map(urun => {
-      const urunStoklari = stoklar?.filter(s => s.urun_id === urun.id) || []
-      const filtreliStoklar = urunStoklari.filter(s =>
-        !s.stok_grubu || s.stok_grubu === 'hepsi' || s.stok_grubu === musteriTipi
-      )
-
-      return {
-        ...urun,
-        urun_gorselleri: gorseller?.filter(g => g.urun_id === urun.id) || [],
-        urun_stoklari: filtreliStoklar,
-        kategoriler: kategorilerData?.find(k => k.id === urun.kategori_id),
-        markalar: markalarData?.find(m => m.id === urun.marka_id)
-      }
-      })
-
-      setUrunler(urunlerWithData)
-    } catch (error) {
-      console.error('Ürün yükleme hatası:', error)
-      if (isLatestRequest()) {
-        setUrunler([])
+        setToplam(0)
+        setSonrakiImlec(null)
         setLoadError('Ürünler şu anda yüklenemedi. Lütfen tekrar deneyin.')
-      }
-    } finally {
-      if (isLatestRequest()) setLoading(false)
-    }
-  }, [aramaText, kategoriler, markalar, musteriData?.musteri_tipi, secilenKampanya, secilenKategori, secilenMarka, visibleProductLimit])
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
 
-  useEffect(() => {
-    loadUrunler()
-  }, [loadUrunler])
+    return () => controller.abort()
+  }, [q, kategori, marka, kampanya, sirala, viewerKey, reloadKey])
+
+  async function loadMore() {
+    if (!sonrakiImlec || loadingMore) return
+    const controller = pageControllerRef.current
+    setLoadingMore(true)
+    setLoadMoreError(null)
+    try {
+      const page = await loadPublicCatalog({
+        q, kategori, marka, kampanya, sirala, imlec: sonrakiImlec, limit: PAGE_SIZE,
+      }, controller?.signal)
+      if (controller?.signal.aborted) return
+      setUrunler((current) => {
+        const seen = new Set(current.map((urun) => urun.id))
+        return [...current, ...page.urunler.filter((urun) => !seen.has(urun.id))]
+      })
+      setToplam(page.toplam)
+      setSonrakiImlec(page.sonrakiImlec)
+    } catch (error) {
+      if (controller?.signal.aborted || isAbortError(error)) return
+      console.error('Sonraki sayfa yükleme hatası:', error)
+      setLoadMoreError('Sonraki ürünler yüklenemedi.')
+    } finally {
+      if (!controller?.signal.aborted) setLoadingMore(false)
+    }
+  }
 
   const clearFilters = () => {
-    setVisibleProductLimit(INITIAL_PRODUCT_LIMIT)
-    setSecilenKategori('')
-    setSecilenMarka('')
     setAramaText('')
-    setSecilenKampanya('')
-    syncSearchParams({ q: '', kategori: '', marka: '', kampanya: '' })
+    updateParams({ q: '', kategori: '', marka: '', kampanya: '', sirala: '' })
   }
+
+  const hasFilters = Boolean(q || kategori || marka || kampanya)
+  const campaignForCards = activeCampaign
+    ? { indirim_tipi: activeCampaign.indirim_tipi, indirim_degeri: Number(activeCampaign.indirim_degeri) }
+    : null
 
   return (
     <div className="shop-container py-6 sm:py-8">
@@ -313,7 +168,8 @@ export default function Urunler() {
           <button
             type="button"
             onClick={() => setFiltersOpen((value) => !value)}
-            className="shop-btn-secondary border-white/20 bg-white/10 text-white hover:bg-white hover:text-zinc-950 lg:hidden"
+            aria-expanded={filtersOpen}
+            className="shop-btn-secondary lg:hidden"
           >
             {filtersOpen ? <X className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />}
             Filtreler
@@ -322,17 +178,17 @@ export default function Urunler() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className={`${filtersOpen ? 'block' : 'hidden'} lg:block`}>
-          <div className="sticky top-24 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
+        <aside className={`${filtersOpen ? 'block' : 'hidden'} min-w-0 lg:block`}>
+          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm lg:sticky lg:top-24">
+            <div className="mb-4 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 font-bold text-zinc-950">
-                <SlidersHorizontal className="h-5 w-5 text-brand" />
+                <SlidersHorizontal className="h-5 w-5 text-orange-600" />
                 Filtreler
               </div>
               <button
                 type="button"
                 onClick={clearFilters}
-                className="text-xs font-bold text-emerald-800 hover:text-orange-800"
+                className="min-h-[36px] px-2 text-xs font-bold text-orange-700 hover:text-orange-800"
               >
                 Temizle
               </button>
@@ -344,15 +200,11 @@ export default function Urunler() {
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
                   <input
-                    type="text"
+                    type="search"
                     value={aramaText}
-                    onChange={(e) => {
-                      const nextValue = e.target.value
-                      setVisibleProductLimit(INITIAL_PRODUCT_LIMIT)
-                      setAramaText(nextValue)
-                      syncSearchParams({ q: nextValue })
-                    }}
-                    placeholder="Ürün veya kategori adı..."
+                    onChange={(e) => setAramaText(e.target.value)}
+                    maxLength={100}
+                    placeholder="Ürün, kategori veya marka..."
                     className="shop-input pl-9"
                   />
                 </div>
@@ -361,13 +213,8 @@ export default function Urunler() {
               <label className="block">
                 <span className="mb-1.5 block text-sm font-bold text-zinc-700">Kategori</span>
                 <select
-                  value={secilenKategori}
-                  onChange={(e) => {
-                    const nextValue = e.target.value
-                    setVisibleProductLimit(INITIAL_PRODUCT_LIMIT)
-                    setSecilenKategori(nextValue)
-                    syncSearchParams({ kategori: nextValue })
-                  }}
+                  value={kategori}
+                  onChange={(e) => updateParams({ kategori: e.target.value })}
                   className="shop-input"
                 >
                   <option value="">Tüm kategoriler</option>
@@ -382,28 +229,33 @@ export default function Urunler() {
               <label className="block">
                 <span className="mb-1.5 block text-sm font-bold text-zinc-700">Marka</span>
                 <select
-                  value={secilenMarka}
-                  onChange={(e) => {
-                    const nextValue = e.target.value
-                    setVisibleProductLimit(INITIAL_PRODUCT_LIMIT)
-                    setSecilenMarka(nextValue)
-                    syncSearchParams({ marka: nextValue })
-                  }}
+                  value={marka}
+                  onChange={(e) => updateParams({ marka: e.target.value })}
                   className="shop-input"
                 >
                   <option value="">Tüm markalar</option>
-                  {markalar.map((marka) => (
-                    <option key={marka.id} value={marka.id}>
-                      {marka.marka_adi}
+                  {markalar.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.marka_adi}
                     </option>
                   ))}
                 </select>
               </label>
 
               {activeCampaign && (
-                <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-800">Aktif kampanya</p>
-                  <p className="mt-1 break-words text-sm font-bold text-zinc-900">{activeCampaign.ad || activeCampaign.kampanya_adi}</p>
+                <div className="flex items-start justify-between gap-2 rounded-lg border border-orange-200 bg-orange-50 p-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-orange-700">Aktif kampanya</p>
+                    <p className="mt-1 break-words text-sm font-bold text-zinc-900">{activeCampaign.ad || activeCampaign.baslik}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updateParams({ kampanya: '' })}
+                    aria-label="Kampanya filtresini kaldır"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-orange-700 hover:bg-orange-100"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               )}
             </div>
@@ -411,10 +263,38 @@ export default function Urunler() {
         </aside>
 
         <section className="min-w-0">
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm font-bold text-zinc-600">
-              {loading ? 'Ürünler yükleniyor' : loadError || `${urunler.length}${hasMoreProducts ? '+' : ''} ürün bulundu`}
-            </p>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-zinc-600" aria-live="polite">
+                {loading
+                  ? 'Ürünler yükleniyor'
+                  : loadError
+                    ? 'Ürünler yüklenemedi'
+                    : `${toplam} ürün bulundu`}
+              </p>
+              {!loading && !loadError && toplam > 0 && (
+                <p className="text-xs text-zinc-500">{urunler.length} / {toplam} gösteriliyor</p>
+              )}
+              {activeCampaign && (
+                <p className="mt-1 flex min-w-0 items-center gap-1 text-xs font-bold text-orange-700 lg:hidden">
+                  <Tag className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{activeCampaign.ad || activeCampaign.baslik}</span>
+                </p>
+              )}
+            </div>
+            <label className="flex min-w-0 items-center gap-2 sm:w-64">
+              <ArrowUpDown className="h-4 w-4 shrink-0 text-zinc-500" />
+              <span className="sr-only">Sıralama</span>
+              <select
+                value={sirala}
+                onChange={(e) => updateParams({ sirala: e.target.value })}
+                className="shop-input min-w-0 flex-1"
+              >
+                {CATALOG_SORTS.map((sort) => (
+                  <option key={sort.value} value={sort.value}>{sort.label}</option>
+                ))}
+              </select>
+            </label>
           </div>
 
           {loading ? (
@@ -425,11 +305,23 @@ export default function Urunler() {
             </div>
           ) : loadError ? (
             <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-red-200 bg-red-50 p-6 text-center">
-              <PackageSearch className="h-12 w-12 text-red-300" />
+              <AlertCircle className="h-12 w-12 text-red-300" />
               <h2 className="mt-3 text-xl font-bold text-zinc-950">Ürünler yüklenemedi</h2>
               <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-600">{loadError}</p>
-              <button type="button" onClick={loadUrunler} className="shop-btn-primary mt-5">
+              <button type="button" onClick={() => setReloadKey((value) => value + 1)} className="shop-btn-primary mt-5">
+                <RotateCcw className="h-4 w-4" />
                 Tekrar dene
+              </button>
+            </div>
+          ) : campaignInvalid ? (
+            <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-orange-200 bg-white p-6 text-center">
+              <Tag className="h-12 w-12 text-orange-300" />
+              <h2 className="mt-3 text-xl font-bold text-zinc-950">Kampanya bulunamadı</h2>
+              <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">
+                Bu kampanyanın süresi dolmuş veya hesabınız için geçerli olmayabilir.
+              </p>
+              <button type="button" onClick={() => updateParams({ kampanya: '' })} className="shop-btn-primary mt-5">
+                Tüm ürünleri göster
               </button>
             </div>
           ) : urunler.length === 0 ? (
@@ -439,25 +331,30 @@ export default function Urunler() {
               <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">
                 Arama veya filtreleri değiştirerek tekrar deneyebilirsiniz.
               </p>
-              <button type="button" onClick={clearFilters} className="shop-btn-primary mt-5">
-                Filtreleri temizle
-              </button>
+              {hasFilters && (
+                <button type="button" onClick={clearFilters} className="shop-btn-primary mt-5">
+                  Filtreleri temizle
+                </button>
+              )}
             </div>
           ) : (
             <div>
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
                 {urunler.map((urun) => (
-                  <UrunKart key={urun.id} urun={urun} kampanya={activeCampaign} />
+                  <UrunKart key={urun.id} urun={urun} kampanya={campaignForCards} />
                 ))}
               </div>
-              {hasMoreProducts && (
-                <div className="mt-6 flex justify-center">
+              {(sonrakiImlec || loadMoreError) && (
+                <div className="mt-6 flex flex-col items-center gap-2">
+                  {loadMoreError && <p className="text-sm font-semibold text-red-600">{loadMoreError}</p>}
                   <button
                     type="button"
-                    onClick={() => setVisibleProductLimit((current) => current + INITIAL_PRODUCT_LIMIT)}
+                    onClick={loadMore}
+                    disabled={loadingMore || !sonrakiImlec}
                     className="shop-btn-secondary"
                   >
-                    Daha fazla ürün göster
+                    {loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {loadMoreError ? 'Tekrar dene' : 'Daha fazla ürün göster'}
                   </button>
                 </div>
               )}

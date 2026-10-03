@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Store, Plus, Edit, Trash2, X, RefreshCw } from 'lucide-react'
+import { MANAGEMENT_PAGE_SIZE, managementPageRange, managementSearchPattern } from '../../lib/admin-management-query'
+import { Store, Plus, Edit, Trash2, X, RefreshCw, Mail } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Bayi {
@@ -12,6 +13,7 @@ interface Bayi {
   telefon: string | null
   adres: string | null
   aktif: boolean
+  kullanici_id: string | null
   olusturma_tarihi: string
 }
 
@@ -40,29 +42,51 @@ export default function AdminBayiler() {
     aktif: true
   })
   const [saving, setSaving] = useState(false)
+  const [invitingId, setInvitingId] = useState<string | null>(null)
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [loadError, setLoadError] = useState(false)
+  const requestId = useRef(0)
 
-  useEffect(() => {
-    loadBayiler()
-  }, [])
-
-  async function loadBayiler() {
+  const loadBayiler = useCallback(async () => {
+    const currentRequest = ++requestId.current
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      setLoadError(false)
+      let query = supabase
         .from('bayiler')
-        .select('*')
+        .select('*', { count: 'exact' })
+      const pattern = managementSearchPattern(search)
+      const range = managementPageRange(page)
+      if (pattern) query = query.ilike('bayi_adi', pattern)
+      const { data, error, count } = await query
         .order('olusturma_tarihi', { ascending: false })
+        .order('id', { ascending: false })
+        .range(range.from, range.to)
 
       if (error) throw error
-
+      if (currentRequest !== requestId.current) return
+      setTotalCount(count || 0)
+      if (page > 1 && count !== null && range.from >= count) {
+        setPage(Math.max(1, Math.ceil(count / MANAGEMENT_PAGE_SIZE)))
+        return
+      }
       setBayiler(data || [])
     } catch (error: any) {
+      if (currentRequest !== requestId.current) return
       console.error('Bayiler yükleme hatası:', error)
-      toast.error('Bayiler yüklenemedi')
+      setLoadError(true)
+      setBayiler([])
     } finally {
-      setLoading(false)
+      if (currentRequest === requestId.current) setLoading(false)
     }
-  }
+  }, [page, search])
+
+  useEffect(() => {
+    void loadBayiler()
+  }, [loadBayiler])
 
   function generateBayiiKodu() {
     const prefix = 'BAY'
@@ -158,14 +182,13 @@ export default function AdminBayiler() {
         })
 
         if (functionError || functionData?.error) {
-          throw functionError || new Error(functionData.error.message || 'Bayi kullanıcısı oluşturulamadı')
+          toast.error('Bayi kaydı oluştu ancak davet gönderilemedi. E-posta ayarlarını kontrol edip listedeki Davet et düğmesiyle tekrar deneyin.')
+          closeModal()
+          void loadBayiler()
+          return
         }
 
-        const deliveryMessage = functionData?.data?.password_delivery === 'email_sent'
-          ? 'Geçici şifre bayiye email ile gönderildi.'
-          : 'Bayi oluşturuldu. RESEND_API_KEY yoksa şifre iletimi için şifre sıfırlama akışı kullanılmalıdır.'
-
-        toast.success(`Bayi başarıyla oluşturuldu. ${deliveryMessage}`)
+        toast.success('Bayi oluşturuldu ve şifre belirleme daveti e-posta ile gönderildi.')
       } else if (modal === 'edit' && selectedBayi) {
         // Bayi güncelle
         const { error } = await supabase
@@ -204,7 +227,29 @@ export default function AdminBayiler() {
     }
   }
 
+  async function sendInvite(bayi: Bayi) {
+    if (invitingId) return
+    setInvitingId(bayi.id)
+    try {
+      const { data, error } = await supabase.functions.invoke('bayi-kullanici-olustur', {
+        body: { bayii_kodu: bayi.bayii_kodu, email: bayi.email },
+      })
+      if (error || data?.error) throw error || new Error(data.error.message || 'Davet gönderilemedi')
+      toast.success('Bayi erişim bağlantısı e-posta ile gönderildi.')
+      void loadBayiler()
+    } catch (error) {
+      console.error('Bayi davet hatası:', error)
+      toast.error('Davet gönderilemedi. E-posta ayarlarını ve bayi kaydını kontrol edip tekrar deneyin.')
+    } finally {
+      setInvitingId(null)
+    }
+  }
+
   async function handleDelete(bayi: Bayi) {
+    if (bayi.kullanici_id) {
+      toast.error('Bağlı bayi hesabını silmek yerine pasifleştirin; sipariş geçmişi korunmalıdır.')
+      return
+    }
     if (!confirm(`${bayi.bayi_adi} bayisini silmek istediğinize emin misiniz?`)) {
       return
     }
@@ -245,20 +290,12 @@ export default function AdminBayiler() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
-
   return (
-    <div className="p-8">
+    <div className="min-w-0 p-4 sm:p-8">
       <div className="mb-4 sm:mb-6 lg:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <Store className="w-6 h-6 sm:w-8 sm:h-8 text-brand" />
+            <Store className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600" />
             Bayi Yönetimi
           </h1>
           <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
@@ -274,10 +311,21 @@ export default function AdminBayiler() {
         </button>
       </div>
 
-      {bayiler.length === 0 ? (
+      <form onSubmit={event => { event.preventDefault(); setPage(1); setSearch(searchInput) }} className="mb-4 flex min-w-0 flex-wrap gap-2">
+        <label htmlFor="bayi-ara" className="sr-only">Bayi adına göre ara</label>
+        <input id="bayi-ara" value={searchInput} onChange={event => setSearchInput(event.target.value)} maxLength={100} placeholder="Bayi adına göre ara" className="min-h-10 min-w-0 flex-1 rounded-lg border border-gray-300 px-3" />
+        <button type="submit" className="min-h-10 rounded-lg bg-brand px-4 text-white">Ara</button>
+        {search && <button type="button" onClick={() => { setSearchInput(''); setSearch(''); setPage(1) }} className="min-h-10 px-3 text-orange-700">Temizle</button>}
+      </form>
+
+      {loading ? (
+        <div role="status" className="py-12 text-center">Bayiler yükleniyor…</div>
+      ) : loadError ? (
+        <div className="rounded-lg bg-white p-6 text-center text-red-700">Bayiler yüklenemedi. <button type="button" onClick={() => void loadBayiler()} className="min-h-10 px-2 underline">Tekrar dene</button></div>
+      ) : bayiler.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
           <Store className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">Henüz bayi bulunmuyor</p>
+          <p className="text-gray-600">{search ? 'Aramayla eşleşen bayi bulunmuyor' : 'Henüz bayi bulunmuyor'}</p>
           <button
             onClick={openCreateModal}
             className="mt-4 px-6 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800"
@@ -286,7 +334,7 @@ export default function AdminBayiler() {
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
+        <div className="bg-white rounded-lg shadow overflow-x-auto" role="region" tabIndex={0} aria-label="Bayi listesi, yatay kaydırılabilir">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -335,8 +383,9 @@ export default function AdminBayiler() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
+                      type="button"
                       onClick={() => toggleAktif(bayi)}
-                      className={`px-3 py-1 text-xs font-semibold rounded-full ${bayi.aktif
+                      className={`min-h-10 px-3 py-1 text-xs font-semibold rounded-full ${bayi.aktif
                           ? 'bg-green-100 text-green-800 hover:bg-green-200'
                           : 'bg-red-100 text-red-800 hover:bg-red-200'
                         }`}
@@ -346,16 +395,30 @@ export default function AdminBayiler() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
+                      type="button"
+                      disabled={invitingId !== null}
+                      onClick={() => void sendInvite(bayi)}
+                      className="mr-2 inline-flex min-h-10 items-center gap-1 rounded px-2 text-orange-700 hover:bg-orange-50 disabled:opacity-50"
+                      title={bayi.kullanici_id ? 'Erişim bağlantısını tekrar gönder' : 'Bayi daveti gönder'}
+                    >
+                      <Mail className="h-4 w-4" aria-hidden="true" />
+                      <span>{invitingId === bayi.id ? 'Gönderiliyor…' : bayi.kullanici_id ? 'Yeniden davet' : 'Davet et'}</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => openEditModal(bayi)}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
+                      className="mr-2 inline-flex min-h-10 min-w-10 items-center justify-center rounded text-blue-600 hover:bg-blue-50 hover:text-blue-900"
                       title="Düzenle"
+                      aria-label={`${bayi.bayi_adi} bayisini düzenle`}
                     >
                       <Edit className="w-5 h-5" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleDelete(bayi)}
-                      className="text-brand-secondary hover:text-red-900"
+                      className="inline-flex min-h-10 min-w-10 items-center justify-center rounded text-red-600 hover:bg-red-50 hover:text-red-900"
                       title="Sil"
+                      aria-label={`${bayi.bayi_adi} bayisini sil`}
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -366,6 +429,14 @@ export default function AdminBayiler() {
           </table>
         </div>
       )}
+
+      {!loadError && totalCount > 0 && <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-700">
+        <span>{totalCount} bayi · Sayfa {page} / {Math.ceil(totalCount / MANAGEMENT_PAGE_SIZE)}</span>
+        <div className="flex gap-2">
+          <button type="button" disabled={loading || page === 1} onClick={() => setPage(value => value - 1)} className="min-h-10 rounded-lg border px-3 disabled:opacity-50">Önceki</button>
+          <button type="button" disabled={loading || page * MANAGEMENT_PAGE_SIZE >= totalCount} onClick={() => setPage(value => value + 1)} className="min-h-10 rounded-lg border px-3 disabled:opacity-50">Sonraki</button>
+        </div>
+      </div>}
 
       {/* Bayi Modal */}
       {modal && (
@@ -455,7 +526,9 @@ export default function AdminBayiler() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   placeholder="info@abcgida.com"
                   required
+                  disabled={modal === 'edit' && Boolean(selectedBayi?.kullanici_id)}
                 />
+                {modal === 'edit' && selectedBayi?.kullanici_id && <p className="mt-1 text-xs text-gray-600">Bağlı hesabın e-postası bu ekrandan değiştirilemez.</p>}
               </div>
 
               <div>
@@ -490,7 +563,7 @@ export default function AdminBayiler() {
                   id="aktif"
                   checked={formData.aktif}
                   onChange={(e) => setFormData({ ...formData, aktif: e.target.checked })}
-                  className="w-4 h-4 text-brand border-gray-300 rounded focus:ring-emerald-700"
+                  className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-emerald-700"
                 />
                 <label htmlFor="aktif" className="text-sm font-medium text-gray-700">
                   Bayi aktif

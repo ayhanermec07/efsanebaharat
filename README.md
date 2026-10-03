@@ -1,50 +1,29 @@
-# React + TypeScript + Vite
+# Efsane Baharat — frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React, Vite ve TypeScript mağaza/yönetim uygulaması. Supabase backend'i kardeş `../supabase/` dizinindedir; Coolify yalnız frontend'i yayımlar.
 
-Currently, two official plugins are available:
+Yerel çalışma alanında güncel mimari, iş kuralları, canlı ortam durumu ve açık kararlar için `../PROJE_BILGI_BANKASI.md` dosyasını okuyun. Yayın sırası ve geri alma adımları `../audit/2026-09-26/canli-yayin-runbook.md` içindedir. Bu iki belge frontend Git deposunun dışındadır. `main` dalı Coolify kaynağıdır; çalışma dalındaki değişiklikler canlıya otomatik uygulanmaz.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Yerel geliştirme
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```powershell
+npm ci
+npm run dev:test
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+`dev:test` yerel Supabase'i başlatır ve yalnız `127.0.0.1:4173` üzerinde Vite'ı çalıştırır. Edge Function'lar için ayrı terminalde `npm run test:functions` çalıştırın. Yeni migration varsa `../supabase/` içinden `npx --yes supabase@latest migration up --local` ile **yalnız yerel** veritabanına uygulayın. Test ortamı kontrolü: `npm run test:environment`.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+Ziyaretçi ve mobil E2E provası için Chrome yüklü makinede önce `npm run test:functions`, sonra ayrı terminalde `npm run test:e2e:guest` çalıştırın. Playwright, Vite'ı yerel Supabase anahtarıyla kendi başlatır; var olan 4173 portunu devralmaz. 320–1440 px arası 10 genişlikte katalog→detay, boş sepet, giriş/iletişim ve gecikmeli logo ayarı akışlarını salt okunur test eder. `.env.local` canlı projeye işaret etse bile bu komut `dev:test` üzerinden yerel adresi zorlar; canlı Supabase'e istek görülürse test başarısız olur. Sonuçlar gerçek hesap/PayTR testlerinin yerini tutmaz.
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+Canlı Supabase'e bağlanan sırları veya service-role anahtarını tarayıcı `VITE_*` değişkenlerine koymayın. Canlı migration'ları doğrudan `db push` ile uygulamayın; canlı history kaynakla eşleşmiyor ve önce yedek/şema provası gerekiyor.
+
+## Doğrulama
+
+```powershell
+node .\node_modules\typescript\bin\tsc -b --pretty false
+node .\node_modules\eslint\bin\eslint.js .
+node --test tests/*.test.mjs
+npm run build
 ```
+
+Görsel yükleme, sipariş ve ödeme işlemleri ayrı yerel Express sunucusundan değil, yetkili Supabase Edge Function'larından geçer.

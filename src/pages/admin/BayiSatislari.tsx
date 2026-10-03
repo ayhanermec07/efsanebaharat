@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { BarChart3, Download, Calendar, Filter, TrendingUp, DollarSign, Package } from 'lucide-react'
 import toast from 'react-hot-toast'
-import * as XLSX from 'xlsx'
+import { dealerSalesCsv } from '../../lib/dealer-sales-csv'
 
 interface Bayi {
   id: string
@@ -163,38 +163,22 @@ export default function AdminBayiSatislari() {
     setEndDate('')
   }
 
-  function exportToExcel() {
+  function exportToCsv() {
     if (satislar.length === 0) {
       toast.error('Dışa aktarılacak veri yok')
       return
     }
 
-    const exportData = satislar.map((satis) => ({
-      'Tarih': new Date(satis.satis_tarihi).toLocaleDateString('tr-TR'),
-      'Bayii Kodu': satis.bayi?.bayii_kodu || '-',
-      'Bayi Adı': satis.bayi?.bayi_adi || '-',
-      'Sipariş ID': satis.siparis_id,
-      'Ürün Adedi': satis.urun_adedi,
-      'Toplam Tutar': `${satis.toplam_tutar.toFixed(2)} ₺`
-    }))
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Bayi Satışları')
-
-    // Sütun genişlikleri ayarla
-    worksheet['!cols'] = [
-      { wch: 12 },
-      { wch: 15 },
-      { wch: 25 },
-      { wch: 36 },
-      { wch: 12 },
-      { wch: 15 }
-    ]
-
-    const fileName = `bayi-satislari-${new Date().toISOString().split('T')[0]}.xlsx`
-    XLSX.writeFile(workbook, fileName)
-    toast.success('Excel dosyası indirildi')
+    const blob = new Blob([dealerSalesCsv(satislar)], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `bayi-satislari-${new Date().toISOString().split('T')[0]}.csv`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+    toast.success('CSV dosyası indirildi')
   }
 
   if (loading) {
@@ -321,12 +305,12 @@ export default function AdminBayiSatislari() {
               Sıfırla
             </button>
             <button
-              onClick={exportToExcel}
+              onClick={exportToCsv}
               className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2"
-              title="Excel'e Aktar"
+              title="CSV indir (Excel ile açılır)"
             >
               <Download className="w-4 h-4" />
-              Excel
+              CSV indir
             </button>
           </div>
         </div>

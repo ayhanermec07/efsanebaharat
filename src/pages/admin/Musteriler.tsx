@@ -94,7 +94,8 @@ export default function Musteriler() {
     setFormErrors({})
     setFormData({
       fiyat_grubu_id: musteri.fiyat_grubu_id || '',
-      musteri_tipi: musteri.musteri_tipi || 'musteri',
+      musteri_tipi: musteri.aktif_durum === false && ['bayi', 'xml_musteri'].includes(musteri.basvuru_tipi)
+        ? musteri.basvuru_tipi : musteri.musteri_tipi || 'musteri',
       ozel_iskonto_orani: musteri.ozel_iskonto_orani || 0,
       aktif_durum: musteri.aktif_durum !== false
     })
@@ -142,7 +143,7 @@ export default function Musteriler() {
         <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Müşteri Yönetimi</h1>
-            <p className="mt-1 text-sm text-gray-600">Yeni başvuruları buradan müşteri türünü seçerek onaylayın.</p>
+            <p className="mt-1 text-sm text-gray-600">Bayi ve XML başvurularını buradan inceleyip onaylayın; perakende kayıtları hemen aktiftir.</p>
           </div>
           {pendingCount > 0 && <div className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900"><Clock3 className="h-4 w-4" /> {pendingCount} onay bekleyen başvuru</div>}
         </div>
@@ -197,7 +198,9 @@ export default function Musteriler() {
                           ? 'bg-violet-100 text-violet-800'
                           : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {musteri.musteri_tipi === 'bayi'
+                      {musteri.aktif_durum === false && musteri.basvuru_tipi && musteri.basvuru_tipi !== 'musteri'
+                        ? `${musteri.basvuru_tipi === 'bayi' ? 'Bayi' : 'XML müşteri'} başvurusu`
+                        : musteri.musteri_tipi === 'bayi'
                         ? 'Bayi'
                         : musteri.musteri_tipi === 'xml_musteri'
                           ? 'XML Müşteri'
@@ -276,6 +279,10 @@ export default function Musteriler() {
                   <div>
                     <label className="text-sm font-medium text-gray-500">Onay durumu</label>
                     <p className="text-gray-900">{secilenMusteri.aktif_durum === false ? 'Onay bekliyor' : 'Aktif'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Başvuru türü</label>
+                    <p className="text-gray-900">{secilenMusteri.basvuru_tipi === 'bayi' ? 'Bayi' : secilenMusteri.basvuru_tipi === 'xml_musteri' ? 'XML müşteri' : secilenMusteri.basvuru_tipi === 'musteri' ? 'Perakende' : 'Eski kayıt / belirtilmemiş'}</p>
                   </div>
                   <div className="col-span-2">
                     <label className="text-sm font-medium text-gray-500">Adres</label>

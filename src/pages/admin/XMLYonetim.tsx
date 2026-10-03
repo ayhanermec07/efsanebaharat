@@ -32,27 +32,100 @@ interface XMLError {
     type: 'error' | 'warning'
 }
 
-interface XMLImportResult {
-    dryRun?: boolean
-    sourceUrl?: string
-    totalInXml?: number
-    parsed?: number
-    createdProducts?: number
-    updatedProducts?: number
-    createdCategories?: number
-    createdBrands?: number
-    updatedStocks?: number
-    insertedImages?: number
-    skipped?: number
-    sample?: Array<{
-        productCode: string
-        name: string
-        mainCategory: string
-        category: string
-        price: number
-        stock: number
-        brand: string
-    }>
+interface XMLImportRun {
+    id: string
+    correlation_id: string
+    source_key: string
+    status: 'staged' | 'applying' | 'completed' | 'completed_with_errors' | 'cancelled' | 'superseded'
+    xml_sha256: string
+    total_items: number
+    plan_summary: { create?: number, update?: number, unchanged?: number, conflict?: number, invalid?: number }
+    pending_count: number
+    applied_count: number
+    skipped_count: number
+    failed_retryable_count: number
+    failed_terminal_count: number
+    checkpoint_seq: number
+    remaining_count?: number
+    created_at: string
+    completed_at: string | null
+    reused?: boolean
+    busy?: boolean
+}
+
+interface XMLImportRunItem {
+    seq: number
+    product_code: string
+    status: string
+    planned_action: string | null
+    reason_code: string | null
+    changed_fields: string[]
+}
+
+const ACTIVE_RUN_STATUSES = ['staged', 'applying']
+const APPLY_BATCH_SIZE = 100
+
+const RUN_STATUS_LABELS: Record<XMLImportRun['status'], string> = {
+    staged: 'Önizleme hazır',
+    applying: 'Uygulanıyor',
+    completed: 'Tamamlandı',
+    completed_with_errors: 'Hatalarla tamamlandı',
+    cancelled: 'İptal edildi',
+    superseded: 'Yeni XML sürümüyle değiştirildi'
+}
+
+const REASON_LABELS: Record<string, string> = {
+    UNIT_MISSING: 'Birim etiketi yok (Unit/UnitType/Birim)',
+    UNIT_UNSUPPORTED: 'Desteklenmeyen birim; yalnız gr veya adet',
+    CURRENCY_UNSUPPORTED: 'Desteklenmeyen para birimi',
+    PRICE_MISSING: 'Fiyat boş',
+    PRICE_ZERO: 'Fiyat sıfır',
+    PRICE_NEGATIVE: 'Fiyat negatif',
+    PRICE_FORMAT: 'Fiyat sayı değil',
+    PRICE_LOCALE_MISMATCH: 'Fiyat biçimi sözleşmeye uymuyor (örn. 1234.56)',
+    PRICE_PRECISION: 'Fiyatta 2 ondalıktan fazla hane',
+    PRICE_OUT_OF_RANGE: 'Fiyat izin verilen aralık dışında',
+    STOCK_MISSING: 'Stok boş',
+    STOCK_NEGATIVE: 'Stok negatif',
+    STOCK_FORMAT: 'Stok sayı değil',
+    STOCK_LOCALE_MISMATCH: 'Stok biçimi sözleşmeye uymuyor (örn. 1234.5)',
+    STOCK_FRACTION_ADET: 'Adet stok kesirli olamaz',
+    STOCK_PRECISION: 'Stokta 3 ondalıktan fazla hane',
+    STOCK_OUT_OF_RANGE: 'Stok izin verilen aralık dışında',
+    TAX_INVALID: 'KDV oranı geçersiz',
+    DESI_INVALID: 'Desi geçersiz',
+    NAME_MISSING: 'Ürün adı boş',
+    NAME_TOO_LONG: 'Ürün adı çok uzun',
+    PRODUCT_CODE_MISSING: 'Ürün kodu yok',
+    PRODUCT_CODE_TOO_LONG: 'Ürün kodu çok uzun',
+    DUPLICATE_PRODUCT_CODE: 'XML içinde tekrarlanan ürün kodu',
+    DUPLICATE_PRODUCT_ID: 'XML içinde tekrarlanan Product_id',
+    IDENTITY_CONFLICT: 'Aynı Product_id başka ürün koduyla kayıtlı; otomatik birleştirilmez',
+    CODE_REASSIGNED: 'Ürün kodu başka Product_id ile kayıtlı',
+    UNIT_CHANGED: 'Kayıtlı XML stok birimi farklı; otomatik dönüştürülmez',
+    STOCK_AMBIGUOUS: 'Birden fazla XML stok satırı var',
+    PAYLOAD_INVALID: 'Satır verisi geçersiz',
+    UNCHANGED: 'Değişiklik yok',
+    RUN_CANCELLED: 'Run iptal edildi',
+    RUN_SUPERSEDED: 'Yeni XML sürümü geldi'
+}
+
+function reasonLabel(code: string | null) {
+    if (!code) return '-'
+    if (REASON_LABELS[code]) return REASON_LABELS[code]
+    if (code.endsWith('_DUPLICATE_TAG')) return 'Aynı alan birden fazla kez verilmiş'
+    if (code.startsWith('DB_')) return 'Veritabanı hatası'
+    return code
+}
+
+async function functionErrorMessage(error: any) {
+    try {
+        const body = await error?.context?.json?.()
+        if (body?.error?.message) return String(body.error.message)
+    } catch {
+        // Yanıt gövdesi JSON değil.
+    }
+    return error?.message || 'XML içe aktarılırken hata oluştu'
 }
 
 interface XMLImportSource {
@@ -87,7 +160,9 @@ export default function XMLYonetim() {
     const [importSources, setImportSources] = useState<XMLImportSource[]>([])
     const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null)
     const [importing, setImporting] = useState(false)
-    const [importResult, setImportResult] = useState<XMLImportResult | null>(null)
+    const [importRun, setImportRun] = useState<XMLImportRun | null>(null)
+    const [runFailures, setRunFailures] = useState<XMLImportRunItem[]>([])
+    const [runChanges, setRunChanges] = useState<XMLImportRunItem[]>([])
     const exportUrl = xmlSettings?.xml_token
         ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bayi-xml-feed?token=${encodeURIComponent(xmlSettings.xml_token)}`
         : null
@@ -185,6 +260,53 @@ export default function XMLYonetim() {
     useEffect(() => {
         loadData()
     }, [loadData])
+
+    const loadRunItems = useCallback(async (runId: string) => {
+        const [{ data: failures }, { data: changes }] = await Promise.all([
+            supabase
+                .from('xml_import_run_items')
+                .select('seq, product_code, status, planned_action, reason_code, changed_fields')
+                .eq('run_id', runId)
+                .in('status', ['failed_terminal', 'failed_retryable'])
+                .order('seq', { ascending: true })
+                .limit(50),
+            supabase
+                .from('xml_import_run_items')
+                .select('seq, product_code, status, planned_action, reason_code, changed_fields')
+                .eq('run_id', runId)
+                .in('planned_action', ['create', 'update'])
+                .order('seq', { ascending: true })
+                .limit(20)
+        ])
+        setRunFailures(failures || [])
+        setRunChanges(changes || [])
+    }, [])
+
+    const loadLatestRun = useCallback(async (sourceId: string | null) => {
+        const { data, error } = await supabase
+            .from('xml_import_runs')
+            .select('*')
+            .eq('source_key', sourceId ? `source:${sourceId}` : 'default')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+
+        if (error) {
+            console.warn('XML import run okunamadı:', error.message)
+            return
+        }
+        setImportRun(data)
+        if (data) {
+            await loadRunItems(data.id)
+        } else {
+            setRunFailures([])
+            setRunChanges([])
+        }
+    }, [loadRunItems])
+
+    useEffect(() => {
+        loadLatestRun(selectedSourceId)
+    }, [loadLatestRun, selectedSourceId])
 
     function addError(message: string, type: 'error' | 'warning') {
         const newError: XMLError = {
@@ -332,7 +454,7 @@ export default function XMLYonetim() {
 
     async function handleGenerateFeedXML() {
         if (selectedProducts.length === 0) {
-            toast.error('XML\'e gÃ¶nderilecek sorti seÃ§ilmemiÅŸ!')
+            toast.error('XML\'e gönderilecek sorti seçilmemiş!')
             return
         }
 
@@ -340,7 +462,7 @@ export default function XMLYonetim() {
         try {
             const response = await fetch(getFeedUrl())
             if (!response.ok) {
-                throw new Error('XML feed oluÅŸturulamadÄ±')
+                throw new Error('XML feed oluşturulamadı')
             }
 
             const xmlContent = await response.text()
@@ -352,10 +474,10 @@ export default function XMLYonetim() {
                 .eq('id', xmlSettings.id)
 
             setXmlSettings({ ...xmlSettings, last_updated_at: new Date().toISOString() })
-            toast.success(`XML feed baÅŸarÄ±yla hazÄ±rlandÄ±! (${selectedProducts.length} sorti)`)
+            toast.success(`XML feed başarıyla hazırlandı! (${selectedProducts.length} sorti)`)
         } catch (error: any) {
-            console.error('XML feed oluÅŸturma hatasÄ±:', error)
-            toast.error(error.message || 'XML feed oluÅŸturulurken hata oluÅŸtu')
+            console.error('XML feed oluşturma hatası:', error)
+            toast.error(error.message || 'XML feed oluşturulurken hata oluştu')
         } finally {
             setGenerating(false)
         }
@@ -368,7 +490,7 @@ export default function XMLYonetim() {
     async function handleCopyFeedUrl() {
         const success = await copyToClipboard(getFeedUrl())
         if (success) {
-            toast.success('XML feed linki kopyalandÄ±')
+            toast.success('XML feed linki kopyalandı')
         }
     }
 
@@ -379,7 +501,7 @@ export default function XMLYonetim() {
             .filter(Boolean)
 
         if (!importUrl.trim()) {
-            toast.error('XML kaynaÄŸÄ± boÅŸ olamaz')
+            toast.error('XML kaynağı boş olamaz')
             return
         }
 
@@ -452,8 +574,8 @@ export default function XMLYonetim() {
 
             toast.success('XML kaynağı ve güncelleme ayarları kaydedildi')
         } catch (error: any) {
-            console.error('XML ayarlarÄ± kaydedilemedi:', error)
-            toast.error(error.message || 'XML ayarlarÄ± kaydedilemedi')
+            console.error('XML ayarları kaydedilemedi:', error)
+            toast.error(error.message || 'XML ayarları kaydedilemedi')
         }
     }
 
@@ -466,7 +588,6 @@ export default function XMLYonetim() {
         setImportUrl(source.url)
         setImportAllowedHosts(source.allowed_hosts?.join(', ') || '')
         setUpdateIntervalMinutes(source.update_interval_minutes || 15)
-        setImportResult(null)
     }
 
     function handleNewSource() {
@@ -475,7 +596,6 @@ export default function XMLYonetim() {
         setImportUrl('')
         setImportAllowedHosts('')
         setUpdateIntervalMinutes(30)
-        setImportResult(null)
     }
 
     async function handleGenerateNewToken() {
@@ -530,98 +650,101 @@ export default function XMLYonetim() {
         }
     }
 
-    async function handleImportXML(dryRun = false) {
+    async function invokeImport(body: Record<string, unknown>) {
+        const { data, error } = await supabase.functions.invoke('xml-product-import', { body })
+        if (error) throw new Error(await functionErrorMessage(error))
+        return data?.run as XMLImportRun
+    }
+
+    // XML bir kez indirilir; snapshot ve dry-run farkı sunucuda run olarak saklanır.
+    async function handlePreviewImport() {
         setImporting(true)
-        setImportResult(null)
-
         try {
-            if (dryRun) {
-                const { data, error } = await supabase.functions.invoke('xml-product-import', {
-                    body: {
-                        xmlUrl: importUrl,
-                        dryRun: true,
-                        limit: 5
-                    }
-                })
-
-                if (error) throw error
-
-                setImportResult(data)
-                toast.success(`XML okundu: ${data?.totalInXml || data?.parsed || 0} ürün bulundu`)
-            } else {
-                // Büyük partiler, aynı XML dosyasının tekrar tekrar indirilmesini önemli ölçüde azaltır.
-                const batchSize = 500
-                let offset = 0
-                let totalInXml: number | null = null
-                const aggregate = {
-                    sourceUrl: importUrl,
-                    importedAt: new Date().toISOString(),
-                    totalInXml: 0,
-                    parsed: 0,
-                    createdProducts: 0,
-                    updatedProducts: 0,
-                    createdCategories: 0,
-                    createdBrands: 0,
-                    updatedStocks: 0,
-                    insertedImages: 0,
-                    skipped: 0,
-                }
-
-                while (totalInXml === null || offset < totalInXml) {
-                    const { data, error } = await supabase.functions.invoke('xml-product-import', {
-                        body: {
-                            xmlUrl: importUrl,
-                            dryRun: false,
-                            limit: batchSize,
-                            offset
-                        }
-                    })
-
-                    if (error) throw error
-                    if (!data || data.parsed === 0) break
-
-                    totalInXml = Number(data.totalInXml || 0)
-                    aggregate.totalInXml = totalInXml
-                    aggregate.parsed += Number(data.parsed || 0)
-                    aggregate.createdProducts += Number(data.createdProducts || 0)
-                    aggregate.updatedProducts += Number(data.updatedProducts || 0)
-                    aggregate.createdCategories += Number(data.createdCategories || 0)
-                    aggregate.createdBrands += Number(data.createdBrands || 0)
-                    aggregate.updatedStocks += Number(data.updatedStocks || 0)
-                    aggregate.insertedImages += Number(data.insertedImages || 0)
-                    aggregate.skipped += Number(data.skipped || 0)
-
-                    offset += Number(data.parsed || batchSize)
-                    toast.success(`XML aktarılıyor: ${Math.min(offset, totalInXml)} / ${totalInXml}`)
-                }
-
-                setImportResult(aggregate)
-                if (selectedSourceId) {
-                    const importedAt = new Date().toISOString()
-                    const { error: sourceError } = await supabase
-                        .from('xml_import_sources')
-                        .update({ last_imported_at: importedAt })
-                        .eq('id', selectedSourceId)
-                    if (sourceError) console.warn('Kaynak son güncelleme zamanı kaydedilemedi:', sourceError)
-                    setImportSources(current => current.map(source => source.id === selectedSourceId ? { ...source, last_imported_at: importedAt } : source))
-                }
-                toast.success(`XML içe aktarıldı: ${aggregate.createdProducts} yeni, ${aggregate.updatedProducts} güncel ürün`)
-                await loadData()
-            }
+            const run = await invokeImport({ action: 'start', sourceId: selectedSourceId || undefined })
+            setImportRun(run)
+            await loadRunItems(run.id)
+            const plan = run.plan_summary || {}
+            toast.success(run.reused
+                ? 'Aynı XML için açık run kullanılıyor'
+                : `Önizleme hazır: ${plan.create || 0} yeni, ${plan.update || 0} güncelleme, ${(plan.invalid || 0) + (plan.conflict || 0)} hatalı`)
         } catch (error: any) {
-            console.error('XML içe aktarma hatası:', error)
-            const message = error?.context?.error?.message || error?.message || 'XML içe aktarılırken hata oluştu'
-            toast.error(message)
-            addError('XML içe aktarma hatası: ' + message, 'error')
+            console.error('XML önizleme hatası:', error)
+            toast.error(error.message)
+            addError('XML önizleme hatası: ' + error.message, 'error')
         }
-
         setImporting(false)
     }
+
+    // Batch'ler run kimliği ve sunucu checkpoint'i ile ilerler; XML tekrar indirilmez.
+    async function handleApplyImport() {
+        if (!importRun || !ACTIVE_RUN_STATUSES.includes(importRun.status)) {
+            toast.error('Önce önizleme oluşturun')
+            return
+        }
+
+        setImporting(true)
+        let run = importRun
+        let stalled = 0
+        try {
+            while (ACTIVE_RUN_STATUSES.includes(run.status)) {
+                const previousRemaining = run.remaining_count ?? run.pending_count + run.failed_retryable_count
+                const next = await invokeImport({ action: 'apply', runId: run.id, limit: APPLY_BATCH_SIZE })
+                if (next.busy) {
+                    toast.error('Bu run için başka bir batch çalışıyor; biraz sonra devam edin')
+                    break
+                }
+                run = next
+                setImportRun(run)
+                const remaining = run.remaining_count ?? run.pending_count + run.failed_retryable_count
+                stalled = remaining >= previousRemaining ? stalled + 1 : 0
+                if (stalled >= 3) {
+                    toast.error('Kalan satırlar ilerlemiyor; hata nedenlerini kontrol edin')
+                    break
+                }
+            }
+            await loadRunItems(run.id)
+            if (run.status === 'completed') {
+                toast.success(`XML içe aktarıldı: ${run.applied_count} değişiklik, ${run.skipped_count} değişmeyen`)
+            } else if (run.status === 'completed_with_errors') {
+                toast.error(`XML hatalarla tamamlandı: ${run.failed_terminal_count} satır uygulanmadı`)
+            }
+            await loadData()
+        } catch (error: any) {
+            console.error('XML içe aktarma hatası:', error)
+            toast.error(error.message)
+            addError('XML içe aktarma hatası: ' + error.message, 'error')
+            await loadLatestRun(selectedSourceId)
+        }
+        setImporting(false)
+    }
+
+    async function handleCancelImport() {
+        if (!importRun || !ACTIVE_RUN_STATUSES.includes(importRun.status)) return
+        if (!confirm('Açık XML import run iptal edilsin mi? Uygulanmış satırlar geri alınmaz.')) return
+
+        setImporting(true)
+        try {
+            const run = await invokeImport({ action: 'cancel', runId: importRun.id })
+            setImportRun(run)
+            await loadRunItems(run.id)
+            toast.success('XML import run iptal edildi')
+        } catch (error: any) {
+            toast.error(error.message)
+        }
+        setImporting(false)
+    }
+
+    const selectedSource = importSources.find(source => source.id === selectedSourceId)
+    const unsavedSourceChanges = selectedSource ? selectedSource.url !== importUrl.trim() : false
+    const runActive = importRun ? ACTIVE_RUN_STATUSES.includes(importRun.status) : false
+    const runRemaining = importRun ? (importRun.remaining_count ?? importRun.pending_count + importRun.failed_retryable_count) : 0
+    const runProcessed = importRun ? importRun.total_items - runRemaining : 0
+    const runPercent = importRun && importRun.total_items > 0 ? Math.round((runProcessed / importRun.total_items) * 100) : 0
 
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
-                <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
             </div>
         )
     }
@@ -630,7 +753,7 @@ export default function XMLYonetim() {
         <div className="max-w-6xl">
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                    <FileCode className="w-8 h-8 text-brand" />
+                    <FileCode className="w-8 h-8 text-orange-600" />
                     <h1 className="text-3xl font-bold text-gray-900">Bayi XML Yönetimi</h1>
                 </div>
                 <button
@@ -647,7 +770,7 @@ export default function XMLYonetim() {
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                            <UploadCloud className="w-5 h-5 text-brand" />
+                            <UploadCloud className="w-5 h-5 text-orange-600" />
                             XML İçe Aktarma
                         </h2>
                         <p className="text-sm text-gray-500 mt-1">
@@ -656,21 +779,34 @@ export default function XMLYonetim() {
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
                         <button
-                            onClick={() => handleImportXML(true)}
+                            type="button"
+                            onClick={handlePreviewImport}
                             disabled={importing}
-                            className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
+                            className="flex min-h-[44px] items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
                         >
                             {importing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
-                            Önizle
+                            Önizle (dry-run)
                         </button>
                         <button
-                            onClick={() => handleImportXML(false)}
-                            disabled={importing}
-                            className="flex items-center justify-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition disabled:opacity-50"
+                            type="button"
+                            onClick={handleApplyImport}
+                            disabled={importing || !runActive}
+                            className="flex min-h-[44px] items-center justify-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-emerald-800 transition disabled:opacity-50"
                         >
                             {importing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                            İçe Aktar
+                            {importRun?.status === 'applying' ? 'Devam Et' : 'Uygula'}
                         </button>
+                        {runActive && (
+                            <button
+                                type="button"
+                                onClick={handleCancelImport}
+                                disabled={importing}
+                                className="flex min-h-[44px] items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+                            >
+                                <XCircle className="w-4 h-4" />
+                                İptal
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -748,59 +884,116 @@ export default function XMLYonetim() {
                     <p className="mt-1 text-xs text-gray-500">Her kaynak için ayrı süre belirleyebilirsiniz.</p>
                 </div>
 
-                {importResult && (
-                    <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                <p className="mt-4 text-xs text-gray-500 break-words">
+                    Önizleme XML'i bir kez indirir, SHA-256 özetiyle sabit bir run oluşturur ve katalogda değişiklik yapmadan farkı gösterir.
+                    Uygula, aynı run'ı {APPLY_BATCH_SIZE} satırlık partilerle kaldığı yerden işler.
+                    {selectedSource ? '' : ' Kayıtlı kaynak seçilmezse bayi XML ayarındaki adres kullanılır.'}
+                </p>
+                {unsavedSourceChanges && (
+                    <p className="mt-2 flex items-start gap-2 rounded-lg bg-yellow-50 p-3 text-xs text-yellow-800">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span className="min-w-0 break-words">Kaydedilmemiş adres değişikliği var. İçe aktarma yalnız kayıtlı kaynak adresini kullanır; önce Kaynağı Kaydet'e basın.</span>
+                    </p>
+                )}
+
+                {importRun && (
+                    <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:p-4">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="text-sm font-semibold text-gray-900">
+                                {RUN_STATUS_LABELS[importRun.status] || importRun.status}
+                            </p>
+                            <p className="min-w-0 truncate font-mono text-xs text-gray-500" title={importRun.correlation_id}>
+                                Run {importRun.id.slice(0, 8)} · SHA {importRun.xml_sha256.slice(0, 12)} · {new Date(importRun.created_at).toLocaleString('tr-TR')}
+                            </p>
+                        </div>
+
+                        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-200" role="progressbar" aria-valuenow={runPercent} aria-valuemin={0} aria-valuemax={100}>
+                            <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${runPercent}%` }} />
+                        </div>
+                        <p className="mt-1 text-xs text-gray-600">
+                            {runProcessed} / {importRun.total_items} satır işlendi · kalan {runRemaining} · checkpoint #{importRun.checkpoint_seq}
+                        </p>
+
+                        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                             <div>
-                                <p className="text-xs text-gray-500">Okunan</p>
-                                <p className="text-lg font-semibold text-gray-900">{importResult.parsed || 0}</p>
+                                <p className="text-xs text-gray-500">Plan: yeni</p>
+                                <p className="text-lg font-semibold text-green-700">{importRun.plan_summary?.create || 0}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500">Yeni Ürün</p>
-                                <p className="text-lg font-semibold text-green-700">{importResult.createdProducts || 0}</p>
+                                <p className="text-xs text-gray-500">Plan: güncelleme</p>
+                                <p className="text-lg font-semibold text-blue-700">{importRun.plan_summary?.update || 0}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500">Güncellenen</p>
-                                <p className="text-lg font-semibold text-blue-700">{importResult.updatedProducts || 0}</p>
+                                <p className="text-xs text-gray-500">Plan: değişmeyen</p>
+                                <p className="text-lg font-semibold text-gray-900">{importRun.plan_summary?.unchanged || 0}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500">Kategori</p>
-                                <p className="text-lg font-semibold text-gray-900">{importResult.createdCategories || 0}</p>
+                                <p className="text-xs text-gray-500">Uygulanan</p>
+                                <p className="text-lg font-semibold text-gray-900">{importRun.applied_count}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500">Marka</p>
-                                <p className="text-lg font-semibold text-gray-900">{importResult.createdBrands || 0}</p>
+                                <p className="text-xs text-gray-500">Tekrar denenecek</p>
+                                <p className="text-lg font-semibold text-yellow-700">{importRun.failed_retryable_count}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500">Görsel</p>
-                                <p className="text-lg font-semibold text-gray-900">{importResult.insertedImages || 0}</p>
+                                <p className="text-xs text-gray-500">Hatalı (kalıcı)</p>
+                                <p className="text-lg font-semibold text-red-700">{importRun.failed_terminal_count}</p>
                             </div>
                         </div>
 
-                        {importResult.sample && importResult.sample.length > 0 && (
-                            <div className="mt-4 overflow-x-auto">
-                                <table className="w-full min-w-[640px] text-sm">
-                                    <thead>
-                                        <tr className="text-left text-xs uppercase text-gray-500">
-                                            <th className="py-2 pr-3">Kod</th>
-                                            <th className="py-2 pr-3">Ürün</th>
-                                            <th className="py-2 pr-3">Kategori</th>
-                                            <th className="py-2 pr-3">Fiyat</th>
-                                            <th className="py-2 pr-3">Stok</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
-                                        {importResult.sample.map((item) => (
-                                            <tr key={item.productCode}>
-                                                <td className="py-2 pr-3 font-mono text-xs">{item.productCode}</td>
-                                                <td className="py-2 pr-3">{item.name}</td>
-                                                <td className="py-2 pr-3">{item.category || item.mainCategory}</td>
-                                                <td className="py-2 pr-3">{item.price.toFixed(2)} ₺</td>
-                                                <td className="py-2 pr-3">{item.stock}</td>
+                        {runChanges.length > 0 && (
+                            <div className="mt-4">
+                                <h3 className="text-sm font-semibold text-gray-900">Planlanan değişiklikler (ilk {runChanges.length})</h3>
+                                <div className="mt-2 overflow-x-auto">
+                                    <table className="w-full min-w-[520px] text-sm">
+                                        <thead>
+                                            <tr className="text-left text-xs uppercase text-gray-500">
+                                                <th className="py-2 pr-3">Sıra</th>
+                                                <th className="py-2 pr-3">Kod</th>
+                                                <th className="py-2 pr-3">İşlem</th>
+                                                <th className="py-2 pr-3">Değişen alanlar</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-200">
+                                            {runChanges.map(item => (
+                                                <tr key={item.seq}>
+                                                    <td className="py-2 pr-3 text-gray-500">{item.seq}</td>
+                                                    <td className="py-2 pr-3 font-mono text-xs break-all">{item.product_code}</td>
+                                                    <td className="py-2 pr-3">{item.planned_action === 'create' ? 'Yeni' : 'Güncelleme'}</td>
+                                                    <td className="py-2 pr-3 text-xs text-gray-600 break-words">{item.changed_fields.join(', ') || '-'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {runFailures.length > 0 && (
+                            <div className="mt-4">
+                                <h3 className="text-sm font-semibold text-red-800">Uygulanmayan satırlar (ilk {runFailures.length})</h3>
+                                <div className="mt-2 overflow-x-auto">
+                                    <table className="w-full min-w-[520px] text-sm">
+                                        <thead>
+                                            <tr className="text-left text-xs uppercase text-gray-500">
+                                                <th className="py-2 pr-3">Sıra</th>
+                                                <th className="py-2 pr-3">Kod</th>
+                                                <th className="py-2 pr-3">Durum</th>
+                                                <th className="py-2 pr-3">Neden</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-200">
+                                            {runFailures.map(item => (
+                                                <tr key={item.seq}>
+                                                    <td className="py-2 pr-3 text-gray-500">{item.seq}</td>
+                                                    <td className="py-2 pr-3 font-mono text-xs break-all">{item.product_code || '-'}</td>
+                                                    <td className="py-2 pr-3 text-xs">{item.status === 'failed_retryable' ? 'Tekrar denenecek' : 'Kalıcı hata'}</td>
+                                                    <td className="py-2 pr-3 text-xs text-gray-700 break-words" title={item.reason_code || ''}>{reasonLabel(item.reason_code)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -811,7 +1004,7 @@ export default function XMLYonetim() {
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-brand" />
+                        <Activity className="w-5 h-5 text-orange-600" />
                         Sistem Durum Paneli
                     </h2>
                     <div className="flex items-center gap-2">
@@ -838,7 +1031,7 @@ export default function XMLYonetim() {
                             {healthStatus.isHealthy ? (
                                 <CheckCircle className="w-5 h-5 text-green-600" />
                             ) : (
-                                <XCircle className="w-5 h-5 text-brand-secondary" />
+                                <XCircle className="w-5 h-5 text-red-600" />
                             )}
                             <span className={`font-semibold ${healthStatus.isHealthy ? 'text-green-700' : 'text-red-700'}`}>
                                 {healthStatus.isHealthy ? 'Çalışıyor' : 'Hata Var'}
@@ -891,7 +1084,7 @@ export default function XMLYonetim() {
                             {healthStatus.errors.length === 0 ? (
                                 <CheckCircle className="w-5 h-5 text-green-600" />
                             ) : (
-                                <XCircle className="w-5 h-5 text-brand-secondary" />
+                                <XCircle className="w-5 h-5 text-red-600" />
                             )}
                             <span className={`font-semibold ${healthStatus.errors.length === 0 ? 'text-green-700' : 'text-red-700'}`}>
                                 Hatalar
@@ -928,7 +1121,7 @@ export default function XMLYonetim() {
                             </h3>
                             <button
                                 onClick={clearErrors}
-                                className="text-sm text-brand-secondary hover:text-red-800 transition"
+                                className="text-sm text-red-600 hover:text-red-800 transition"
                             >
                                 Temizle
                             </button>
@@ -954,7 +1147,7 @@ export default function XMLYonetim() {
             {/* XML Dışa Aktarma Bağlantısı */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Download className="w-5 h-5 text-brand" />
+                    <Download className="w-5 h-5 text-orange-600" />
                     XML Dışa Aktarma Linki
                 </h2>
                 

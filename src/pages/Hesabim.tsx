@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Package, User as UserIcon, Truck, Copy, Check, ExternalLink, Pencil, X, Clock3, LayoutDashboard, LogOut } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { loadCustomerOrders } from '../lib/account-orders'
+import { formatPrice } from '../lib/currency'
 
 export default function Hesabim() {
   const { user, musteriData, loading: authLoading, updateUser, isAdmin, signOut } = useAuth()
@@ -79,51 +81,7 @@ export default function Hesabim() {
     setLoading(true)
 
     try {
-      const { data: siparisData, error: siparisError } = await supabase
-        .from('siparisler')
-        .select('*')
-        .eq('musteri_id', musteriData.id)
-        .order('olusturma_tarihi', { ascending: false })
-
-      if (siparisError) throw siparisError
-
-      if (siparisData && siparisData.length > 0) {
-        const siparislerWithUrunler = await Promise.all(
-          siparisData.map(async (siparis) => {
-            const { data: siparisUrunleri } = await supabase
-              .from('siparis_urunleri')
-              .select('*')
-              .eq('siparis_id', siparis.id)
-
-            if (siparisUrunleri && siparisUrunleri.length > 0) {
-              const urunIds = [...new Set(siparisUrunleri.map(su => su.urun_id))]
-              const { data: urunler } = await supabase
-                .from('urunler')
-                .select('id, urun_adi')
-                .in('id', urunIds)
-
-              const detayliUrunler = siparisUrunleri.map(su => ({
-                ...su,
-                urun_adi: urunler?.find(u => u.id === su.urun_id)?.urun_adi || 'Ürün'
-              }))
-
-              return {
-                ...siparis,
-                siparis_urunleri: detayliUrunler
-              }
-            }
-
-            return {
-              ...siparis,
-              siparis_urunleri: []
-            }
-          })
-        )
-
-        setSiparisler(siparislerWithUrunler)
-      } else {
-        setSiparisler([])
-      }
+      setSiparisler(await loadCustomerOrders(supabase, musteriData.id))
     } catch (error) {
       console.error('Siparişler yüklenirken hata:', error)
       toast.error('Siparişler yüklenemedi')
@@ -154,7 +112,7 @@ export default function Hesabim() {
   if (authLoading || loading) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <div className="inline-block w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
+        <div className="inline-block w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -205,12 +163,13 @@ export default function Hesabim() {
                     <h2 className="text-xl font-bold text-gray-900">
                       {musteriData?.ad_soyad || `${musteriData?.ad} ${musteriData?.soyad}`}
                     </h2>
-                    <p className="text-gray-600">{user?.email}</p>
+                    <p className="break-all text-gray-600">{user?.email}</p>
                   </div>
                 )}
               </div>
               {!isEditing ? (
-                <button
+                  <button
+                  type="button"
                   onClick={() => {
                     setFormData({
                       ad: musteriData?.ad || '',
@@ -220,15 +179,18 @@ export default function Hesabim() {
                     })
                     setIsEditing(true)
                   }}
-                  className="text-gray-400 hover:text-brand transition"
+                  aria-label="Profili düzenle"
+                  className="inline-flex min-h-11 min-w-11 items-center justify-center text-gray-400 hover:text-orange-600 transition"
                   title="Profili Düzenle"
                 >
                   <Pencil className="w-5 h-5" />
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={() => setIsEditing(false)}
-                  className="text-gray-400 hover:text-brand-secondary transition"
+                  aria-label="Profil düzenlemeyi iptal et"
+                  className="inline-flex min-h-11 min-w-11 items-center justify-center text-gray-400 hover:text-red-600 transition"
                   title="İptal"
                 >
                   <X className="w-5 h-5" />
@@ -238,10 +200,11 @@ export default function Hesabim() {
 
             {isEditing ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Ad</label>
+                    <label htmlFor="profil-ad" className="block text-sm font-medium text-gray-700 mb-1">Ad</label>
                     <input
+                      id="profil-ad"
                       type="text"
                       value={formData.ad}
                       onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
@@ -249,8 +212,9 @@ export default function Hesabim() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Soyad</label>
+                    <label htmlFor="profil-soyad" className="block text-sm font-medium text-gray-700 mb-1">Soyad</label>
                     <input
+                      id="profil-soyad"
                       type="text"
                       value={formData.soyad}
                       onChange={(e) => setFormData({ ...formData, soyad: e.target.value })}
@@ -260,8 +224,9 @@ export default function Hesabim() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                  <label htmlFor="profil-telefon" className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
                   <input
+                    id="profil-telefon"
                     type="tel"
                     value={formData.telefon}
                     onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
@@ -270,8 +235,9 @@ export default function Hesabim() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Adres</label>
+                  <label htmlFor="profil-adres" className="block text-sm font-medium text-gray-700 mb-1">Adres</label>
                   <textarea
+                    id="profil-adres"
                     rows={3}
                     value={formData.adres}
                     onChange={(e) => setFormData({ ...formData, adres: e.target.value })}
@@ -389,8 +355,10 @@ export default function Hesabim() {
                                 {siparis.kargo_takip_no}
                               </span>
                               <button
+                                type="button"
                                 onClick={() => copyToClipboard(siparis.kargo_takip_no, siparis.id)}
-                                className="text-blue-600 hover:text-blue-700 transition"
+                                aria-label="Takip numarasını kopyala"
+                                className="inline-flex min-h-11 min-w-11 items-center justify-center text-blue-600 hover:text-blue-700 transition"
                                 title="Takip numarasını kopyala"
                               >
                                 {copiedId === siparis.id ? (
@@ -426,19 +394,19 @@ export default function Hesabim() {
 
                     <div className="space-y-2 mb-4">
                       {siparis.siparis_urunleri?.map((item: any) => (
-                        <div key={item.id} className="flex justify-between text-sm">
-                          <span className="text-gray-700">
+                        <div key={item.id} className="flex items-start justify-between gap-3 text-sm">
+                          <span className="min-w-0 break-words text-gray-700">
                             {item.urun_adi} ({item.birim_turu}) x {item.miktar}
                           </span>
-                          <span className="font-medium">{item.toplam_fiyat?.toFixed(2)} TL</span>
+                          <span className="shrink-0 font-medium">{formatPrice(item.toplam_fiyat == null ? null : Number(item.toplam_fiyat))}</span>
                         </div>
                       ))}
                     </div>
 
                     <div className="border-t pt-4 flex justify-between items-center">
                       <span className="font-semibold text-gray-900">Toplam</span>
-                      <span className="text-xl font-bold text-brand">
-                        {siparis.toplam_tutar?.toFixed(2)} TL
+                      <span className="text-xl font-bold text-orange-600">
+                        {formatPrice(siparis.toplam_tutar == null ? null : Number(siparis.toplam_tutar))}
                       </span>
                     </div>
                   </div>

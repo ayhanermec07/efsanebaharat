@@ -1,4 +1,3 @@
-import { formatPrice } from '../lib/currency'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowUpRight, Check, PackageOpen, ShoppingBag } from 'lucide-react'
@@ -6,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
 import { kademeliIskontoUygula } from '../utils/iskonto'
 import { getImageUrl } from '../utils/imageUtils'
+import { formatPrice } from '../lib/currency'
 
 interface UrunKartProps {
   urun: any
@@ -22,6 +22,7 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
 
   const [secilenStok, setSecilenStok] = useState<any>(null)
   const [eklendi, setEklendi] = useState(false)
+  const [ekleniyor, setEkleniyor] = useState(false)
   const [imgError, setImgError] = useState(false)
 
   useEffect(() => {
@@ -72,15 +73,16 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
     return { satisFiyati: hamFiyat, eskiFiyat: hamFiyat, indirimVar: false, indirimOrani: 0 }
   }, [grupIskontoOrani, kampanya, ozelIskontoOrani, secilenStok, user])
 
-  const handleSepeteEkle = () => {
+  const handleSepeteEkle = async () => {
     if (!user) {
       navigate('/giris')
       return
     }
 
-    if (!secilenStok) return
+    if (!secilenStok || ekleniyor) return
 
-    sepeteEkle({
+    setEkleniyor(true)
+    const result = await sepeteEkle({
       stok_varyant_id: secilenStok.id,
       urun_id: urun.id,
       urun_adi: urun.urun_adi,
@@ -92,7 +94,10 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
       gorsel_url: ilkGorsel,
       min_siparis_miktari: secilenStok.min_siparis_miktari
     })
+    setEkleniyor(false)
 
+    // "Eklendi" yalnız sunucu başarı döndürdüğünde gösterilir; hata mesajı SepetContext'ten gelir.
+    if (!result.ok) return
     setEklendi(true)
     window.setTimeout(() => setEklendi(false), 2000)
   }
@@ -170,7 +175,7 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
                 </div>
                 {fiyatBilgisi.indirimVar && (
                   <div className="mt-1 text-xs font-semibold text-zinc-400 line-through">
-                    {fiyatBilgisi.eskiFiyat.toFixed(2)} TL
+                    {formatPrice(fiyatBilgisi.eskiFiyat)}
                   </div>
                 )}
               </>
@@ -183,8 +188,9 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
         {user ? (
           <button
             type="button"
-            onClick={handleSepeteEkle}
-            disabled={!secilenStok}
+            onClick={() => { void handleSepeteEkle() }}
+            disabled={!secilenStok || ekleniyor}
+            aria-busy={ekleniyor}
             className={`flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg px-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500 ${eklendi
               ? 'bg-emerald-600 text-white'
               : 'site-primary-bg site-primary-hover text-white'

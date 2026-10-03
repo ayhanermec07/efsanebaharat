@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Tag, X, AlertCircle } from 'lucide-react';
+import { formatPrice } from '../lib/currency';
 
 interface Kampanya {
   id: string;
@@ -250,7 +251,7 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Tag className="w-5 h-5 text-green-600" />
           <h3 className="font-semibold text-gray-900">Kampanyalar</h3>
@@ -289,12 +290,14 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
               </div>
               <p className="text-sm text-green-800 mb-2">{uygulananKampanya.aciklama}</p>
               <p className="text-lg font-bold text-green-900">
-                İndirim: -{indirimTutari.toFixed(2)} TL
+                İndirim: -{formatPrice(indirimTutari)}
               </p>
             </div>
             <button
               onClick={kampanyaKaldir}
-              className="p-1 text-green-700 hover:text-green-900 hover:bg-green-100 rounded transition-colors"
+              type="button"
+              aria-label="Kampanyayı kaldır"
+              className="flex min-h-11 min-w-11 items-center justify-center rounded text-green-700 transition-colors hover:bg-green-100 hover:text-green-900"
               title="Kampanyayı kaldır"
             >
               <X className="w-5 h-5" />
@@ -338,7 +341,7 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
                           <span className="text-xs px-2 py-0.5 bg-green-600 text-white rounded-full">
                             {kampanya.indirim_tipi === 'yuzde'
                               ? `%${kampanya.indirim_degeri}`
-                              : `${kampanya.indirim_degeri} TL`}
+                              : formatPrice(kampanya.indirim_degeri)}
                           </span>
                         </div>
                         <p className="text-sm text-gray-700 mb-1">{kampanya.ad}</p>
@@ -347,14 +350,14 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-gray-600 mt-2 pt-2 border-t border-gray-200">
-                      <span>Min. Sepet: {kampanya.min_sepet_tutari} TL</span>
+                      <span>Min. Sepet: {formatPrice(kampanya.min_sepet_tutari)}</span>
                       {uygunMu ? (
                         <span className="text-green-700 font-semibold">
-                          İndirim: -{indirim.toFixed(2)} TL
+                          İndirim: -{formatPrice(indirim)}
                         </span>
                       ) : (
-                        <span className="text-brand">
-                          {(kampanya.min_sepet_tutari - sepetTutari).toFixed(2)} TL daha ekleyin
+                        <span className="text-orange-600">
+                          {formatPrice(kampanya.min_sepet_tutari - sepetTutari)} daha ekleyin
                         </span>
                       )}
                     </div>
@@ -372,7 +375,7 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
               value={kampanyaKodu}
               onChange={(e) => setKampanyaKodu(e.target.value.toUpperCase())}
               placeholder="Kampanya kodunu girin"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent uppercase"
+              className="min-w-0 flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent uppercase"
               disabled={yukleniyor}
             />
             <button
@@ -386,7 +389,7 @@ export default function KampanyaUygula({ sepetTutari, onKampanyaUygula }: Kampan
 
           {hata && (
             <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-brand-secondary flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-800">{hata}</p>
             </div>
           )}
