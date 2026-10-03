@@ -6,11 +6,13 @@ import { uploadImage } from '../../utils/imageUpload'
 import toast from 'react-hot-toast'
 import { Save, RefreshCw, Upload, Shield, Palette, UserPlus } from 'lucide-react'
 
+import PaymentSettings from '../../components/admin/PaymentSettings'
+
 export default function Ayarlar() {
     const { theme, logo, siteInfo, updateTheme, updateLogo, updateSiteInfo } = useTheme()
     const { user } = useAuth()
 
-    const [activeTab, setActiveTab] = useState<'tasarim' | 'yoneticiler'>('tasarim')
+    const [activeTab, setActiveTab] = useState<'tasarim' | 'yoneticiler' | 'odemeler'>('tasarim')
 
     // Tasarım form state
     const [primaryColor, setPrimaryColor] = useState(theme.primaryColor)
@@ -227,7 +229,7 @@ export default function Ayarlar() {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                <div className="flex border-b">
+                <div className="flex flex-wrap border-b">
                     <button
                         onClick={() => setActiveTab('tasarim')}
                         className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition ${activeTab === 'tasarim'
@@ -238,6 +240,7 @@ export default function Ayarlar() {
                         <Palette className="w-4 h-4" />
                         Tasarım Ayarları
                     </button>
+                    <button onClick={() => setActiveTab('odemeler')} className={`px-4 py-4 text-sm font-medium ${activeTab === 'odemeler' ? 'border-b-2 border-orange-500 text-orange-600 bg-orange-50' : 'text-gray-500'}`}>Ödeme Ayarları</button>
                     <button
                         onClick={() => setActiveTab('yoneticiler')}
                         className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition ${activeTab === 'yoneticiler'
@@ -250,7 +253,8 @@ export default function Ayarlar() {
                     </button>
                 </div>
 
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
+                    {activeTab === 'odemeler' && <PaymentSettings />}
                     {activeTab === 'tasarim' && (
                         <div className="max-w-xl space-y-8">
                             <div>

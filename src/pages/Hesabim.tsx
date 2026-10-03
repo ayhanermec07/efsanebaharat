@@ -1,3 +1,4 @@
+import { paymentStatusLabel } from '../lib/payment-methods'
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { Link, useNavigate } from 'react-router-dom'
@@ -320,7 +321,7 @@ export default function Hesabim() {
               <div className="space-y-4">
                 {siparisler.map((siparis) => (
                   <div key={siparis.id} className="border rounded-lg p-4 hover:shadow-md transition">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                       <div>
                         <p className="font-semibold text-gray-900">
                           Sipariş No: {siparis.siparis_no}
@@ -330,10 +331,14 @@ export default function Hesabim() {
                         </p>
                       </div>
                       <div className="text-right">
-                        {kargoDurumBadge(siparis.kargo_durumu || 'hazirlaniyor')}
+                        {siparis.payment_method === 'havale' && siparis.odeme_durumu === 'bekliyor' ? <span className="text-sm text-amber-800">{siparis.siparis_durumu === 'iptal_edildi' ? 'İptal edildi' : 'Havale bekleniyor'}</span> : kargoDurumBadge(siparis.kargo_durumu || 'hazirlaniyor')}
                       </div>
                     </div>
 
+                    {siparis.payment_method === 'havale' && <div className="mb-4 rounded-lg bg-amber-50 p-3 text-sm">
+                      <p>{siparis.siparis_durumu === 'iptal_edildi' ? 'Sipariş iptal edildi' : paymentStatusLabel(siparis.payment_method, siparis.odeme_durumu)}</p>
+                      {siparis.siparis_durumu !== 'iptal_edildi' && siparis.odeme_durumu === 'bekliyor' && <Link className="mt-2 inline-flex min-h-10 items-center font-bold text-brand underline" to={`/odeme-basarili?order_id=${encodeURIComponent(siparis.id)}`}>Havale bilgilerini görüntüle</Link>}
+                    </div>}
                     {/* Kargo Bilgileri */}
                     {siparis.kargo_firmasi && siparis.kargo_takip_no && (
                       <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">

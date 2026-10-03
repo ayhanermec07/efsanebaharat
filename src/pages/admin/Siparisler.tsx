@@ -1,3 +1,4 @@
+import { paymentStatusLabel } from '../../lib/payment-methods'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Eye, X } from 'lucide-react'
@@ -86,6 +87,7 @@ export default function Siparisler() {
     const siparis = siparisler.find(item => item.id === siparisId)
     if (!siparis) return
     if (yeniDurum === 'iptal_edildi' && !window.confirm(`Sipariş ${siparis.siparis_no} için iptal/ret işlemini onaylıyor musunuz?`)) return
+    if (yeniDurum === 'odendi' && !window.confirm(`Sipariş ${siparis.siparis_no} için ${formatPrice(siparis.toplam_tutar)} tutarındaki havalenin banka hesabınıza ulaştığını onaylıyor musunuz?`)) return
     setUpdatingOrderId(siparisId)
     try {
       if (siparis.odeme_durumu === 'fis_kontrol_bekliyor' ||
@@ -188,6 +190,7 @@ export default function Siparisler() {
   }
   const izinliDurumlar = (siparis: any) => {
     const durumlar = [siparis.siparis_durumu]
+    if (siparis.payment_method === 'havale' && siparis.odeme_durumu === 'bekliyor' && siparis.siparis_durumu === 'odeme_bekleniyor') durumlar.push('iptal_edildi')
     if (siparis.odeme_durumu === 'fis_kontrol_bekliyor') durumlar.push('hazirlaniyor', 'iptal_edildi')
     else {
       if (siparis.odeme_durumu === 'onaylandi' && siparis.siparis_durumu !== 'iptal_edildi') durumlar.push('iptal_edildi')
@@ -286,8 +289,9 @@ export default function Siparisler() {
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <span className={`px-2 py-1 rounded-full text-xs ${siparis.odeme_durumu === 'odendi' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                      {siparis.odeme_durumu === 'odendi' ? 'Ödendi' : siparis.odeme_durumu === 'onaylandi' ? 'Onaylandı' : siparis.odeme_durumu === 'fis_kontrol_bekliyor' ? 'Fiş kontrolü' : 'Bekliyor'}
+                      {siparis.siparis_durumu === 'iptal_edildi' ? 'İptal edildi' : paymentStatusLabel(siparis.payment_method, siparis.odeme_durumu)}
                     </span>
+                    {siparis.payment_method === 'havale' && siparis.odeme_durumu === 'bekliyor' && siparis.siparis_durumu === 'odeme_bekleniyor' && <button type="button" disabled={updatingOrderId !== null} onClick={() => void handleDurumGuncelle(siparis.id, 'odendi')} className="mt-2 block min-h-10 rounded border border-green-300 px-3 text-xs font-bold text-green-800 disabled:opacity-50">Havale alındı — onayla</button>}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <button

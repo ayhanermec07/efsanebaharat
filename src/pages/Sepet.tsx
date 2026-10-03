@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { AlertCircle, CreditCard, LockKeyhole, Minus, Plus, RotateCcw, ShoppingBag, Trash2 } from 'lucide-react'
+import { availablePaymentMethods, checkoutStorageKey, PAYMENT_METHOD_LABELS, type PaymentMethod, type PaymentSettings } from '../lib/payment-methods'
+import BankTransferDetails from '../components/BankTransferDetails'
 import KampanyaUygula from '../components/KampanyaUygula'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
@@ -10,36 +12,36 @@ import { formatPrice } from '../lib/currency'
 import { supabase } from '../lib/supabase'
 import { akilliBirimGoster } from '../utils/birimDonusturucu'
 
-const CHECKOUT_ATTEMPT_KEY = 'efsane-checkout-denemesi'
 const IN_PROGRESS_RETRIES = 5
 
 type PaymentResponse = {
+  action?: string
   token?: string
   siparis_id?: string
   error?: { code?: string; message?: string; retryable?: boolean; siparis_id?: string }
 }
 
-function readStoredAttempt(): CheckoutAttempt | null {
+function readStoredAttempt(method: PaymentMethod): CheckoutAttempt | null {
   try {
-    const parsed = JSON.parse(window.sessionStorage.getItem(CHECKOUT_ATTEMPT_KEY) || 'null')
+    const parsed = JSON.parse(window.sessionStorage.getItem(checkoutStorageKey(method)) || 'null')
     return parsed && typeof parsed.key === 'string' ? parsed : null
   } catch {
     return null
   }
 }
 
-function storeAttempt(attempt: CheckoutAttempt | null) {
+function storeAttempt(attempt: CheckoutAttempt | null, method: PaymentMethod) {
   try {
-    if (attempt) window.sessionStorage.setItem(CHECKOUT_ATTEMPT_KEY, JSON.stringify(attempt))
-    else window.sessionStorage.removeItem(CHECKOUT_ATTEMPT_KEY)
+    if (attempt) window.sessionStorage.setItem(checkoutStorageKey(method), JSON.stringify(attempt))
+    else window.sessionStorage.removeItem(checkoutStorageKey(method))
   } catch {
     // Depolama kapalıysa anahtar yalnız bellekte tutulur.
   }
 }
 
-async function invokePayment(attempt: CheckoutAttempt): Promise<PaymentResponse> {
+async function invokePayment(attempt: CheckoutAttempt, paymentMethod: PaymentMethod): Promise<PaymentResponse> {
   const { data, error } = await supabase.functions.invoke('paytr-payment', {
-    body: { idempotencyKey: attempt.key, cartVersion: attempt.cartVersion, kampanyaKodu: attempt.kampanyaKodu || null },
+    body: { paymentMethod, idempotencyKey: attempt.key, cartVersion: attempt.cartVersion, kampanyaKodu: attempt.kampanyaKodu || null },
   })
   if (!error) return (data || {}) as PaymentResponse
   const context = (error as { context?: Response }).context
@@ -98,6 +100,19 @@ export default function Sepet() {
   const [kampanyaIndirimi, setKampanyaIndirimi] = useState(0)
   const checkoutAttempt = useRef<CheckoutAttempt | null>(null)
 
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('havale')
+  const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null)
+  const [settingsError, setSettingsError] = useState(false)
+  useEffect(() => {
+    let active = true
+    void supabase.from('checkout_payment_settings').select('*').single().then(({ data, error }) => {
+      if (!active) return
+      setSettingsError(Boolean(error))
+      if (data) { setPaymentSettings(data); setPaymentMethod(availablePaymentMethods(data)[0] || 'havale') }
+    })
+    return () => { active = false }
+  }, [])
+  const methods = paymentSettings ? availablePaymentMethods(paymentSettings) : []
   const indirimliToplam = Math.max(0, toplamTutar - kampanyaIndirimi)
   const sepetMesgul = bekleyenStoklar.size > 0
 
@@ -123,26 +138,34 @@ export default function Sepet() {
       return
     }
 
+    if (!methods.includes(paymentMethod)) { toast.error('Ödeme yöntemi şu anda kullanılamıyor'); return }
     setLoading(true)
     try {
       // Aynı sepet sürümü + kampanya için anahtar bir kez üretilir ve her
       // yeniden denemede (cevap kaybı, iframe kapatma) aynı anahtar gönderilir.
       const version = await cartVersion(sepetItems)
       const attempt = nextCheckoutAttempt(
-        checkoutAttempt.current || readStoredAttempt(),
+        checkoutAttempt.current || readStoredAttempt(paymentMethod),
         version,
         String(uygulananKampanya?.kod || ''),
         () => crypto.randomUUID(),
       )
       checkoutAttempt.current = attempt
-      storeAttempt(attempt)
+      storeAttempt(attempt, paymentMethod)
 
-      let response = await invokePayment(attempt)
+      let response = await invokePayment(attempt, paymentMethod)
       for (let retry = 0; retry < IN_PROGRESS_RETRIES && response.error?.code === 'CHECKOUT_IN_PROGRESS'; retry++) {
         await new Promise((resolve) => window.setTimeout(resolve, 1500))
-        response = await invokePayment(attempt)
+        response = await invokePayment(attempt, paymentMethod)
       }
 
+      if (response.action === 'order_created' && response.siparis_id) {
+        checkoutAttempt.current = null
+        storeAttempt(null, paymentMethod)
+        await sepetiYenile()
+        navigate(`/odeme-basarili?order_id=${encodeURIComponent(response.siparis_id)}`)
+        return
+      }
       if (response.token) {
         setPaymentToken(response.token)
         setShowPaymentIframe(true)
@@ -152,7 +175,7 @@ export default function Sepet() {
       const code = response.error?.code || ''
       if (CHECKOUT_TERMINAL_CODES.has(code)) {
         checkoutAttempt.current = null
-        storeAttempt(null)
+        storeAttempt(null, paymentMethod)
       }
       if (code === 'CART_VERSION_MISMATCH') await sepetiYenile()
       if (code === 'DELIVERY_CONTACT_REQUIRED') {
@@ -383,11 +406,20 @@ export default function Sepet() {
                 />
               </div>
 
+              <fieldset className="mb-4 min-w-0 space-y-3">
+                <legend className="mb-2 font-bold">Ödeme yöntemi</legend>
+                {methods.map(method => <label key={method} className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm">
+                  <input type="radio" name="paymentMethod" value={method} checked={paymentMethod === method} disabled={loading} onChange={() => { setPaymentMethod(method); checkoutAttempt.current = null }} />
+                  {PAYMENT_METHOD_LABELS[method]}
+                </label>)}
+                {!methods.length && <p role="status" className="text-sm text-amber-800">{settingsError ? 'Ödeme bilgileri alınamadı. Sayfayı yenileyin.' : paymentSettings ? 'Şu anda açık bir ödeme yöntemi bulunmuyor.' : 'Ödeme bilgileri yükleniyor…'}</p>}
+                {paymentMethod === 'havale' && methods.includes('havale') && paymentSettings && <BankTransferDetails details={paymentSettings} />}
+              </fieldset>
               {user ? (
                 <button
                   type="button"
                   onClick={handleOdemeYap}
-                  disabled={loading || sepetMesgul}
+                  disabled={loading || sepetMesgul || !methods.includes(paymentMethod)}
                   className="shop-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? (
@@ -398,7 +430,7 @@ export default function Sepet() {
                   ) : (
                     <>
                       <CreditCard className="h-5 w-5" />
-                      Ödemeye geç
+                      {paymentMethod === 'havale' ? 'Havale ile sipariş oluştur' : 'Ödemeye geç'}
                     </>
                   )}
                 </button>
@@ -409,7 +441,7 @@ export default function Sepet() {
               )}
 
               <p className="mt-3 text-center text-xs leading-5 text-zinc-500">
-                Ödeme PayTR üzerinden güvenli sayfada tamamlanır.
+                {paymentMethod === 'havale' ? 'Sipariş oluşturunca tutar ve transfer açıklaması gösterilir. Ödemeniz onaylanana kadar sipariş havale bekler.' : 'Ödeme PayTR üzerinden güvenli sayfada tamamlanır.'}
               </p>
             </div>
           </aside>

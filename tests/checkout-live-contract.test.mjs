@@ -10,7 +10,7 @@ test('canlı ödeme isteği backend tarafından zorunlu tutulan deneme anahtarı
 
 test('ödeme cevap kaybı ve devam eden denemede aynı anahtarla yeniden denenir', () => {
   assert.match(checkout, /nextCheckoutAttempt\(/)
-  assert.match(checkout, /checkoutAttempt\.current\s*\|\|\s*readStoredAttempt\(\)/)
+  assert.match(checkout, /checkoutAttempt\.current\s*\|\|\s*readStoredAttempt\(paymentMethod\)/)
   assert.match(checkout, /CHECKOUT_IN_PROGRESS/)
-  assert.match(checkout, /response = await invokePayment\(attempt\)/)
+  assert.match(checkout, /response = await invokePayment\(attempt, paymentMethod\)/)
 })
