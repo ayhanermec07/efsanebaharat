@@ -323,7 +323,7 @@ export default function Hesabim() {
                   <div key={siparis.id} className="border rounded-lg p-4 hover:shadow-md transition">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                       <div>
-                        <p className="font-semibold text-gray-900">
+                        <p className="break-all font-semibold text-gray-900">
                           Sipariş No: {siparis.siparis_no}
                         </p>
                         <p className="text-sm text-gray-600">
