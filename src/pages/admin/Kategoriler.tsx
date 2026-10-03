@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { publicSupabase, supabase } from '../../lib/supabase'
-import { Plus, Edit, Trash2, Save, X } from 'lucide-react'
+import { Plus, Edit, Trash2, Save } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { ImageUpload } from '../../components/ImageUpload'
 import { taxonomyPageRange, taxonomySearchPattern, TAXONOMY_PAGE_SIZE } from '../../lib/admin-taxonomy-query'
+import { getCategoryBranchIds, getCategoryPath, loadCategories } from '../../lib/category-hierarchy'
+import type { CatalogCategory } from '../../lib/catalog'
+import AccessibleModal from '../../components/admin/AccessibleModal'
 
 export default function Kategoriler() {
   const [kategoriler, setKategoriler] = useState<any[]>([])
@@ -16,6 +19,10 @@ export default function Kategoriler() {
   const [refresh, setRefresh] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [allCategories, setAllCategories] = useState<CatalogCategory[]>([])
+  const [optionsLoading, setOptionsLoading] = useState(true)
+  const [optionsError, setOptionsError] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
     kategori_adi: '',
     aciklama: '',
@@ -24,6 +31,24 @@ export default function Kategoriler() {
     aktif_durum: true,
     gorsel_url: ''
   })
+
+  const parentOptions = useMemo(() => {
+    const excluded = editingId ? getCategoryBranchIds(allCategories, editingId) : new Set<string>()
+    return allCategories.filter(category => !excluded.has(category.id))
+      .map(category => ({ ...category, label: getCategoryPath(allCategories, category.id).map(parent => parent.kategori_adi).join(' → ') }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'tr'))
+  }, [allCategories, editingId])
+
+  useEffect(() => {
+    let active = true
+    setOptionsLoading(true)
+    setOptionsError(false)
+    loadCategories(supabase, false)
+      .then(categories => { if (active) setAllCategories(categories) })
+      .catch(() => { if (active) setOptionsError(true) })
+      .finally(() => { if (active) setOptionsLoading(false) })
+    return () => { active = false }
+  }, [refresh])
 
   useEffect(() => {
     let active = true
@@ -60,7 +85,13 @@ export default function Kategoriler() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (saving || optionsLoading || optionsError) return
+    if (formData.ust_kategori_id && !parentOptions.some(category => category.id === formData.ust_kategori_id)) {
+      toast.error('Geçerli bir üst kategori seçin. Kategori kendisine veya alt kategorisine bağlanamaz.')
+      return
+    }
 
+    setSaving(true)
     try {
       if (editingId) {
         const { error } = await supabase
@@ -85,10 +116,20 @@ export default function Kategoriler() {
     } catch (error: any) {
       console.error('Kategori kayıt hatası:', error)
       toast.error('Hata: ' + (error.message || 'Bilinmeyen hata'))
+    } finally {
+      setSaving(false)
     }
   }
 
   async function handleDelete(id: string) {
+    if (optionsLoading || optionsError) {
+      toast.error('Kategori ilişkileri yüklenmeden silme yapılamaz. Lütfen tekrar deneyin.')
+      return
+    }
+    if (allCategories.some(category => category.ust_kategori_id === id)) {
+      toast.error('Önce bu kategorinin alt kategorilerini başka bir üst kategoriye taşıyın.')
+      return
+    }
     if (!confirm('Bu kategoriyi silmek istediğinizden emin misiniz?')) return
 
     try {
@@ -133,6 +174,14 @@ export default function Kategoriler() {
     setModalOpen(false)
   }
 
+  function categoryRelationship(category: CatalogCategory) {
+    if (!category.ust_kategori_id) return 'Ana kategori'
+    if (optionsLoading) return 'Kategori yolu yükleniyor…'
+    if (optionsError) return 'Kategori yolu yüklenemedi'
+    if (!allCategories.some(parent => parent.id === category.ust_kategori_id)) return 'Alt kategori · Üst kategori bulunamadı'
+    return getCategoryPath(allCategories, category.id).map(parent => parent.kategori_adi).join(' → ')
+  }
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6 lg:mb-8">
@@ -167,7 +216,7 @@ export default function Kategoriler() {
         <div className="space-y-2 sm:hidden">
           {kategoriler.map(kategori => <div key={kategori.id} className="min-w-0 rounded-lg bg-white p-4 shadow-sm">
             <div className="flex min-w-0 items-start justify-between gap-3">
-              <div className="min-w-0"><p className="break-words text-sm font-semibold text-gray-900">{kategori.kategori_adi}</p><p className="mt-1 text-xs text-gray-500">Sıra {kategori.sira_no}</p></div>
+              <div className="min-w-0"><p className="break-words text-sm font-semibold text-gray-900">{kategori.kategori_adi}</p><p className="mt-1 break-words text-xs text-gray-600">{categoryRelationship(kategori)}</p><p className="mt-1 text-xs text-gray-500">Sıra {kategori.sira_no}</p></div>
               <span className={`shrink-0 rounded-full px-2 py-1 text-xs ${kategori.aktif_durum ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{kategori.aktif_durum ? 'Aktif' : 'Pasif'}</span>
             </div>
             {kategori.aciklama && <p className="mt-2 break-words text-sm text-gray-600">{kategori.aciklama}</p>}
@@ -191,7 +240,7 @@ export default function Kategoriler() {
             <tbody className="divide-y">
               {kategoriler.map((kategori) => (
                 <tr key={kategori.id}>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{kategori.kategori_adi}</td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900"><span className="break-words">{kategori.kategori_adi}</span><p className="mt-1 break-words text-xs font-normal text-gray-600">{categoryRelationship(kategori)}</p></td>
                   <td className="px-6 py-4 text-sm text-gray-600">{kategori.aciklama || '-'}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{kategori.sira_no}</td>
                   <td className="px-6 py-4 text-sm">
@@ -229,23 +278,12 @@ export default function Kategoriler() {
       </div>}
 
       {/* Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-50 p-0 sm:items-center sm:p-4">
-          <div className="max-h-[100dvh] w-full max-w-lg overflow-y-auto bg-white sm:max-h-[90vh] sm:rounded-lg">
-            <div className="p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {editingId ? 'Kategori Düzenle' : 'Yeni Kategori Ekle'}
-                </h2>
-                <button type="button" onClick={resetForm} aria-label="Kategori penceresini kapat" className="inline-flex min-h-10 min-w-10 items-center justify-center text-gray-400 hover:text-gray-600">
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
+      <AccessibleModal open={modalOpen} title={editingId ? 'Kategori Düzenle' : 'Yeni Kategori Ekle'} onClose={resetForm} className="max-w-lg">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Kategori Adı</label>
+                  <label htmlFor="kategori-adi" className="block text-sm font-medium text-gray-700 mb-2">Kategori Adı</label>
                   <input
+                    id="kategori-adi"
                     type="text"
                     value={formData.kategori_adi}
                     onChange={(e) => setFormData({ ...formData, kategori_adi: e.target.value })}
@@ -257,6 +295,18 @@ export default function Kategoriler() {
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
                   <p className="text-xs text-gray-500 mt-1">En az 2, en fazla 100 karakter</p>
+                </div>
+
+                <div>
+                  <label htmlFor="ust-kategori" className="mb-2 block text-sm font-medium text-gray-700">Üst kategori</label>
+                  <select id="ust-kategori" value={formData.ust_kategori_id || ''} onChange={event => setFormData({ ...formData, ust_kategori_id: event.target.value || null })} disabled={optionsLoading || optionsError || saving} className="shop-input min-w-0">
+                    <option value="">Ana kategori (üst kategori yok)</option>
+                    {formData.ust_kategori_id && !parentOptions.some(category => category.id === formData.ust_kategori_id) && <option value={formData.ust_kategori_id}>Mevcut üst kategori · Seçimi kontrol edin</option>}
+                    {parentOptions.map(category => <option key={category.id} value={category.id}>{category.label}</option>)}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">Ana kategori için boş bırakın; alt kategori için bağlı olduğu kategoriyi seçin.</p>
+                  {optionsLoading && <p role="status" className="mt-2 text-sm text-gray-600">Kategori ilişkileri yükleniyor…</p>}
+                  {optionsError && <p role="alert" className="mt-2 text-sm text-red-700">Kategori ilişkileri yüklenemedi. <button type="button" onClick={() => setRefresh(value => value + 1)} className="min-h-10 px-2 underline">Tekrar dene</button></p>}
                 </div>
 
                 <div>
@@ -308,10 +358,11 @@ export default function Kategoriler() {
                 <div className="flex space-x-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2"
+                    disabled={saving || optionsLoading || optionsError}
+                    className="min-h-11 flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2 disabled:opacity-50"
                   >
                     <Save className="w-5 h-5" />
-                    <span>{editingId ? 'Güncelle' : 'Kaydet'}</span>
+                    <span>{saving ? 'Kaydediliyor…' : editingId ? 'Güncelle' : 'Kaydet'}</span>
                   </button>
                   <button
                     type="button"
@@ -322,10 +373,7 @@ export default function Kategoriler() {
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        </div>
-      )}
+      </AccessibleModal>
     </div>
   )
 }

@@ -1,12 +1,14 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { ChevronDown, LayoutDashboard, LogOut, Menu, Search, ShoppingBag, Sprout, User, X } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
 import { useTheme } from '../contexts/ThemeContext'
-import { supabase } from '../lib/supabase'
+import { publicSupabase } from '../lib/supabase'
 import { getImageUrl } from '../utils/imageUtils'
-import { loadPublicCatalog } from '../lib/catalog'
+import { loadPublicCatalog, type CatalogCategory } from '../lib/catalog'
+import { buildCategoryTree, loadCategories } from '../lib/category-hierarchy'
+import CategoryNavigation from './CategoryNavigation'
 import { formatPrice } from '../lib/currency'
 import AccessibleModal from './admin/AccessibleModal'
 
@@ -29,7 +31,9 @@ export default function Header() {
   const [searchLoading, setSearchLoading] = useState(false)
   const [showCategoryMenu, setShowCategoryMenu] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [kategoriler, setKategoriler] = useState<any[]>([])
+  const [kategoriler, setKategoriler] = useState<CatalogCategory[]>([])
+  const [categoryLoadError, setCategoryLoadError] = useState(false)
+  const categoryTree = useMemo(() => buildCategoryTree(kategoriler), [kategoriler])
   const navigate = useNavigate()
 
   const searchContainerRef = useRef<HTMLDivElement>(null)
@@ -70,14 +74,12 @@ export default function Header() {
   }, [])
 
   async function loadKategoriler() {
-    const { data } = await supabase
-      .from('kategoriler')
-      .select('id, kategori_adi')
-      .eq('aktif_durum', true)
-      .is('ust_kategori_id', null)
-      .order('sira_no')
-
-    if (data) setKategoriler(data)
+    setCategoryLoadError(false)
+    try {
+      setKategoriler(await loadCategories(publicSupabase, true))
+    } catch {
+      setCategoryLoadError(true)
+    }
   }
 
   async function performSearch(query: string) {
@@ -205,21 +207,12 @@ export default function Header() {
                 <ChevronDown className="h-4 w-4" />
               </button>
               {showCategoryMenu && (
-                <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-xl">
+                <div className="absolute right-0 mt-2 w-72 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-xl">
                   <Link to="/urunler" onClick={closeMenus} className="block px-4 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-50">
                     Tüm ürünler
                   </Link>
-                  <div className="max-h-80 overflow-y-auto border-t border-zinc-100 py-1">
-                    {kategoriler.map((kategori) => (
-                      <Link
-                        key={kategori.id}
-                        to={`/urunler?kategori=${kategori.id}`}
-                        onClick={closeMenus}
-                        className="block px-4 py-2 text-sm text-zinc-700 hover:bg-emerald-50 hover:text-emerald-900"
-                      >
-                        {kategori.kategori_adi}
-                      </Link>
-                    ))}
+                  <div className="max-h-[min(24rem,50dvh)] overflow-y-auto overscroll-contain border-t border-zinc-100 p-2">
+                    {categoryLoadError ? <button type="button" onClick={loadKategoriler} className="min-h-11 px-2 text-sm text-red-700">Kategoriler yüklenemedi. Tekrar dene</button> : <CategoryNavigation nodes={categoryTree} onNavigate={closeMenus} />}
                   </div>
                 </div>
               )}
@@ -395,11 +388,7 @@ export default function Header() {
               <div className="rounded-lg bg-zinc-50 p-3">
                 <div className="mb-2 text-xs font-bold uppercase tracking-wide text-zinc-500">Kategoriler</div>
                 <div className="grid gap-1">
-                  {kategoriler.slice(0, 8).map((kategori) => (
-                    <Link key={kategori.id} to={`/urunler?kategori=${kategori.id}`} onClick={closeMenus} className="rounded-md px-2 py-2 text-sm text-zinc-700 hover:bg-white">
-                  {kategori.kategori_adi}
-                    </Link>
-                  ))}
+                  {categoryLoadError ? <button type="button" onClick={loadKategoriler} className="min-h-11 px-2 text-left text-sm text-red-700">Kategoriler yüklenemedi. Tekrar dene</button> : <CategoryNavigation nodes={categoryTree} onNavigate={closeMenus} />}
                 </div>
               </div>
               {user ? (

@@ -28,6 +28,6 @@ jobs:
       - run: node ./node_modules/eslint/bin/eslint.js .
       # preflight.test.mjs requires the separate Supabase repository; the
       # standalone frontend acceptance tests run in this checkout.
-      - run: node --test tests/payment-methods.test.mjs tests/theme.test.mjs tests/seo.test.mjs tests/product-detail-null-metadata.test.mjs tests/product-deactivation.test.mjs tests/login-redirect.test.mjs tests/local-supabase-credentials.test.mjs tests/gram-price-discount.test.mjs tests/cart-commands.test.mjs tests/admin-taxonomy-query.test.mjs tests/admin-orders-query.test.mjs tests/admin-management-query.test.mjs tests/account-orders.test.mjs tests/customer-management.test.mjs tests/checkout-live-contract.test.mjs tests/dashboard-live-contract.test.mjs tests/dealer-sales-csv.test.mjs
+      - run: node --test tests/category-hierarchy.test.mjs tests/payment-methods.test.mjs tests/theme.test.mjs tests/seo.test.mjs tests/product-detail-null-metadata.test.mjs tests/product-deactivation.test.mjs tests/login-redirect.test.mjs tests/local-supabase-credentials.test.mjs tests/gram-price-discount.test.mjs tests/cart-commands.test.mjs tests/admin-taxonomy-query.test.mjs tests/admin-orders-query.test.mjs tests/admin-management-query.test.mjs tests/account-orders.test.mjs tests/customer-management.test.mjs tests/checkout-live-contract.test.mjs tests/dashboard-live-contract.test.mjs tests/dealer-sales-csv.test.mjs
       - run: npm run build
 

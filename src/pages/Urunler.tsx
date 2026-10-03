@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { AlertCircle, ArrowUpDown, Loader2, PackageSearch, RotateCcw, Search, SlidersHorizontal, Tag, X } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
 import { useAuth } from '../contexts/AuthContext'
+import { buildCategoryTree, getCategoryBranchIds, getCategoryPath, loadCategories } from '../lib/category-hierarchy'
+import { publicSupabase } from '../lib/supabase'
 import {
   CATALOG_SORTS,
   isCatalogSort,
@@ -49,6 +51,15 @@ export default function Urunler() {
   const [reloadKey, setReloadKey] = useState(0)
   const pageControllerRef = useRef<AbortController | null>(null)
   const metaLoadedRef = useRef(false)
+  const categoryTree = useMemo(() => buildCategoryTree(kategoriler), [kategoriler])
+  const categoryPath = useMemo(() => getCategoryPath(kategoriler, kategori), [kategoriler, kategori])
+  const mainCategoryId = categoryPath[0]?.id || kategori
+  const subCategories = useMemo(() => {
+    const branch = getCategoryBranchIds(kategoriler, mainCategoryId)
+    return kategoriler.filter(category => category.id !== mainCategoryId && branch.has(category.id))
+      .map(category => ({ ...category, label: getCategoryPath(kategoriler, category.id).slice(1).map(parent => parent.kategori_adi).join(' → ') }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'tr'))
+  }, [kategoriler, mainCategoryId])
 
   const updateParams = useCallback((values: Partial<Record<FilterKey, string>>, replace = false) => {
     setSearchParams((current) => {
@@ -85,16 +96,17 @@ export default function Urunler() {
     setLoadMoreError(null)
     setCampaignInvalid(false)
 
-    loadPublicCatalog({
+    const includeMeta = !metaLoadedRef.current
+    Promise.all([loadPublicCatalog({
       q, kategori, marka, kampanya, sirala,
       limit: PAGE_SIZE,
-      meta: !metaLoadedRef.current,
-    }, controller.signal)
-      .then((page) => {
+      meta: includeMeta,
+    }, controller.signal), includeMeta ? loadCategories(publicSupabase, true) : Promise.resolve(null)])
+      .then(([page, categories]) => {
         if (controller.signal.aborted) return
-        if (page.kategoriler) setKategoriler(page.kategoriler)
+        if (categories) setKategoriler(categories)
         if (page.markalar) setMarkalar(page.markalar)
-        if (page.kategoriler || page.markalar) metaLoadedRef.current = true
+        if (categories && page.markalar) metaLoadedRef.current = true
         setUrunler(page.urunler)
         setToplam(page.toplam)
         setSonrakiImlec(page.sonrakiImlec)
@@ -210,21 +222,31 @@ export default function Urunler() {
                 </div>
               </label>
 
-              <label className="block">
-                <span className="mb-1.5 block text-sm font-bold text-zinc-700">Kategori</span>
+              <div className="min-w-0">
+                <label htmlFor="catalog-main-category" className="mb-1.5 block text-sm font-bold text-zinc-700">Ana kategori</label>
                 <select
-                  value={kategori}
+                  id="catalog-main-category"
+                  value={mainCategoryId}
                   onChange={(e) => updateParams({ kategori: e.target.value })}
                   className="shop-input"
                 >
                   <option value="">Tüm kategoriler</option>
-                  {kategoriler.map((kat) => (
-                    <option key={kat.id} value={kat.id}>
-                      {kat.kategori_adi}
+                  {kategori && !categoryPath.length && <option value={kategori}>Seçili kategori</option>}
+                  {categoryTree.map(({ category }) => (
+                    <option key={category.id} value={category.id}>
+                      {category.kategori_adi}
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
+
+              {subCategories.length > 0 && <div className="min-w-0">
+                <label htmlFor="catalog-sub-category" className="mb-1.5 block text-sm font-bold text-zinc-700">Alt kategori</label>
+                <select id="catalog-sub-category" value={kategori === mainCategoryId ? '' : kategori} onChange={event => updateParams({ kategori: event.target.value || mainCategoryId })} className="shop-input">
+                  <option value="">Tüm alt kategoriler</option>
+                  {subCategories.map(category => <option key={category.id} value={category.id}>{category.label}</option>)}
+                </select>
+              </div>}
 
               <label className="block">
                 <span className="mb-1.5 block text-sm font-bold text-zinc-700">Marka</span>
@@ -265,6 +287,7 @@ export default function Urunler() {
         <section className="min-w-0">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
+              {categoryPath.length > 0 && <p className="mb-1 break-words text-sm text-brand-muted" aria-label="Kategori yolu">{categoryPath.map(category => category.kategori_adi).join(' → ')}</p>}
               <p className="text-sm font-bold text-zinc-600" aria-live="polite">
                 {loading
                   ? 'Ürünler yükleniyor'
