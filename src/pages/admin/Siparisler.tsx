@@ -185,7 +185,7 @@ export default function Siparisler() {
     'iptal_edildi': 'bg-red-100 text-red-800'
   }
   const durumEtiketleri: Record<string, string> = {
-    beklemede: 'Beklemede', hazirlaniyor: 'Hazırlanıyor', kargoda: 'Kargoda',
+    odeme_bekleniyor: 'Ödeme bekleniyor', beklemede: 'Beklemede', hazirlaniyor: 'Hazırlanıyor', kargoda: 'Kargoda',
     teslim_edildi: 'Teslim Edildi', iptal_edildi: 'İptal Edildi'
   }
   const izinliDurumlar = (siparis: any) => {
