@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Plus, Edit, Trash2, Save, X, Package } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -20,6 +20,8 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const savingRef = useRef(false)
   const [formData, setFormData] = useState({
     birim_turu: 'gram',
     birim_adedi: 100,
@@ -92,6 +94,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (savingRef.current) return
     
     // Birim uyumluluğu kontrolü
     if (!birimUyumluMu(formData.birim_turu, formData.birim_adedi_turu)) {
@@ -99,6 +102,8 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
       return
     }
     
+    savingRef.current = true
+    setSaving(true)
     try {
       const stokData = {
         birim_turu: formData.birim_turu,
@@ -123,12 +128,17 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
     } catch (error: any) {
       console.error('Stok kayıt hatası:', error)
       toast.error('Hata: ' + (error.message || 'Bilinmeyen hata'))
+    } finally {
+      savingRef.current = false
+      setSaving(false)
     }
   }
 
   async function handleDelete(id: string) {
+    if (savingRef.current) return
     if (!confirm('Bu stok kaydını silmek istediğinizden emin misiniz?')) return
-    
+    savingRef.current = true
+    setSaving(true)
     try {
       await stoklariKaydet(stoklar.filter(stok => stok.id !== id))
       
@@ -137,6 +147,9 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
     } catch (error: any) {
       console.error('Stok silme hatası:', error)
       toast.error('Hata: ' + (error.message || 'Bilinmeyen hata'))
+    } finally {
+      savingRef.current = false
+      setSaving(false)
     }
   }
 
@@ -193,7 +206,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
           </h3>
           <p className="text-gray-600 mt-1 break-words">{urunAdi}</p>
         </div>
-        <button
+        <button disabled={saving || loading}
           onClick={() => setModalOpen(true)}
           className="w-full sm:w-auto min-h-10 bg-brand text-white px-4 py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center gap-2"
         >
@@ -274,13 +287,13 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex space-x-2">
-                      <button
+                      <button disabled={saving || loading}
                         onClick={() => handleEdit(stok)}
                         className="text-blue-600 hover:text-blue-800"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
-                      <button
+                      <button disabled={saving || loading}
                         onClick={() => handleDelete(stok.id)}
                         className="text-red-600 hover:text-red-800"
                       >
@@ -304,7 +317,7 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                 <h2 className="text-xl font-bold text-gray-900">
                   {editingId ? 'Stok Düzenle' : 'Yeni Stok Ekle'}
                 </h2>
-                <button onClick={resetForm} className="min-h-10 min-w-10 text-gray-400 hover:text-gray-600" aria-label="Stok formunu kapat">
+                <button disabled={saving || loading} onClick={resetForm} className="min-h-10 min-w-10 text-gray-400 hover:text-gray-600" aria-label="Stok formunu kapat">
                   <X className="w-6 h-6" />
                 </button>
               </div>
@@ -485,14 +498,14 @@ export default function StokYonetimi({ urunId, urunAdi }: StokYonetimiProps) {
                 </div>
 
                 <div className="flex space-x-4 pt-4">
-                  <button
+                  <button disabled={saving || loading}
                     type="submit"
                     className="flex-1 bg-brand text-white py-2 rounded-lg hover:bg-emerald-800 transition flex items-center justify-center space-x-2"
                   >
                     <Save className="w-4 h-4" />
                     <span>{editingId ? 'Güncelle' : 'Kaydet'}</span>
                   </button>
-                  <button
+                  <button disabled={saving || loading}
                     type="button"
                     onClick={resetForm}
                     className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition"

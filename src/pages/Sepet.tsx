@@ -4,6 +4,8 @@ import toast from 'react-hot-toast'
 import { AlertCircle, CreditCard, LockKeyhole, Minus, Plus, RotateCcw, ShoppingBag, Trash2 } from 'lucide-react'
 import { availablePaymentMethods, checkoutStorageKey, PAYMENT_METHOD_LABELS, type PaymentMethod, type PaymentSettings } from '../lib/payment-methods'
 import BankTransferDetails from '../components/BankTransferDetails'
+import SellerInformation from '../components/SellerInformation'
+import { usesConsumerCheckout } from '../lib/business-info'
 import KampanyaUygula from '../components/KampanyaUygula'
 import { useAuth } from '../contexts/AuthContext'
 import { useSepet } from '../contexts/SepetContext'
@@ -11,10 +13,15 @@ import { CHECKOUT_TERMINAL_CODES, cartVersion, nextCheckoutAttempt, type Checkou
 import { formatPrice } from '../lib/currency'
 import { supabase } from '../lib/supabase'
 import { akilliBirimGoster } from '../utils/birimDonusturucu'
+import CheckoutReviewPanel from '../components/CheckoutReview'
+import type { CheckoutReview } from '../lib/commerce'
 
 const IN_PROGRESS_RETRIES = 5
 
 type PaymentResponse = {
+  review_id?: string
+  expires_at?: string
+  snapshot?: CheckoutReview['snapshot']
   action?: string
   token?: string
   siparis_id?: string
@@ -39,9 +46,9 @@ function storeAttempt(attempt: CheckoutAttempt | null, method: PaymentMethod) {
   }
 }
 
-async function invokePayment(attempt: CheckoutAttempt, paymentMethod: PaymentMethod): Promise<PaymentResponse> {
+async function invokePayment(attempt: CheckoutAttempt, paymentMethod: PaymentMethod, review?: CheckoutReview, preview=false): Promise<PaymentResponse> {
   const { data, error } = await supabase.functions.invoke('paytr-payment', {
-    body: { paymentMethod, idempotencyKey: attempt.key, cartVersion: attempt.cartVersion, kampanyaKodu: attempt.kampanyaKodu || null },
+    body: { paymentMethod, idempotencyKey: attempt.key, cartVersion: attempt.cartVersion, kampanyaKodu: attempt.kampanyaKodu || null, ...(preview?{phase:'preview'}:{reviewId:review?.review_id,reviewAccepted:Boolean(review)}) },
   })
   if (!error) return (data || {}) as PaymentResponse
   const context = (error as { context?: Response }).context
@@ -99,8 +106,26 @@ export default function Sepet() {
   const [uygulananKampanya, setUygulananKampanya] = useState<any>(null)
   const [kampanyaIndirimi, setKampanyaIndirimi] = useState(0)
   const checkoutAttempt = useRef<CheckoutAttempt | null>(null)
+  const [review,setReview]=useState<CheckoutReview|null>(null)
+  const [reviewAccepted,setReviewAccepted]=useState(false)
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('havale')
+  const recoveredAttempts = useRef(new Set<string>())
+  useEffect(() => {
+    if (!user) return
+    const attempt = readStoredAttempt(paymentMethod)
+    if (!attempt || recoveredAttempts.current.has(attempt.key)) return
+    recoveredAttempts.current.add(attempt.key)
+    // A committed order can clear the cart before its HTTP response arrives.
+    // Replay the stored key on reload; the server rejects any new unreviewed order.
+    void invokePayment(attempt, paymentMethod).then(response => {
+      if (response.action === 'order_created' && response.siparis_id) {
+        storeAttempt(null, paymentMethod)
+        navigate(`/odeme-basarili?order_id=${encodeURIComponent(response.siparis_id)}`)
+      }
+    })
+  }, [user, paymentMethod, navigate])
+  useEffect(()=>{setReview(null);setReviewAccepted(false)},[sepetItems,paymentMethod,uygulananKampanya])
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null)
   const [settingsError, setSettingsError] = useState(false)
   useEffect(() => {
@@ -153,10 +178,16 @@ export default function Sepet() {
       checkoutAttempt.current = attempt
       storeAttempt(attempt, paymentMethod)
 
-      let response = await invokePayment(attempt, paymentMethod)
+      if (!review) {
+        const response=await invokePayment(attempt,paymentMethod,undefined,true)
+        if(response.review_id&&response.expires_at&&response.snapshot){setReview({review_id:response.review_id,expires_at:response.expires_at,snapshot:response.snapshot});setReviewAccepted(false);return}
+        toast.error(response.error?.message||'Sipariş bilgileri alınamadı. Lütfen tekrar deneyin.');return
+      }
+      if(!reviewAccepted){toast.error('Sipariş bilgilerini okuyup teyit edin.');return}
+      let response = await invokePayment(attempt, paymentMethod,review)
       for (let retry = 0; retry < IN_PROGRESS_RETRIES && response.error?.code === 'CHECKOUT_IN_PROGRESS'; retry++) {
         await new Promise((resolve) => window.setTimeout(resolve, 1500))
-        response = await invokePayment(attempt, paymentMethod)
+        response = await invokePayment(attempt, paymentMethod,review)
       }
 
       if (response.action === 'order_created' && response.siparis_id) {
@@ -173,6 +204,7 @@ export default function Sepet() {
       }
 
       const code = response.error?.code || ''
+      if(['CHECKOUT_REVIEW_CHANGED','CHECKOUT_REVIEW_EXPIRED','CHECKOUT_REVIEW_REQUIRED'].includes(code)){setReview(null);setReviewAccepted(false)}
       if (CHECKOUT_TERMINAL_CODES.has(code)) {
         checkoutAttempt.current = null
         storeAttempt(null, paymentMethod)
@@ -415,11 +447,22 @@ export default function Sepet() {
                 {!methods.length && <p role="status" className="text-sm text-amber-800">{settingsError ? 'Ödeme bilgileri alınamadı. Sayfayı yenileyin.' : paymentSettings ? 'Şu anda açık bir ödeme yöntemi bulunmuyor.' : 'Ödeme bilgileri yükleniyor…'}</p>}
                 {paymentMethod === 'havale' && methods.includes('havale') && paymentSettings && <BankTransferDetails details={paymentSettings} />}
               </fieldset>
+              {usesConsumerCheckout(musteriData?.musteri_tipi) && <section data-testid="consumer-checkout-information" className="mb-4 min-w-0 space-y-3 rounded-lg border border-zinc-200 p-3 text-sm">
+                <h3 className="font-bold">Satıcı ve tüketici bilgileri</h3>
+                <SellerInformation />
+                <div className="flex flex-col gap-1">
+                  <Link to="/on-bilgilendirme" className="inline-flex min-h-11 items-center underline">Ön Bilgilendirme Formu</Link>
+                  <Link to="/mesafeli-satis-sozlesmesi" className="inline-flex min-h-11 items-center underline">Mesafeli Satış Sözleşmesi</Link>
+                  <Link to="/iade-iptal-cayma" className="inline-flex min-h-11 items-center underline">İade / İptal / Cayma Hakkı</Link>
+                </div>
+                <p className="break-words text-sm">Siparişe özel yürürlükteki koşullar son inceleme adımında gösterilir.</p>
+              </section>}
+              {review&&<CheckoutReviewPanel review={review} accepted={reviewAccepted} onAccept={setReviewAccepted}/>}
               {user ? (
                 <button
                   type="button"
                   onClick={handleOdemeYap}
-                  disabled={loading || sepetMesgul || !methods.includes(paymentMethod)}
+                  disabled={loading || sepetMesgul || !methods.includes(paymentMethod) || Boolean(review&&!reviewAccepted)}
                   className="shop-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? (
@@ -430,7 +473,7 @@ export default function Sepet() {
                   ) : (
                     <>
                       <CreditCard className="h-5 w-5" />
-                      {paymentMethod === 'havale' ? 'Havale ile sipariş oluştur' : 'Ödemeye geç'}
+                      {!review?'Sipariş bilgilerini incele':paymentMethod === 'havale' ? 'Havale ile sipariş oluştur' : 'Ödemeye geç'}
                     </>
                   )}
                 </button>

@@ -6,6 +6,8 @@ import toast from 'react-hot-toast'
 import { akilliBirimGoster } from '../../utils/birimDonusturucu'
 import { orderPageRange, orderQueryFilters, ORDER_PAGE_SIZE } from '../../lib/admin-orders-query'
 import { formatPrice } from '../../lib/currency'
+import OrderReturn from '../../components/OrderReturn'
+import OrderDocumentDelivery from '../../components/admin/OrderDocumentDelivery'
 
 type OrderFilters = { search: string; status: string; from: string; to: string }
 const emptyFilters: OrderFilters = { search: '', status: '', from: '', to: '' }
@@ -342,6 +344,8 @@ export default function Siparisler() {
                   {secilenSiparis.adres && <p className="whitespace-pre-wrap break-words text-sm text-gray-600">Teslimat adresi: {secilenSiparis.adres}</p>}
                 </div>
 
+                <OrderReturn orderId={secilenSiparis.id} admin/>
+                <OrderDocumentDelivery orderId={secilenSiparis.id}/>
                 {secilenSiparis.siparis_fis_url && (
                   <div className="border-b pb-4">
                     <h3 className="font-semibold text-gray-900 mb-2">Sipariş Fişi</h3>

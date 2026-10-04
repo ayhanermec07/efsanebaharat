@@ -230,7 +230,7 @@ test('ürün ve stok eklenir, aynı stok kimliği düzenlenir ve ürün pasifle�
   ok(first, 'Eklenen stok'); expect(Number(first.data!.stok_miktari)).toBe(30)
   await page.getByLabel('Ürün adına göre ara').fill(name)
   await page.getByRole('button', { name: 'Ara', exact: true }).click()
-  await page.getByRole('button', { name: 'Düzenle', exact: true }).click()
+  await page.getByRole('button', { name: 'Düzenle', exact: true }).filter({ visible: true }).click()
   modal = page.getByRole('dialog')
   await page.getByLabel('1. seçenek stok miktarı', { exact: true }).fill('42')
   await page.getByLabel('1. seçenek fiyatı (TL)', { exact: true }).fill('14')
@@ -297,7 +297,9 @@ test('azalan stok ekranı ekler, düzenler, kaldırır ve son stok seçeneğini 
   await expect(page.getByRole('button', { name: 'Stok formunu kapat' })).not.toBeVisible()
   const added = await service.from('urun_stoklari').select('*').eq('urun_id', id).neq('id', originalId).single()
   ok(added, 'Yeni stok'); expect(Number(added.data!.stok_miktari)).toBe(7)
-  const addedRow = page.locator('tbody tr').filter({ hasText: '33' }).last()
+  const stockRows = page.locator('table').last().locator('tbody > tr')
+  await expect(stockRows).toHaveCount(2)
+  const addedRow = stockRows.filter({ has: page.getByText('33.00 ₺', { exact: true }) })
   await addedRow.getByRole('button').nth(0).click()
   form = page.locator('form').last()
   await form.locator('input[type=number]').nth(2).fill('9')
@@ -307,9 +309,10 @@ test('azalan stok ekranı ekler, düzenler, kaldırır ve son stok seçeneğini 
   ok(edited, 'Stok düzenleme'); expect(Number(edited.data!.stok_miktari)).toBe(9)
   await addedRow.getByRole('button').nth(1).click()
   await expect.poll(async () => (await service.from('urun_stoklari').select('id').eq('urun_id', id)).data?.length).toBe(1)
-  const remainingRow = page.locator('tbody tr').filter({ hasText: '10' }).last()
+  await expect(stockRows).toHaveCount(1)
+  const remainingRow = stockRows.first()
   await remainingRow.getByRole('button').nth(1).click()
-  await expect(page.getByText(/son stok|en az bir stok/i)).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: /son stok|en az bir stok/i }).first()).toBeVisible()
   expect((await service.from('urun_stoklari').select('id').eq('urun_id', id)).data).toEqual([{ id: originalId }])
   await overflow(page)
 })
@@ -317,15 +320,16 @@ test('azalan stok ekranı ekler, düzenler, kaldırır ve son stok seçeneğini 
 test('kategori ve marka oluşturulur düzenlenir silinir; bayi eklenir ve aktifliği düzenlenir', async ({ page }) => {
   test.setTimeout(90_000)
   for (const item of [
-    { table: 'kategoriler', field: 'kategori_adi', route: 'kategoriler', label: 'Kategori adı ara', newButton: 'Yeni Kategori Ekle', close: 'Kategori penceresini kapat' },
-    { table: 'markalar', field: 'marka_adi', route: 'markalar', label: 'Marka adı ara', newButton: 'Yeni Marka Ekle', close: 'Marka penceresini kapat' },
+    { table: 'kategoriler', field: 'kategori_adi', route: 'kategoriler', label: 'Kategori adı ara', newButton: 'Yeni Kategori Ekle' },
+    { table: 'markalar', field: 'marka_adi', route: 'markalar', label: 'Marka adı ara', newButton: 'Yeni Marka Ekle' },
   ]) {
     const name = `${prefix} CRUD ${item.route}`
     await page.goto(`/admin/${item.route}`)
     await page.getByRole('button', { name: item.newButton, exact: true }).click()
     await page.locator('form').last().locator('input[type=text]').first().fill(name)
     await page.locator('form').last().getByRole('button', { name: 'Kaydet', exact: true }).click()
-    await expect(page.getByRole('button', { name: item.close })).not.toBeVisible()
+    await expect(item.route === 'kategoriler' ? page.getByRole('dialog') : page.getByRole('button', { name: 'Marka penceresini kapat', exact: true })).not.toBeVisible()
+    await expect.poll(async () => (await service.from(item.table).select('id').eq(item.field, name)).data?.length).toBe(1)
     const created = await service.from(item.table).select('id').eq(item.field, name).single()
     ok(created, `${item.table} UI ekleme`)
     const id = created.data!.id; listFixtures.push({ table: item.table, ids: [id] })
@@ -335,7 +339,8 @@ test('kategori ve marka oluşturulur düzenlenir silinir; bayi eklenir ve aktifl
     await page.locator('form').last().locator('input[type=text]').first().fill(`${name} Updated`)
     await overflow(page)
     await page.locator('form').last().getByRole('button', { name: 'Güncelle', exact: true }).click()
-    await expect(page.getByRole('button', { name: item.close })).not.toBeVisible()
+    await expect(item.route === 'kategoriler' ? page.getByRole('dialog') : page.getByRole('button', { name: 'Marka penceresini kapat', exact: true })).not.toBeVisible()
+    await expect.poll(async () => (await service.from(item.table).select(item.field).eq('id', id).single()).data?.[item.field]).toBe(`${name} Updated`)
     const edited = await service.from(item.table).select('*').eq('id', id).single()
     ok(edited, `${item.table} UI düzenleme`); expect(edited.data![item.field]).toBe(`${name} Updated`)
     await page.getByRole('button', { name: 'Sil', exact: true }).filter({ visible: true }).click()

@@ -1,9 +1,14 @@
 import path from "path"
 import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
+import { defineConfig, loadEnv } from "vite"
+import { validateProductionConfig } from './scripts/production-config.mjs'
 import sourceIdentifierPlugin from 'vite-plugin-source-identifier'
 
-export default defineConfig(({ command }) => ({
+export default defineConfig(({ command, mode }) => {
+  if (command === 'build' && mode === 'production') {
+    validateProductionConfig({ ...loadEnv(mode, process.cwd(), 'VITE_'), ...process.env } as Record<string, string>)
+  }
+  return ({
   plugins: [
     react(),
     // Source identifiers assist local development but add significant work
@@ -32,4 +37,5 @@ export default defineConfig(({ command }) => ({
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
   },
-}))
+})
+})

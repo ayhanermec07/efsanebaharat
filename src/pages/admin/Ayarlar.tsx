@@ -7,12 +7,13 @@ import toast from 'react-hot-toast'
 import { Save, RefreshCw, Upload, Shield, Palette, UserPlus } from 'lucide-react'
 
 import PaymentSettings from '../../components/admin/PaymentSettings'
+import CommerceSettings from '../../components/admin/CommerceSettings'
 
 export default function Ayarlar() {
     const { theme, logo, siteInfo, updateTheme, updateLogo, updateSiteInfo } = useTheme()
     const { user } = useAuth()
 
-    const [activeTab, setActiveTab] = useState<'tasarim' | 'yoneticiler' | 'odemeler'>('tasarim')
+    const [activeTab, setActiveTab] = useState<'tasarim' | 'yoneticiler' | 'odemeler' | 'satis'>('tasarim')
 
     // Tasarım form state
     const [primaryColor, setPrimaryColor] = useState(theme.primaryColor)
@@ -241,6 +242,7 @@ export default function Ayarlar() {
                         Tasarım Ayarları
                     </button>
                     <button onClick={() => setActiveTab('odemeler')} className={`px-4 py-4 text-sm font-medium ${activeTab === 'odemeler' ? 'border-b-2 border-orange-500 text-orange-600 bg-orange-50' : 'text-gray-500'}`}>Ödeme Ayarları</button>
+                    <button onClick={()=>setActiveTab('satis')} className="min-h-11 px-4 py-4 text-sm font-medium">Satış ve Sözleşme</button>
                     <button
                         onClick={() => setActiveTab('yoneticiler')}
                         className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition ${activeTab === 'yoneticiler'
@@ -255,6 +257,7 @@ export default function Ayarlar() {
 
                 <div className="p-4 sm:p-6">
                     {activeTab === 'odemeler' && <PaymentSettings />}
+                    {activeTab === 'satis' && <CommerceSettings />}
                     {activeTab === 'tasarim' && (
                         <div className="max-w-xl space-y-8">
                             <div>

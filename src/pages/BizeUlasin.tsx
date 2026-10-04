@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { useTheme } from '../contexts/ThemeContext'
+import SellerInformation from '../components/SellerInformation'
 import { supabase } from '../lib/supabase'
-import { MessageSquare, Send, CheckCircle, Mail, MapPin, Phone } from 'lucide-react'
+import { MessageSquare, Send, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const KONULAR = [
@@ -16,7 +16,6 @@ const KONULAR = [
 
 export default function BizeUlasin() {
   const { user, loading: authLoading } = useAuth()
-  const { siteInfo } = useTheme()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   
@@ -117,13 +116,9 @@ export default function BizeUlasin() {
             </p>
           </div>
 
-          {(siteInfo.phone || siteInfo.email || siteInfo.address) && (
-            <div className="mb-6 grid gap-3 rounded-lg border border-gray-200 bg-white p-5 text-sm text-gray-700 sm:grid-cols-2">
-              {siteInfo.phone && <a href={`tel:${siteInfo.phone.replace(/[^+\d]/g, '')}`} className="flex min-w-0 items-center gap-2 break-words"><Phone className="h-5 w-5 shrink-0 text-orange-600" />{siteInfo.phone}</a>}
-              {siteInfo.email && <a href={`mailto:${siteInfo.email}`} className="flex min-w-0 items-center gap-2 break-all"><Mail className="h-5 w-5 shrink-0 text-orange-600" />{siteInfo.email}</a>}
-              {siteInfo.address && <p className="flex min-w-0 items-center gap-2 break-words sm:col-span-2"><MapPin className="h-5 w-5 shrink-0 text-orange-600" />{siteInfo.address}</p>}
-            </div>
-          )}
+          <section aria-label="İşletme ve iletişim bilgileri" className="mb-6 min-w-0 space-y-4 rounded-lg border border-gray-200 bg-white p-5 text-gray-700">
+            <SellerInformation variant="contact" />
+          </section>
 
           {/* Success Message */}
           {success && (

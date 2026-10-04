@@ -6,6 +6,8 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import Layout from './components/Layout'
 import SeoManager from './components/SeoManager'
 import OfflineNotice from './components/OfflineNotice'
+import { legalDocuments } from './lib/legal-documents'
+const YasalBilgiler = lazy(() => import('./pages/YasalBilgiler'))
 const AnaSayfa = lazy(() => import('./pages/AnaSayfa'))
 const Urunler = lazy(() => import('./pages/Urunler'))
 const UrunDetay = lazy(() => import('./pages/UrunDetay'))
@@ -75,6 +77,7 @@ function App() {
                 <Route path="/kampanyalar" element={<Kampanyalar />} />
                 <Route path="/bize-ulasin" element={<BizeUlasin />} />
                 <Route path="/sorularim" element={<Sorularim />} />
+                {legalDocuments.map(document => <Route key={document.path} path={document.path} element={<YasalBilgiler />} />)}
                 <Route path="*" element={<Bulunamadi />} />
               </Route>
 

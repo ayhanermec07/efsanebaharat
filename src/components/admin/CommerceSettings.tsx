@@ -1,0 +1,21 @@
+import {useEffect,useState} from 'react'
+import toast from 'react-hot-toast'
+import {supabase} from '../../lib/supabase'
+import {COMMERCE_DOCUMENT_TITLES} from '../../lib/commerce'
+type Configuration={id:boolean;version:string;seller:Record<string,string>;documents:Record<string,string>;shipping_mode:string;shipping_fee:number|null;free_shipping_threshold:number|null;consumer_ready:boolean;business_ready:boolean}
+export default function CommerceSettings(){
+ const [value,setValue]=useState<Configuration|null>(null);const [error,setError]=useState(false);const [busy,setBusy]=useState(false)
+ async function load(){setError(false);const r=await supabase.from('commerce_configuration').select('*').single();if(r.error){setError(true);return}setValue(r.data)}
+ useEffect(()=>{void load()},[])
+ async function save(e:React.FormEvent){e.preventDefault();if(!value||busy)return;setBusy(true);try{const {error}=await supabase.from('commerce_configuration').update({seller:value.seller,documents:value.documents,shipping_mode:value.shipping_mode,shipping_fee:value.shipping_fee,free_shipping_threshold:value.free_shipping_threshold,consumer_ready:value.consumer_ready,business_ready:value.business_ready}).eq('id',true);if(error)throw error;toast.success('Satış koşulları kaydedildi.');await load()}catch(e){toast.error(e instanceof Error?e.message:'Bilgiler eksik veya kayıt yapılamadı.')}finally{setBusy(false)}}
+ if(error)return <div role="alert"><p>Satış koşulları yüklenemedi.</p><button onClick={()=>void load()} className="shop-btn-secondary">Tekrar dene</button></div>
+ if(!value)return <p>Satış koşulları yükleniyor…</p>
+ const patch=(p:Partial<Configuration>)=>setValue({...value,...p})
+ return <form onSubmit={save} className="min-w-0 space-y-5"><h2 className="text-xl font-bold">Satış ve sözleşme koşulları</h2><p className="text-sm text-brand-muted">Yalnız doğrulanmış bilgiler girin. Hazır işaretlemesi final metinleri ve kargo kuralını yayınlar; yeni siparişler bu sürüme bağlanır. Eski siparişler değişmez.</p>
+ <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">{[['seller_name','Satıcı adı'],['address','Merkez / iade adresi'],['phone','Telefon'],['kep','KEP'],['tax_number','VKN'],['email','Normal müşteri e-postası'],['chamber','Bağlı oda'],['union','Bağlı birlik']].map(([key,label])=><label key={key} className="min-w-0 text-sm">{label}<input className="shop-input mt-1 w-full" value={value.seller[key]||''} onChange={e=>patch({seller:{...value.seller,[key]:e.target.value}})}/></label>)}</div>
+ <label className="block text-sm">Kargo ücret yöntemi<select className="shop-input mt-1 w-full" value={value.shipping_mode} onChange={e=>patch({shipping_mode:e.target.value})}><option value="unconfigured">Henüz belirlenmedi</option><option value="free">Ücretsiz</option><option value="flat">Sabit ücret</option></select></label>
+ <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{[['shipping_fee','Kargo ücreti (TL)'],['free_shipping_threshold','Ücretsiz kargo alt sınırı (TL, isteğe bağlı)']].map(([key,label])=><label className="text-sm" key={key}>{label}<input type="number" min="0" step="0.01" className="shop-input mt-1 w-full" value={value[key as 'shipping_fee']??''} onChange={e=>patch({[key]:e.target.value===''?null:Number(e.target.value)})}/></label>)}</div>
+ {Object.entries(COMMERCE_DOCUMENT_TITLES).map(([key,title])=><details className="min-w-0 rounded border border-brand-line p-3" key={key}><summary className="min-h-11 cursor-pointer font-semibold">{title}</summary><label className="block text-sm">Doğrulanmış nihai metin<textarea rows={12} className="shop-input mt-2 w-full" value={value.documents[key]||''} onChange={e=>patch({documents:{...value.documents,[key]:e.target.value}})}/></label></details>)}
+ <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" checked={value.consumer_ready} onChange={e=>patch({consumer_ready:e.target.checked})}/>Tüketici satış koşulları tamamlandı; satışa hazır.</label><label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" checked={value.business_ready} onChange={e=>patch({business_ready:e.target.checked})}/>Ticari satış koşulları tamamlandı; bayi satışına hazır.</label>
+ <button disabled={busy} className="shop-btn-primary w-full sm:w-auto">{busy?'Kaydediliyor…':'Satış koşullarını kaydet'}</button></form>
+}

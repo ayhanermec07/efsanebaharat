@@ -4,7 +4,7 @@ import { createRequire } from 'node:module'
 import test from 'node:test'
 
 const ts = createRequire(import.meta.url)('typescript')
-async function loadProduct(product) {
+async function loadProduct(product, stocks=[{ id: 'stock', fiyat:10, stok_grubu: 'hepsi', min_siparis_miktari: 1 }]) {
   const source = fs.readFileSync(new URL('../src/pages/UrunDetay.tsx', import.meta.url), 'utf8')
   const ast = ts.createSourceFile('UrunDetay.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
   let loader
@@ -27,7 +27,7 @@ async function loadProduct(product) {
       then(resolve, reject) { return Promise.resolve(result()).then(resolve, reject) },
     }
     const result = () => nullId ? { data: null, error: { message: 'invalid UUID null' } } : {
-      data: table === 'urunler' ? product : table === 'urun_stoklari' ? [{ id: 'stock', stok_grubu: 'hepsi', min_siparis_miktari: 1 }] : table === 'urun_gorselleri' ? [] : { id: 'metadata' }, error: null,
+      data: table === 'urunler' ? product : table === 'urun_stoklari' ? stocks : table === 'urun_gorselleri' ? [] : { id: 'metadata' }, error: null,
     }
     return query
   } }
@@ -52,4 +52,9 @@ test('atanmış kategori ve marka normal olarak yüklenir', async () => {
   const { state, calls } = await loadProduct({ id: 'product', kategori_id: 'category', marka_id: 'brand' })
   assert.equal(state.loadState, 'ready')
   assert.ok(calls.includes('kategoriler') && calls.includes('markalar'))
+})
+
+test('sıfır, eksik ve sonsuz fiyatlı varyant ürün detayından seçilemez',async()=>{
+ const {state}=await loadProduct({id:'product'},[0,null,undefined,Infinity,NaN,-1,29.5].map(fiyat=>({fiyat,stok_grubu:'hepsi'})))
+ assert.deepEqual(state.product.urun_stoklari.map(x=>x.fiyat),[29.5])
 })

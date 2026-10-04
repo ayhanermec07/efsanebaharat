@@ -6,6 +6,7 @@ import BankTransferDetails from '../components/BankTransferDetails'
 import type { BankDetails } from '../lib/payment-methods'
 import { formatPrice } from '../lib/currency'
 import { supabase } from '../lib/supabase'
+import OrderDocument from '../components/OrderDocument'
 
 type PaymentState = 'loading' | 'missing' | 'unauthenticated' | 'not_found' | 'transfer' | 'pending' | 'failed' | 'paid' | 'error'
 
@@ -60,6 +61,7 @@ export default function OdemeBasarili() {
         <p className="mt-4 text-gray-600">{authLoading || state === 'loading' ? 'Lütfen bekleyin.' : content.message}</p>
         {state === 'transfer' && order && <div className="mt-6 space-y-4"><p className="break-words font-bold">Sipariş: {order.siparis_no}<br />Gönderilecek tutar: {formatPrice(order.toplam_tutar)}</p><BankTransferDetails details={order.bank_details} reference={order.siparis_no} /></div>}
         <div className="mt-8 space-y-3">
+          {order&&orderId&&<OrderDocument orderId={orderId} orderNumber={order.siparis_no}/>}
           {state === 'transfer' || state === 'pending' || state === 'error' ? <button type="button" onClick={() => void loadOrder()} className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand py-3 text-white transition hover:bg-emerald-800"><RefreshCw className="h-4 w-4" /> Durumu yenile</button> : null}
           {state === 'unauthenticated' ? <Link to="/giris?redirect=/hesabim" className="block w-full rounded-lg bg-brand py-3 text-white transition hover:bg-emerald-800">Giriş yap</Link> : null}
           {state === 'paid' || state === 'transfer' ? <Link to="/hesabim" className="block w-full rounded-lg bg-brand py-3 text-white transition hover:bg-emerald-800">Siparişlerimi görüntüle</Link> : null}

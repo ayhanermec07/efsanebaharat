@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
-import { Mail, MapPin, Phone, ShieldCheck, Sprout, Truck } from 'lucide-react'
+import { ShieldCheck, Sprout, Truck } from 'lucide-react'
+import SellerInformation from './SellerInformation'
+import { legalDocuments } from '../lib/legal-documents'
 import { useTheme } from '../contexts/ThemeContext'
 import { getImageUrl } from '../utils/imageUtils'
 
@@ -25,20 +27,7 @@ export default function Footer() {
             <p className="max-w-md text-sm leading-6 text-brand-muted">
               {siteInfo.description}
             </p>
-            <div className="mt-5 grid gap-3 text-sm">
-              {siteInfo.phone && <div className="flex items-center gap-3">
-                <Phone className="site-secondary-text h-4 w-4" />
-                <a href={`tel:${siteInfo.phone.replace(/[^+\d]/g, '')}`} className="hover:underline">{siteInfo.phone}</a>
-              </div>}
-              {siteInfo.email && <div className="flex items-center gap-3">
-                <Mail className="site-secondary-text h-4 w-4" />
-                <a href={`mailto:${siteInfo.email}`} className="break-all hover:underline">{siteInfo.email}</a>
-              </div>}
-              {siteInfo.address && <div className="flex items-center gap-3">
-                <MapPin className="site-secondary-text h-4 w-4" />
-                <span>{siteInfo.address}</span>
-              </div>}
-            </div>
+            <div className="mt-5"><SellerInformation variant="footer" /></div>
           </div>
 
           <div>
@@ -66,7 +55,7 @@ export default function Footer() {
             <div className="grid gap-3 text-sm text-brand-muted">
               <div className="flex gap-3">
                 <Truck className="site-secondary-text mt-0.5 h-4 w-4 shrink-0" />
-                <span>Hızlı kargo ve takip bildirimi</span>
+                <span>Sipariş ve kargo takibi</span>
               </div>
               <div className="flex gap-3">
                 <ShieldCheck className="site-secondary-text mt-0.5 h-4 w-4 shrink-0" />
@@ -78,6 +67,12 @@ export default function Footer() {
             </div>
           </div>
         </div>
+
+        <nav aria-label="Yasal ve ticari bilgiler" className="mt-8 border-t border-brand-line pt-6">
+          <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            {legalDocuments.map(document => <li key={document.path} className="min-w-0"><Link to={document.path} className="inline-flex min-h-11 items-center break-words hover:underline">{document.title}</Link></li>)}
+          </ul>
+        </nav>
 
         <div className="mt-10 border-t border-brand-line pt-6 text-center text-xs text-brand-muted">
           © {new Date().getFullYear()} EfsaneBaharat.com - Tüm hakları saklıdır.

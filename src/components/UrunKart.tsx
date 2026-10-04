@@ -25,14 +25,16 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
   const [ekleniyor, setEkleniyor] = useState(false)
   const [imgError, setImgError] = useState(false)
 
+  const satisaHazirStoklar = useMemo(() => (urun.urun_stoklari || []).filter((s: any) => Number.isFinite(Number(s.fiyat)) && Number(s.fiyat) > 0), [urun])
+
   useEffect(() => {
-    if (urun.urun_stoklari && urun.urun_stoklari.length > 0) {
-      setSecilenStok(urun.urun_stoklari[0])
+    if (satisaHazirStoklar.length > 0) {
+      setSecilenStok(satisaHazirStoklar[0])
     } else {
       setSecilenStok(null)
     }
     setImgError(false)
-  }, [urun])
+  }, [urun, satisaHazirStoklar])
 
   const ilkGorsel = getImageUrl(urun.urun_gorselleri?.[0]?.gorsel_url || urun.ana_gorsel_url)
 
@@ -128,9 +130,9 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
           </span>
         )}
 
-        {urun.urun_stoklari?.length > 1 && (
+        {satisaHazirStoklar.length > 1 && (
           <span className="absolute bottom-2 left-2 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-zinc-700 shadow-sm">
-            {urun.urun_stoklari.length} sorti
+            {satisaHazirStoklar.length} sorti
           </span>
         )}
       </Link>
@@ -147,9 +149,9 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
           </div>
         </div>
 
-        {urun.urun_stoklari && urun.urun_stoklari.length > 0 && (
+        {urun.urun_stoklari && satisaHazirStoklar.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {urun.urun_stoklari.map((stok: any) => (
+            {satisaHazirStoklar.map((stok: any) => (
               <button
                 key={stok.id}
                 type="button"

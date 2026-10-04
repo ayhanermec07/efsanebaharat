@@ -6,6 +6,16 @@ const publicPages: Record<string, { title: string; description: string }> = {
   '/bize-ulasin': { title: 'Bize Ulaşın | Efsane Baharat', description: 'Efsane Baharat ile iletişime geçin.' }
 }
 
+const draftLegalTitles: Record<string, string> = {
+  '/on-bilgilendirme': 'Ön Bilgilendirme Formu',
+  '/mesafeli-satis-sozlesmesi': 'Mesafeli Satış Sözleşmesi',
+  '/teslimat-kargo': 'Teslimat ve Kargo Politikası',
+  '/iade-iptal-cayma': 'İade / İptal / Cayma Hakkı Politikası',
+  '/kvkk': 'KVKK Aydınlatma Metni',
+  '/gizlilik': 'Gizlilik Politikası',
+  '/islem-rehberi': 'İşlem Rehberi',
+}
+
 export function seoForPath(path: string, origin: string) {
   const normalizedPath = path === '/' ? '/' : path.replace(/\/+$/, '')
   const publicPage = publicPages[normalizedPath]
@@ -15,10 +25,10 @@ export function seoForPath(path: string, origin: string) {
     robots: 'index,follow'
   }
 
-  const title = normalizedPath.startsWith('/admin') ? 'Yönetim' :
+  const title = draftLegalTitles[normalizedPath] || (normalizedPath.startsWith('/admin') ? 'Yönetim' :
     normalizedPath.startsWith('/urun/') ? 'Ürün Detayı' :
       normalizedPath === '/giris' ? 'Giriş' :
-        normalizedPath === '/kayit' ? 'Kayıt' : 'Sayfa'
+        normalizedPath === '/kayit' ? 'Kayıt' : 'Sayfa')
   return {
     title: `${title} | Efsane Baharat`,
     description: 'Efsane Baharat',

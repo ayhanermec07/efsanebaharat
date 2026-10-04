@@ -7,6 +7,8 @@ import { Package, User as UserIcon, Truck, Copy, Check, ExternalLink, Pencil, X,
 import toast from 'react-hot-toast'
 import { loadCustomerOrders } from '../lib/account-orders'
 import { formatPrice } from '../lib/currency'
+import OrderDocument from '../components/OrderDocument'
+import OrderReturn from '../components/OrderReturn'
 
 export default function Hesabim() {
   const { user, musteriData, loading: authLoading, updateUser, isAdmin, signOut } = useAuth()
@@ -321,6 +323,8 @@ export default function Hesabim() {
               <div className="space-y-4">
                 {siparisler.map((siparis) => (
                   <div key={siparis.id} className="border rounded-lg p-4 hover:shadow-md transition">
+                    <div className="mb-3"><OrderDocument orderId={siparis.id} orderNumber={siparis.siparis_no} /></div>
+                    <OrderReturn orderId={siparis.id}/>
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                       <div>
                         <p className="break-all font-semibold text-gray-900">

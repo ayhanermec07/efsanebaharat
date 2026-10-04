@@ -17,6 +17,7 @@
     "test:environment": "node scripts/verify-test-environment.mjs",
     "test:e2e:guest": "node scripts/verify-test-environment.mjs && playwright test tests/e2e/guest-store.spec.ts",
     "test:e2e:categories": "playwright test --config playwright.categories.config.ts",
+    "test:e2e:business": "playwright test --config playwright.business.config.ts",
     "test:e2e:auth": "node scripts/verify-test-environment.mjs && playwright test tests/e2e/authenticated.spec.ts",
     "test:e2e:transaction": "node scripts/verify-test-environment.mjs && playwright test tests/e2e/transaction-local.spec.ts",
     "test:e2e:admin-operations": "node scripts/verify-test-environment.mjs && playwright test tests/e2e/admin-operations.spec.ts",

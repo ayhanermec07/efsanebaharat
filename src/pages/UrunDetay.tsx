@@ -72,7 +72,8 @@ export default function UrunDetay() {
     }
 
     const filtreliStoklar = stoklar?.filter(s =>
-      !s.stok_grubu || s.stok_grubu === 'hepsi' || s.stok_grubu === musteriTipi
+      Number.isFinite(Number(s.fiyat)) && Number(s.fiyat)>0 &&
+      (!s.stok_grubu || s.stok_grubu === 'hepsi' || s.stok_grubu === musteriTipi)
     ) || []
 
     setUrun({
@@ -204,12 +205,12 @@ export default function UrunDetay() {
                 <>
                   <div className="text-sm font-bold text-zinc-500 line-through">{formatPrice(iskontoInfo.eskiFiyat)}</div>
                   <div className="mt-1 flex flex-wrap items-end justify-between gap-2">
-                    <span className="text-3xl font-bold text-zinc-950">{formatPrice(fiyat)}</span>
+                    <span className="text-3xl font-bold text-zinc-950">{secilenStok ? formatPrice(fiyat) : 'Satışa hazır seçenek yok'}</span>
                     <span className="rounded-full bg-brand-clay px-3 py-1 text-xs font-bold text-white">%{iskontoInfo.oran} indirim</span>
                   </div>
                 </>
               ) : (
-                <span className="text-3xl font-bold text-zinc-950">{formatPrice(fiyat)}</span>
+                <span className="text-3xl font-bold text-zinc-950">{secilenStok ? formatPrice(fiyat) : 'Satışa hazır seçenek yok'}</span>
               )}
             </div>
 
