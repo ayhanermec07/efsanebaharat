@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AlertCircle, PackageSearch, RotateCcw, Star, TrendingUp } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
+import CatalogToolbar from '../components/CatalogToolbar'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { fetchInBatches } from '../utils/supabaseBatch'
@@ -131,7 +132,30 @@ export default function EnCokSatan() {
   }, [loadProducts])
 
   return (
-    <div className="shop-container py-6 sm:py-8">
+    <div className="min-w-0">
+      <CatalogToolbar>
+        <div className="flex items-center justify-between gap-3">
+          <span className="min-w-0 text-xs font-semibold sm:text-sm">En çok satanlar</span>
+          <div className="grid shrink-0 grid-cols-2 gap-1 rounded-lg bg-brand-paper p-1">
+            <button
+              type="button"
+              onClick={() => setSiralama('otomatik')}
+              className={`min-h-[40px] rounded-md px-2 text-sm sm:px-4 font-bold transition ${siralama === 'otomatik' ? 'bg-brand text-white' : 'text-brand-muted'}`}
+            >
+              Otomatik
+            </button>
+            <button
+              type="button"
+              onClick={() => setSiralama('manuel')}
+              className={`flex min-h-[40px] items-center justify-center gap-2 rounded-md px-2 text-sm sm:px-4 font-bold transition ${siralama === 'manuel' ? 'bg-brand text-white' : 'text-brand-muted'}`}
+            >
+              <Star className="h-4 w-4" />
+              Önerilen
+            </button>
+          </div>
+        </div>
+      </CatalogToolbar>
+      <div className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <div className="shop-page-heading mb-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
@@ -144,29 +168,11 @@ export default function EnCokSatan() {
               {siralama === 'otomatik' ? 'Satış verilerine göre öne çıkan ürünler.' : 'Panelden özel seçilmiş ürünler.'}
             </p>
           </div>
-
-          <div className="grid grid-cols-2 gap-1 rounded-lg bg-brand-paper p-1">
-            <button
-              type="button"
-              onClick={() => setSiralama('otomatik')}
-              className={`min-h-[40px] rounded-md px-4 text-sm font-bold transition ${siralama === 'otomatik' ? 'bg-brand text-white' : 'text-brand-muted'}`}
-            >
-              Otomatik
-            </button>
-            <button
-              type="button"
-              onClick={() => setSiralama('manuel')}
-              className={`flex min-h-[40px] items-center justify-center gap-2 rounded-md px-4 text-sm font-bold transition ${siralama === 'manuel' ? 'bg-brand text-white' : 'text-brand-muted'}`}
-            >
-              <Star className="h-4 w-4" />
-              Önerilen
-            </button>
-          </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
             <div key={item} className="h-72 animate-pulse rounded-lg bg-white shadow-sm" />
           ))}
@@ -185,12 +191,13 @@ export default function EnCokSatan() {
           <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">Bu raf için gösterilecek ürün bulunamadı.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {urunler.map((urun) => (
             <UrunKart key={urun.id} urun={urun} />
           ))}
         </div>
       )}
+      </div>
     </div>
   )
 }

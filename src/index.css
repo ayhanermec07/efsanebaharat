@@ -58,7 +58,7 @@
     --ring: 137 22% 26%;
   }
 
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; scroll-padding-top: calc(var(--store-header-height, 0px) + 100px); }
   body { background: var(--site-background-color); color: var(--shop-ink); }
   ::selection { background: #d0dcc1; color: var(--shop-ink); }
   .anadolu-ui :where(button, [role='button']) { min-height: 44px; }

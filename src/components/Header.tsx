@@ -9,15 +9,13 @@ import { getImageUrl } from '../utils/imageUtils'
 import { loadPublicCatalog, type CatalogCategory } from '../lib/catalog'
 import { buildCategoryTree, loadCategories } from '../lib/category-hierarchy'
 import CategoryNavigation from './CategoryNavigation'
+import CategoryMegaMenu from './CategoryMegaMenu'
 import { formatPrice } from '../lib/currency'
 import AccessibleModal from './admin/AccessibleModal'
 
 const navLinks = [
-  { to: '/', label: 'Ana Sayfa' },
-  { to: '/urunler', label: 'Ürünler' },
   { to: '/en-cok-satan', label: 'En Çok Satanlar' },
   { to: '/kampanyalar', label: 'Kampanyalar' },
-  { to: '/bize-ulasin', label: 'İletişim' },
 ]
 
 export default function Header() {
@@ -36,6 +34,21 @@ export default function Header() {
   const categoryTree = useMemo(() => buildCategoryTree(kategoriler), [kategoriler])
   const navigate = useNavigate()
 
+  const headerRef = useRef<HTMLElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const searchToggleRef = useRef<HTMLButtonElement>(null)
+  const categoryToggleRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    const header = headerRef.current
+    if (!header) return
+    const measure = () => document.documentElement.style.setProperty('--store-header-height', `${header.getBoundingClientRect().height}px`)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(header)
+    return () => { observer.disconnect(); document.documentElement.style.removeProperty('--store-header-height') }
+  }, [])
+
   const searchContainerRef = useRef<HTMLDivElement>(null)
   const categoryMenuRef = useRef<HTMLDivElement>(null)
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -48,7 +61,7 @@ export default function Header() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node) && !searchToggleRef.current?.contains(e.target as Node)) {
         setSearchResults([])
         setSearchOpen(false)
       }
@@ -57,6 +70,8 @@ export default function Header() {
     }
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
+        if (document.getElementById('header-category-tree')?.contains(document.activeElement)) categoryToggleRef.current?.focus()
+        if (searchContainerRef.current?.contains(document.activeElement) && window.innerWidth < 1024) searchToggleRef.current?.focus()
         setSearchOpen(false)
         setSearchResults([])
         setShowCategoryMenu(false)
@@ -155,13 +170,13 @@ export default function Header() {
   const canAccessAdmin = isAdmin || musteriData?.musteri_tipi === 'admin'
 
   return (
-    <header className="sticky top-0 z-40 border-b border-brand-line bg-brand-paper">
-      <div className="site-primary-bg px-4 py-2 text-center text-[11px] font-medium uppercase tracking-[0.14em] text-white">
+    <header ref={headerRef} className="sticky top-0 z-40 border-b border-brand-line bg-brand-paper">
+      <div className="site-primary-bg px-4 py-1 text-center text-[10px] font-medium uppercase tracking-[0.14em] text-white">
         Sofranıza bir tutam lezzet
       </div>
-      <div className="shop-container">
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 py-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,420px)_auto] lg:gap-x-6 lg:py-5">
-          <Link to="/" className="order-1 flex min-w-0 items-center gap-2 sm:gap-3" onClick={closeMenus}>
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 py-2 lg:grid-cols-[auto_minmax(330px,1fr)_minmax(200px,360px)_auto] lg:gap-x-5 lg:py-3">
+          <Link to="/" className="order-1 flex min-w-0 items-center gap-2" onClick={closeMenus}>
             <div
               className={`flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg ${logo.url ? 'border border-brand-line bg-brand-paper' : 'text-emerald-700'}`}
               style={logo.url ? { width: logoSize, height: logoSize } : undefined}
@@ -176,67 +191,22 @@ export default function Header() {
               ) : themeLoading ? null : <Sprout aria-hidden="true" className="h-7 w-7" />}
             </div>
             <div className="min-w-0">
-              <div className="line-clamp-2 break-words font-display text-xl font-semibold leading-tight tracking-tight text-brand-ink sm:text-2xl">{siteInfo.siteName}</div>
-              <div className="mt-1 hidden truncate text-[11px] font-medium tracking-wide text-brand-muted sm:block">{siteInfo.tagline}</div>
+              <div className="truncate font-display text-lg font-semibold leading-tight tracking-tight text-brand-ink sm:text-xl">{siteInfo.siteName}</div>
             </div>
           </Link>
 
-          <nav className="order-4 col-span-full hidden flex-wrap items-center justify-center gap-1 border-t border-brand-line pt-3 lg:flex" aria-label="Ana gezinme">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) =>
-                  `rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                    isActive ? 'bg-emerald-50 text-emerald-900' : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950'
-                  }`
-                }
-              >
-                {link.label}
-              </NavLink>
-            ))}
-
-            <div ref={categoryMenuRef} className="relative">
-              <button
-                type="button"
-                onClick={() => setShowCategoryMenu((value) => !value)}
-                aria-expanded={showCategoryMenu}
-                className="flex min-h-11 items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-brand-ink transition hover:bg-brand-soft"
-              >
-                Kategoriler
-                <ChevronDown className="h-4 w-4" />
+          <nav className="order-3 col-span-full flex min-w-0 items-center justify-between gap-1 lg:order-2 lg:col-span-1 lg:justify-evenly" aria-label="Ana gezinme">
+            <div ref={categoryMenuRef} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setShowCategoryMenu(false) }}>
+              <button ref={categoryToggleRef} type="button" onClick={() => { setShowCategoryMenu(value => !value); setSearchOpen(false); setShowUserMenu(false) }} aria-expanded={showCategoryMenu} aria-controls="header-category-tree" className="flex min-h-11 items-center gap-1 rounded-lg px-2 py-2 text-xs font-semibold text-brand-ink hover:bg-brand-soft sm:px-3 sm:text-sm">
+                Kategoriler <ChevronDown className={`h-4 w-4 transition-transform motion-reduce:transition-none ${showCategoryMenu ? 'rotate-180' : ''}`} aria-hidden="true" />
               </button>
-              {showCategoryMenu && (
-                <div className="absolute right-0 mt-2 w-72 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-xl">
-                  <Link to="/urunler" onClick={closeMenus} className="block px-4 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-50">
-                    Tüm ürünler
-                  </Link>
-                  <div className="max-h-[min(24rem,50dvh)] overflow-y-auto overscroll-contain border-t border-zinc-100 p-2">
-                    {categoryLoadError ? <button type="button" onClick={loadKategoriler} className="min-h-11 px-2 text-sm text-red-700">Kategoriler yüklenemedi. Tekrar dene</button> : <CategoryNavigation nodes={categoryTree} onNavigate={closeMenus} />}
-                  </div>
-                </div>
-              )}
+              {showCategoryMenu && <CategoryMegaMenu nodes={categoryTree} error={categoryLoadError} onRetry={loadKategoriler} onNavigate={closeMenus} />}
             </div>
-
-            {user && musteriData?.musteri_tipi === 'bayi' && (
-              <NavLink to="/bayi-panel" className="rounded-lg px-3 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100">
-                Bayi Paneli
-              </NavLink>
-            )}
-            {user && musteriData?.musteri_tipi === 'xml_musteri' && (
-              <>
-                <NavLink to="/xml-siparis" className="rounded-lg px-3 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-50">XML Sipariş</NavLink>
-                <NavLink to="/xml-siparislerim" className="rounded-lg px-3 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-50">Siparişlerim</NavLink>
-              </>
-            )}
-            {canAccessAdmin && (
-              <NavLink to="/admin" className="rounded-lg px-3 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-50">
-                Admin
-              </NavLink>
-            )}
+            {navLinks.map(link => <NavLink key={link.to} to={link.to} onClick={closeMenus} className={({ isActive }) => `flex min-h-11 items-center whitespace-nowrap rounded-lg px-2 py-2 text-xs font-semibold transition sm:px-3 sm:text-sm ${isActive ? 'bg-brand-soft text-brand-ink' : 'text-brand-muted hover:bg-brand-soft hover:text-brand-ink'}`}>{link.label}</NavLink>)}
           </nav>
 
-          <div className="order-2 flex shrink-0 items-center gap-2 lg:order-3">
+          <div className="order-2 flex shrink-0 items-center gap-1 lg:order-4 lg:gap-2">
+            <button ref={searchToggleRef} type="button" onClick={() => { setSearchOpen(value => !value); setShowCategoryMenu(false); requestAnimationFrame(() => { if (searchInputRef.current?.getClientRects().length) searchInputRef.current.focus() }) }} className="shop-icon-button lg:hidden" aria-label="Aramayı aç" aria-expanded={searchOpen} aria-controls="header-search"><Search className="h-5 w-5" aria-hidden="true" /></button>
             <Link
               to="/sepet"
               onClick={closeMenus}
@@ -252,7 +222,7 @@ export default function Header() {
             </Link>
 
             {user ? (
-              <div ref={userMenuRef} className="relative hidden sm:block">
+              <div ref={userMenuRef} className="relative hidden lg:block">
                 <button
                   type="button"
                   onClick={() => setShowUserMenu((value) => !value)}
@@ -270,6 +240,9 @@ export default function Header() {
                     <Link to="/sorularim" onClick={closeMenus} className="block px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50">
                       Sorularım
                     </Link>
+                    {musteriData?.musteri_tipi === 'bayi' && <Link to="/bayi-panel" onClick={closeMenus} className="block px-4 py-3 text-sm hover:bg-brand-soft">Bayi Paneli</Link>}
+                    {musteriData?.musteri_tipi === 'xml_musteri' && <><Link to="/xml-siparis" onClick={closeMenus} className="block px-4 py-3 text-sm hover:bg-brand-soft">XML Sipariş</Link><Link to="/xml-siparislerim" onClick={closeMenus} className="block px-4 py-3 text-sm hover:bg-brand-soft">Siparişlerim</Link></>}
+                    {canAccessAdmin && <Link to="/admin" onClick={closeMenus} className="block px-4 py-3 text-sm hover:bg-brand-soft">Yönetim Paneli</Link>}
                     <button
                       type="button"
                       onClick={() => {
@@ -284,7 +257,7 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <Link to="/giris" onClick={closeMenus} className="shop-icon-button" aria-label="Giriş yap">
+              <Link to="/giris" onClick={closeMenus} className="shop-icon-button hidden lg:inline-flex" aria-label="Giriş yap">
                 <User className="h-5 w-5" aria-hidden="true" />
               </Link>
             )}
@@ -300,17 +273,18 @@ export default function Header() {
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
-          <div ref={searchContainerRef} className="relative order-3 col-span-full min-w-0 lg:order-2 lg:col-span-1">
+          <div id="header-search" ref={searchContainerRef} className={`${searchOpen ? 'block' : 'hidden'} relative order-4 col-span-full min-w-0 pb-1 lg:order-3 lg:col-span-1 lg:block lg:pb-0`}>
             <form onSubmit={handleSearchSubmit} className="relative">
-              <Search className="absolute left-4 top-3.5 h-5 w-5 text-zinc-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
               <input
+                ref={searchInputRef}
                 type="text"
                 aria-label="Ürün ara"
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onFocus={() => setSearchOpen(true)}
                 placeholder="Hangi baharatı arıyorsunuz?"
-                className="shop-input bg-brand-cream pl-12 pr-28 text-sm"
+                className="shop-input bg-brand-cream py-2 pl-12 pr-20 text-sm"
               />
               {searchQuery && (
                 <button

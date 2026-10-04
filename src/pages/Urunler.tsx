@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { AlertCircle, ArrowUpDown, Loader2, PackageSearch, RotateCcw, Search, SlidersHorizontal, Tag, X } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
+import CatalogToolbar from '../components/CatalogToolbar'
 import { useAuth } from '../contexts/AuthContext'
 import { buildCategoryTree, getCategoryBranchIds, getCategoryPath, loadCategories } from '../lib/category-hierarchy'
 import { publicSupabase } from '../lib/supabase'
@@ -164,7 +165,58 @@ export default function Urunler() {
     : null
 
   return (
-    <div className="shop-container py-6 sm:py-8">
+    <div className="min-w-0">
+      <CatalogToolbar>
+        <div className="flex min-h-11 items-center justify-between gap-3 lg:hidden">
+          <button type="button" onClick={() => setFiltersOpen(value => !value)} aria-expanded={filtersOpen} aria-controls="catalog-filters" aria-label="Filtreler" className="flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold hover:bg-brand-soft">
+            {filtersOpen ? <X className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />} Filtreler
+            {hasFilters && <span className="h-2 w-2 rounded-full bg-brand" aria-label="Filtre etkin" />}
+          </button>
+          <span className="min-w-0 truncate text-xs text-brand-muted" aria-live="polite">{loading ? 'Ürünler yükleniyor' : loadError ? 'Ürünler yüklenemedi' : `${toplam} ürün`}</span>
+        </div>
+        <div id="catalog-filters" className={`${filtersOpen ? 'grid' : 'hidden'} ${subCategories.length > 0 ? 'lg:grid-cols-[minmax(150px,1.2fr)_repeat(4,minmax(0,1fr))_auto]' : 'lg:grid-cols-[minmax(150px,1.2fr)_repeat(3,minmax(0,1fr))_auto]'} max-h-[calc(100dvh-var(--store-header-height,120px)-80px)] grid-cols-1 gap-3 overflow-y-auto overscroll-contain py-2 sm:grid-cols-2 lg:grid lg:max-h-none lg:items-end lg:overflow-visible lg:py-0`}>
+          <label className="min-w-0">
+            <span className="mb-1 block text-xs font-semibold text-brand-muted">Ürün ara</span>
+            <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
+              <input type="search" value={aramaText} onChange={event => setAramaText(event.target.value)} maxLength={100} placeholder="Ürün veya marka..." className="shop-input py-2 pl-9 text-sm" />
+            </div>
+          </label>
+          <div className="min-w-0">
+            <label htmlFor="catalog-main-category" className="mb-1 block text-xs font-semibold text-brand-muted">Ana kategori</label>
+            <select id="catalog-main-category" value={mainCategoryId} onChange={event => updateParams({ kategori: event.target.value })} className="shop-input py-2 text-sm">
+              <option value="">Tüm kategoriler</option>
+              {kategori && !categoryPath.length && <option value={kategori}>Seçili kategori</option>}
+              {categoryTree.map(({ category }) => <option key={category.id} value={category.id}>{category.kategori_adi}</option>)}
+            </select>
+          </div>
+          {subCategories.length > 0 && <div className="min-w-0">
+            <label htmlFor="catalog-sub-category" className="mb-1 block text-xs font-semibold text-brand-muted">Alt kategori</label>
+            <select id="catalog-sub-category" value={kategori === mainCategoryId ? '' : kategori} onChange={event => updateParams({ kategori: event.target.value || mainCategoryId })} className="shop-input py-2 text-sm">
+              <option value="">Tüm alt kategoriler</option>
+              {subCategories.map(category => <option key={category.id} value={category.id}>{category.label}</option>)}
+            </select>
+          </div>}
+          <label className="min-w-0">
+            <span className="mb-1 block text-xs font-semibold text-brand-muted">Marka</span>
+            <select value={marka} onChange={event => updateParams({ marka: event.target.value })} className="shop-input py-2 text-sm">
+              <option value="">Tüm markalar</option>
+              {markalar.map(item => <option key={item.id} value={item.id}>{item.marka_adi}</option>)}
+            </select>
+          </label>
+          <label className="min-w-0">
+            <span className="mb-1 flex items-center gap-1 text-xs font-semibold text-brand-muted"><ArrowUpDown className="h-3 w-3" /> Sıralama</span>
+            <select value={sirala} onChange={event => updateParams({ sirala: event.target.value })} className="shop-input py-2 text-sm">
+              {CATALOG_SORTS.map(sort => <option key={sort.value} value={sort.value}>{sort.label}</option>)}
+            </select>
+          </label>
+          <button type="button" onClick={clearFilters} className="flex min-h-11 items-center justify-center gap-1 rounded-lg px-2 text-xs font-semibold text-brand-muted hover:bg-brand-soft"><RotateCcw className="h-4 w-4" /> Temizle</button>
+        </div>
+        {activeCampaign && <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-brand-muted">
+          <Tag className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{activeCampaign.ad || activeCampaign.baslik}</span>
+          <button type="button" onClick={() => updateParams({ kampanya: '' })} aria-label="Kampanya filtresini kaldır" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg hover:bg-brand-soft"><X className="h-4 w-4" /></button>
+        </div>}
+      </CatalogToolbar>
+      <div className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <div className="shop-page-heading mb-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">
@@ -177,112 +229,9 @@ export default function Urunler() {
               Baharat, kahve ve gurme ürünleri kategori, marka ve kampanya filtresiyle hızlı bulun.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setFiltersOpen((value) => !value)}
-            aria-expanded={filtersOpen}
-            className="shop-btn-secondary lg:hidden"
-          >
-            {filtersOpen ? <X className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />}
-            Filtreler
-          </button>
+
         </div>
       </div>
-
-      <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className={`${filtersOpen ? 'block' : 'hidden'} min-w-0 lg:block`}>
-          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm lg:sticky lg:top-24">
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 font-bold text-zinc-950">
-                <SlidersHorizontal className="h-5 w-5 text-orange-600" />
-                Filtreler
-              </div>
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="min-h-[36px] px-2 text-xs font-bold text-orange-700 hover:text-orange-800"
-              >
-                Temizle
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <label className="block">
-                <span className="mb-1.5 block text-sm font-bold text-zinc-700">Ürün ara</span>
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                  <input
-                    type="search"
-                    value={aramaText}
-                    onChange={(e) => setAramaText(e.target.value)}
-                    maxLength={100}
-                    placeholder="Ürün, kategori veya marka..."
-                    className="shop-input pl-9"
-                  />
-                </div>
-              </label>
-
-              <div className="min-w-0">
-                <label htmlFor="catalog-main-category" className="mb-1.5 block text-sm font-bold text-zinc-700">Ana kategori</label>
-                <select
-                  id="catalog-main-category"
-                  value={mainCategoryId}
-                  onChange={(e) => updateParams({ kategori: e.target.value })}
-                  className="shop-input"
-                >
-                  <option value="">Tüm kategoriler</option>
-                  {kategori && !categoryPath.length && <option value={kategori}>Seçili kategori</option>}
-                  {categoryTree.map(({ category }) => (
-                    <option key={category.id} value={category.id}>
-                      {category.kategori_adi}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {subCategories.length > 0 && <div className="min-w-0">
-                <label htmlFor="catalog-sub-category" className="mb-1.5 block text-sm font-bold text-zinc-700">Alt kategori</label>
-                <select id="catalog-sub-category" value={kategori === mainCategoryId ? '' : kategori} onChange={event => updateParams({ kategori: event.target.value || mainCategoryId })} className="shop-input">
-                  <option value="">Tüm alt kategoriler</option>
-                  {subCategories.map(category => <option key={category.id} value={category.id}>{category.label}</option>)}
-                </select>
-              </div>}
-
-              <label className="block">
-                <span className="mb-1.5 block text-sm font-bold text-zinc-700">Marka</span>
-                <select
-                  value={marka}
-                  onChange={(e) => updateParams({ marka: e.target.value })}
-                  className="shop-input"
-                >
-                  <option value="">Tüm markalar</option>
-                  {markalar.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.marka_adi}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              {activeCampaign && (
-                <div className="flex items-start justify-between gap-2 rounded-lg border border-orange-200 bg-orange-50 p-3">
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-orange-700">Aktif kampanya</p>
-                    <p className="mt-1 break-words text-sm font-bold text-zinc-900">{activeCampaign.ad || activeCampaign.baslik}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => updateParams({ kampanya: '' })}
-                    aria-label="Kampanya filtresini kaldır"
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-orange-700 hover:bg-orange-100"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </aside>
 
         <section className="min-w-0">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -305,23 +254,11 @@ export default function Urunler() {
                 </p>
               )}
             </div>
-            <label className="flex min-w-0 items-center gap-2 sm:w-64">
-              <ArrowUpDown className="h-4 w-4 shrink-0 text-zinc-500" />
-              <span className="sr-only">Sıralama</span>
-              <select
-                value={sirala}
-                onChange={(e) => updateParams({ sirala: e.target.value })}
-                className="shop-input min-w-0 flex-1"
-              >
-                {CATALOG_SORTS.map((sort) => (
-                  <option key={sort.value} value={sort.value}>{sort.label}</option>
-                ))}
-              </select>
-            </label>
+
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
               {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
                 <div key={item} className="h-72 animate-pulse rounded-lg bg-white shadow-sm" />
               ))}
@@ -362,7 +299,7 @@ export default function Urunler() {
             </div>
           ) : (
             <div>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 {urunler.map((urun) => (
                   <UrunKart key={urun.id} urun={urun} kampanya={campaignForCards} />
                 ))}

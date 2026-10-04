@@ -87,7 +87,7 @@ export default function Kampanyalar() {
   }
 
   return (
-    <div className="shop-container py-6 sm:py-8">
+    <div className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <div className="shop-page-heading mb-6">
         <div className="shop-eyebrow">
           <Tag className="h-4 w-4" />
@@ -100,7 +100,7 @@ export default function Kampanyalar() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
             <div key={item} className="h-72 animate-pulse rounded-lg bg-white shadow-sm" />
           ))}
@@ -157,7 +157,7 @@ export default function Kampanyalar() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 p-3 sm:gap-4 sm:p-5 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 p-3 sm:gap-4 sm:p-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 {kampanya.urunler.map((urun) => (
                   <UrunKart
                     key={urun.id}
