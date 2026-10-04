@@ -4,7 +4,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Sprout } from 'lucide-react'
 import CanliDestekWidget from '../components/CanliDestekWidget'
 import UrunKart from '../components/UrunKart'
 import { publicSupabase } from '../lib/supabase'
-import { loadPublicCatalog, type CatalogCategory } from '../lib/catalog'
+import { loadPublicCatalog } from '../lib/catalog'
 import { getImageUrl } from '../utils/imageUtils'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -16,7 +16,6 @@ export default function AnaSayfa() {
   const [enCokSatanlar, setEnCokSatanlar] = useState<any[]>([])
   const [yeniEklenenler, setYeniEklenenler] = useState<any[]>([])
   const [markalar, setMarkalar] = useState<any[]>([])
-  const [kategoriler, setKategoriler] = useState<CatalogCategory[]>([])
   const [currentBanner, setCurrentBanner] = useState(0)
   const [bestsellerPage, setBestsellerPage] = useState(0)
   const [newProductsPage, setNewProductsPage] = useState(0)
@@ -54,7 +53,6 @@ export default function AnaSayfa() {
         setEnCokSatanlar(products.slice(0, 12))
         setYeniEklenenler(products)
         setMarkalar(catalog.markalar || [])
-        setKategoriler(catalog.kategoriler || [])
         if (campaignResponse.error) {
           console.error('Ana sayfa kampanyaları yüklenemedi:', campaignResponse.error)
         } else {
@@ -148,7 +146,7 @@ export default function AnaSayfa() {
                   {activeBanner ? 'Kampanyayı incele' : 'Baharatları keşfet'}
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
-                <Link to="/en-cok-satan" className="shop-btn-secondary">Çok satanlar</Link>
+                <Link to="/kampanyalar" className="shop-btn-secondary">Kampanyalar</Link>
               </div>
             </div>
           <div className="shop-hero-art aspect-[4/3] md:aspect-square lg:aspect-[4/3]">
@@ -181,7 +179,6 @@ export default function AnaSayfa() {
               </div>
             </div>
           )}
-        {kategoriler.length > 0 && <nav aria-label="Ürün kategorileri" className="mt-7 flex flex-wrap gap-2 border-b border-brand-line pb-7 sm:mt-10"><Link to="/urunler" className="shop-btn-primary px-4">Tüm ürünler</Link>{kategoriler.slice(0, 8).map(kategori => <Link key={kategori.id} to={`/urunler?kategori=${kategori.id}`} className="shop-btn-secondary px-4">{kategori.kategori_adi}</Link>)}</nav>}
       </section>
 
       {oneCikanUrunler.length > 0 && (
