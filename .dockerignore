@@ -5,4 +5,6 @@ dist
 .env*
 *.log
 tests
-scripts
+scripts/*
+!scripts/production-config.mjs
+!scripts/production-config.d.mts
