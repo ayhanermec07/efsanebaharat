@@ -29,7 +29,9 @@ export default function Kategoriler() {
     ust_kategori_id: null as string | null,
     sira_no: 0,
     aktif_durum: true,
-    gorsel_url: ''
+    gorsel_url: '',
+    banner_desktop_url: '',
+    banner_mobile_url: ''
   })
 
   const parentOptions = useMemo(() => {
@@ -156,7 +158,9 @@ export default function Kategoriler() {
       ust_kategori_id: kategori.ust_kategori_id,
       sira_no: kategori.sira_no || 0,
       aktif_durum: kategori.aktif_durum,
-      gorsel_url: kategori.gorsel_url || ''
+      gorsel_url: kategori.gorsel_url || '',
+      banner_desktop_url: kategori.banner_desktop_url || '',
+      banner_mobile_url: kategori.banner_mobile_url || ''
     })
     setModalOpen(true)
   }
@@ -169,7 +173,9 @@ export default function Kategoriler() {
       ust_kategori_id: null,
       sira_no: 0,
       aktif_durum: true,
-      gorsel_url: ''
+      gorsel_url: '',
+      banner_desktop_url: '',
+      banner_mobile_url: ''
     })
     setModalOpen(false)
   }
@@ -318,7 +324,7 @@ export default function Kategoriler() {
                     maxLength={500}
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-700"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Maksimum 500 karakter ({formData.aciklama.length}/500)</p>
+                  <p className="text-xs text-gray-500 mt-1">Boş bırakırsanız katalog banner’ında açıklama gösterilmez. Maksimum 500 karakter ({formData.aciklama.length}/500)</p>
                 </div>
 
                 <div>
@@ -339,11 +345,19 @@ export default function Kategoriler() {
                   <ImageUpload
                     maxFiles={1}
                     bucketName="kategori-gorselleri"
-                    onUploadComplete={(urls) => setFormData({ ...formData, gorsel_url: urls[0] || '' })}
+                    onUploadComplete={(urls) => setFormData(current => ({ ...current, gorsel_url: urls[0] || '' }))}
                     existingImages={formData.gorsel_url ? [formData.gorsel_url] : []}
                     maxSizeMB={8}
                   />
                 </div>
+
+                {(['banner_desktop_url', 'banner_mobile_url'] as const).map(field => <section key={field} aria-label={field === 'banner_desktop_url' ? 'Masaüstü banner' : 'Mobil banner'} className="min-w-0 space-y-2">
+                  <h3 className="text-sm font-medium text-gray-700">{field === 'banner_desktop_url' ? 'Masaüstü banner' : 'Mobil banner'}</h3>
+                  <p className="text-xs leading-5 text-gray-500">{field === 'banner_desktop_url'
+                    ? 'Önerilen: 1600 × 240 px. Yazısız, sol %55’i sade; kategori kompozisyonu sağda. 768 px ve üzerindeki ekranlarda gösterilir.'
+                    : 'Önerilen: 780 × 640 px. Yazısız, üst %40’ı sade; kategori kompozisyonu altta. 768 px altındaki ekranlarda gösterilir.'} Ana kategorinin banner’ı alt kategorilerde de kullanılır.</p>
+                  <ImageUpload maxFiles={1} bucketName="kategori-gorselleri" maxSizeMB={8} previewFit="contain" existingImages={formData[field] ? [formData[field]] : []} onUploadComplete={urls => setFormData(current => ({ ...current, [field]: urls[0] || '' }))} />
+                </section>)}
 
                 <div className="flex items-center">
                   <input

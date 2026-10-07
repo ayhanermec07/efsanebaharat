@@ -10,7 +10,10 @@ const fixtureCategories = [
   { id: whole, kategori_adi: 'Tane Baharatlar', ust_kategori_id: spices, sira_no: 3 },
   ...Array.from({ length: 28 }, (_, i) => ({ id: id(10 + i), kategori_adi: `Diğer Kategori ${i}`, ust_kategori_id: null, sira_no: 20 + i })),
   { id: tea, kategori_adi: 'Çaylar', ust_kategori_id: null, sira_no: 100 },
-].map(category => ({ ...category, aktif_durum: true, aciklama: '', gorsel_url: null }))
+].map(category => ({ ...category, aktif_durum: true, aciklama: '', gorsel_url: null,
+  banner_desktop_url: category.id === spices ? 'https://banner.example.test/desktop.png' : null,
+  banner_mobile_url: category.id === spices ? 'https://banner.example.test/mobile.png' : null,
+}))
 
 async function noOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0)
@@ -28,6 +31,7 @@ test.beforeEach(async ({ page }) => {
   const categories = fixtureCategories.map(category => ({ ...category }))
   await page.route('**/*', async route => {
     const url = new URL(route.request().url())
+    if (url.hostname === 'banner.example.test') return route.fulfill({ contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9l0AAAAASUVORK5CYII=', 'base64') })
     if (url.origin === 'http://127.0.0.1:4175') return route.continue()
     if (url.origin !== 'http://127.0.0.1:54321') return route.abort()
     const pathname = url.pathname
@@ -54,6 +58,79 @@ test.beforeEach(async ({ page }) => {
     if (pathname.startsWith('/rest/v1/')) return route.fulfill({ json: [] })
     return route.abort()
   })
+})
+
+test('kategori banner kökü kullanır; yalnız ekrana uygun görseli indirir ve genel başlığa döner', async ({ page }, testInfo) => {
+  const images: string[] = []
+  page.on('request', request => { if (request.url().includes('banner.example.test')) images.push(request.url()) })
+  await page.goto(`/urunler?kategori=${red}`)
+  const banner = page.locator('[data-category-banner]')
+  await expect(banner.getByRole('heading', { level: 1 })).toHaveText('Baharatlar')
+  await expect(banner.locator('p')).toHaveCount(0)
+  const expected = page.viewportSize()!.width < 768 ? 'mobile' : 'desktop'
+  await expect(banner.locator('img')).toHaveJSProperty('naturalWidth', 1)
+  expect(images).toEqual([`https://banner.example.test/${expected}.png`])
+  await noOverflow(page)
+  await page.screenshot({ path: testInfo.outputPath('kategori-banner.png') })
+  if (page.viewportSize()!.width < 1024) await page.getByRole('button', { name: 'Filtreler', exact: true }).click()
+  await page.getByLabel('Ana kategori', { exact: true }).selectOption('')
+  await expect(page.getByRole('heading', { name: 'Ürünler', exact: true })).toBeVisible()
+  await expect(banner).toHaveCount(0)
+  await page.goBack()
+  await expect(banner.getByRole('heading', { level: 1 })).toHaveText('Baharatlar')
+})
+
+test('eksik ve hatalı banner sade zemine döner', async ({ page }) => {
+  await page.goto(`/urunler?kategori=${tea}`)
+  const banner = page.locator('[data-category-banner]')
+  await expect(banner.getByRole('heading', { level: 1 })).toHaveText('Çaylar')
+  await expect(banner.locator('img')).toHaveCount(0)
+  await page.route('https://banner.example.test/**', route => route.abort())
+  await page.goto(`/urunler?kategori=${spices}`)
+  await expect(banner.locator('img')).toHaveCount(0)
+  await expect(banner.getByRole('heading', { level: 1 })).toHaveText('Baharatlar')
+  await noOverflow(page)
+})
+
+test('uzun kategori adı ve yalnız yönetimde yazılmış açıklama taşmadan gösterilir', async ({ page }, testInfo) => {
+  const categories = fixtureCategories.map(category => category.id === spices ? { ...category, kategori_adi: 'Doğal Baharatlar ve Geleneksel Lezzetler', aciklama: 'Özenle seçilmiş baharatlar. '.repeat(19).trim() } : category)
+  await page.route('**/rest/v1/kategoriler*', route => route.fulfill({ json: categories }))
+  await page.goto(`/urunler?kategori=${red}`)
+  const banner = page.locator('[data-category-banner]')
+  await expect(banner.locator('p')).toHaveText(categories[0].aciklama)
+  await noOverflow(page)
+  await page.screenshot({ path: testInfo.outputPath('kategori-banner-uzun-metin.png') })
+})
+
+test('yönetim banner alanlarını bağımsız kaldırır ve yeniden yükler; kart görselini korur', async ({ page }) => {
+  await adminSession(page)
+  await page.goto('/admin/kategoriler')
+  const row = page.viewportSize()!.width < 640
+    ? page.locator('.sm\\:hidden > div').filter({ has: page.getByText('Baharatlar', { exact: true }) })
+    : page.getByRole('row').filter({ has: page.getByText('Baharatlar', { exact: true }) })
+  await row.getByRole('button', { name: 'Düzenle', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Kategori Düzenle' })
+  await dialog.getByRole('region', { name: 'Mobil banner', exact: true }).getByRole('button', { name: 'Görsel 1 sil' }).click()
+  const desktop = dialog.getByRole('region', { name: 'Masaüstü banner', exact: true })
+  await desktop.getByRole('button', { name: 'Görsel 1 sil' }).click()
+  const mobile = dialog.getByRole('region', { name: 'Mobil banner', exact: true })
+  await mobile.locator('input[type="file"]').setInputFiles({ name: 'mobile.png', mimeType: 'image/png', buffer: Buffer.from('fixture') })
+  await dialog.locator('textarea').fill('Yönetici açıklaması')
+  await expect(mobile.getByText('Yükleme bekliyor', { exact: true })).toBeVisible()
+  await page.route('**/functions/v1/image-storage-upload', route => route.fulfill({ json: { success: true, data: { publicUrl: 'https://banner.example.test/replacement.png' } } }))
+  await desktop.getByRole('tab', { name: 'Link ile Ekle' }).click()
+  await desktop.locator('input[type="url"]').fill('https://banner.example.test/source.png')
+  await desktop.getByRole('button', { name: 'Ekle', exact: true }).click()
+  await expect(desktop.getByText('Yüklendi', { exact: true })).toBeVisible()
+  await expect(mobile.getByText('Yükleme bekliyor', { exact: true })).toBeVisible()
+  await mobile.getByRole('button', { name: 'Görsel 1 sil' }).click()
+  const save = page.waitForRequest(request => request.method() === 'PATCH' && request.url().includes('/rest/v1/kategoriler'))
+  await dialog.getByRole('button', { name: 'Güncelle', exact: true }).click()
+  const payload = (await save).postDataJSON()
+  expect(payload.banner_mobile_url).toBe('')
+  expect(payload.banner_desktop_url).toBe('https://banner.example.test/replacement.png')
+  expect(payload.gorsel_url).toBe('')
+  await noOverflow(page)
 })
 
 test('menü alt kategorileri açar ve üçüncü seviye bağlantıyı korur', async ({ page }, testInfo) => {

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { AlertCircle, ArrowUpDown, Loader2, PackageSearch, RotateCcw, Search, SlidersHorizontal, Tag, X } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
 import CatalogToolbar from '../components/CatalogToolbar'
+import CategoryBanner from '../components/CategoryBanner'
 import { useAuth } from '../contexts/AuthContext'
 import { buildCategoryTree, getCategoryBranchIds, getCategoryPath, loadCategories } from '../lib/category-hierarchy'
 import { publicSupabase } from '../lib/supabase'
@@ -217,7 +218,7 @@ export default function Urunler() {
         </div>}
       </CatalogToolbar>
       <div className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-      <div className="shop-page-heading mb-6">
+      {categoryPath[0] ? <CategoryBanner key={categoryPath[0].id} category={categoryPath[0]} /> : <div className="shop-page-heading mb-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">
             <div className="shop-eyebrow">
@@ -231,7 +232,7 @@ export default function Urunler() {
           </div>
 
         </div>
-      </div>
+      </div>}
 
         <section className="min-w-0">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

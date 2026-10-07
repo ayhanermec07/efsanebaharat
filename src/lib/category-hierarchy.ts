@@ -63,7 +63,7 @@ export async function loadCategories(client: SupabaseClient, activeOnly: boolean
   const categories: CatalogCategory[] = []
   const pageSize = 500
   for (let offset = 0; ; offset += pageSize) {
-    let query = client.from('kategoriler').select('id,kategori_adi,ust_kategori_id,sira_no').order('id')
+    let query = client.from('kategoriler').select('id,kategori_adi,ust_kategori_id,sira_no,aciklama,banner_desktop_url,banner_mobile_url').order('id')
     if (activeOnly) query = query.eq('aktif_durum', true)
     const { data, error } = await query.range(offset, offset + pageSize - 1)
     if (error) throw error

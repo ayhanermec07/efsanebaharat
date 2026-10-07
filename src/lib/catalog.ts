@@ -61,6 +61,9 @@ export interface CatalogCategory {
   kategori_adi: string
   ust_kategori_id: string | null
   sira_no: number | null
+  aciklama?: string | null
+  banner_desktop_url?: string | null
+  banner_mobile_url?: string | null
 }
 
 export interface CatalogBrand {
