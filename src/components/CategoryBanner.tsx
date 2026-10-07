@@ -21,8 +21,8 @@ export default function CategoryBanner({ category }: { category: CatalogCategory
   const description = category.aciklama?.trim()
 
   return <div className="shop-page-heading relative isolate overflow-hidden !p-0" data-category-banner={category.id}>
-    {hasImage && <img key={`${src}:${failed}`} {...(failed ? { src } : sources)} sizes="(min-width: 768px) 50vw, calc(100vw - 32px)" alt="" aria-hidden="true" loading="eager" decoding="async" className="absolute inset-x-0 bottom-0 -z-10 h-[200px] w-full object-cover object-bottom [mask-image:linear-gradient(to_bottom,transparent,black_20%)] md:left-auto md:h-full md:w-1/2 md:object-right md:[mask-image:linear-gradient(to_right,transparent,black_20%)]" onError={() => setFailures(current => ({ ...current, [src]: failed === 0 && sources.src !== src ? 1 : 2 }))} />}
-    <div className={`relative flex flex-col p-5 sm:p-7 ${hasImage ? 'min-h-[320px] pb-[200px] sm:pb-[200px] md:min-h-[220px] md:pb-7' : ''}`}>
+    {hasImage && <img key={`${src}:${failed}`} {...(failed ? { src } : sources)} sizes="(min-width: 768px) 50vw, calc(100vw - 32px)" alt="" aria-hidden="true" loading="eager" decoding="async" className="absolute inset-x-0 bottom-0 -z-10 h-[145px] w-full object-cover object-[center_65%] [mask-image:linear-gradient(to_bottom,transparent,black_20%)] md:left-auto md:h-full md:w-1/2 md:object-right md:[mask-image:linear-gradient(to_right,transparent,black_20%)]" onError={() => setFailures(current => ({ ...current, [src]: failed === 0 && sources.src !== src ? 1 : 2 }))} />}
+    <div className={`relative flex flex-col p-5 sm:p-7 ${hasImage ? 'min-h-[240px] pb-[145px] sm:pb-[145px] md:min-h-[160px] md:pb-7' : ''}`}>
       <div className={`min-w-0 ${hasImage ? 'md:w-1/2' : ''}`}>
         <div className="shop-eyebrow"><PackageSearch className="h-4 w-4 shrink-0" />Ürün kataloğu</div>
         <h1 className="mt-3 break-words text-3xl font-bold sm:text-4xl">{category.kategori_adi}</h1>
