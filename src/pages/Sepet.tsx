@@ -1,3 +1,4 @@
+import { SiteImage } from '../components/SiteImage'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -329,7 +330,7 @@ export default function Sepet() {
                   <div className="grid gap-3 sm:grid-cols-[96px_minmax(0,1fr)]">
                     <div className="h-24 w-24 overflow-hidden rounded-lg bg-zinc-100">
                       {item.gorsel_url ? (
-                        <img src={item.gorsel_url} alt={item.urun_adi} className="h-full w-full object-cover" />
+                        <SiteImage variant="thumb" src={item.gorsel_url} alt={item.urun_adi} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-orange-100 text-2xl font-bold text-orange-700">
                           {item.urun_adi.charAt(0)}

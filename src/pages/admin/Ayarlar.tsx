@@ -1,3 +1,5 @@
+import { SiteImage } from '../../components/SiteImage'
+import MediaTransferStatus from '../../components/admin/MediaTransferStatus'
 import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -227,6 +229,7 @@ export default function Ayarlar() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-gray-900">Ayarlar</h1>
+                    <MediaTransferStatus />
             </div>
 
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -374,7 +377,7 @@ export default function Ayarlar() {
                                 <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                                     {logo.url ? (
                                         <div className="mb-4">
-                                            <img
+                                            <SiteImage variant="thumb"
                                                 src={logo.url}
                                                 alt="Site Logo"
                                                 style={{ width: logoPreviewSize, height: logoPreviewSize, margin: '0 auto' }}

@@ -1,3 +1,4 @@
+import { SiteImage } from '../components/SiteImage'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AlertCircle, Check, Minus, Plus, RotateCcw, ShoppingBag, Sprout } from 'lucide-react'
@@ -156,7 +157,11 @@ export default function UrunDetay() {
           <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
             <div className="aspect-square bg-zinc-100">
               {gorseller.length > 0 ? (
-                <img
+                <SiteImage
+                  variant="detail"
+                  loading="eager"
+                  fetchPriority="high"
+                  sizes="(min-width: 1280px) 736px, (min-width: 1024px) calc(100vw - 544px), calc(100vw - 32px)"
                   src={getImageUrl(gorseller[secilenGorsel]?.gorsel_url)}
                   alt={urun.urun_adi}
                   className="h-full w-full object-contain p-3"
@@ -180,7 +185,7 @@ export default function UrunDetay() {
                   onClick={() => setSecilenGorsel(index)}
                   className={`h-20 w-20 shrink-0 overflow-hidden rounded-lg border-2 bg-white ${index === secilenGorsel ? 'border-orange-600' : 'border-zinc-200'}`}
                 >
-                  <img src={getImageUrl(gorsel.gorsel_url)} alt={`${urun.urun_adi} ${index + 1}`} className="h-full w-full object-contain p-3" />
+                  <SiteImage variant="thumb" src={getImageUrl(gorsel.gorsel_url)} alt={`${urun.urun_adi} ${index + 1}`} className="h-full w-full object-contain p-3" />
                 </button>
               ))}
             </div>

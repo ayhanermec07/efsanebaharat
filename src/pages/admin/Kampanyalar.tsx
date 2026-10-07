@@ -1,3 +1,4 @@
+import { SiteImage } from '../../components/SiteImage'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { ImageUpload } from '../../components/ImageUpload'
@@ -545,7 +546,7 @@ function BannerlarTab({ bannerlar, kampanyalar, onAdd, onEdit, onDelete }: any) 
           return (
             <div key={banner.id} className="bg-white rounded-lg shadow-sm p-4 flex items-start space-x-4">
               {banner.gorsel_url && (
-                <img
+                <SiteImage variant="thumb"
                   src={getImageUrl(banner.gorsel_url)}
                   alt={banner.baslik || 'Banner'}
                   className="w-32 h-20 object-cover rounded"

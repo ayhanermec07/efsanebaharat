@@ -1,3 +1,4 @@
+import { SiteImage } from '../../components/SiteImage'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { ImageUpload } from '../../components/ImageUpload'
@@ -276,7 +277,7 @@ export default function Urunler() {
                 <tr key={urun.id}>
                   <td className="px-6 py-4">
                     {urun.ana_gorsel_url ? (
-                      <img
+                      <SiteImage variant="thumb"
                         src={urun.ana_gorsel_url}
                         alt={urun.urun_adi}
                         className="w-16 h-16 object-cover rounded-lg"

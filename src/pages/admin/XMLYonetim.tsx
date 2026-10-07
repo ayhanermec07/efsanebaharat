@@ -1,3 +1,5 @@
+import { SiteImage } from '../../components/SiteImage'
+import MediaTransferStatus from '../../components/admin/MediaTransferStatus'
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { FileCode, RefreshCw, Download, Copy, Check, Key, Eye, EyeOff, Package, CheckCircle, XCircle, AlertTriangle, Activity, UploadCloud } from 'lucide-react'
@@ -755,6 +757,7 @@ export default function XMLYonetim() {
                 <div className="flex items-center gap-3">
                     <FileCode className="w-8 h-8 text-orange-600" />
                     <h1 className="text-3xl font-bold text-gray-900">Bayi XML Yönetimi</h1>
+                    <MediaTransferStatus />
                 </div>
                 <button
                     onClick={loadData}
@@ -1220,7 +1223,7 @@ export default function XMLYonetim() {
                                     <tr key={product.id} className="hover:bg-gray-50">
                                         <td className="px-4 py-3">
                                             {product.gorsel_url ? (
-                                                <img
+                                                <SiteImage variant="thumb"
                                                     src={product.gorsel_url}
                                                     alt={product.urun_adi}
                                                     className="w-10 h-10 object-cover rounded"

@@ -34,6 +34,7 @@ jobs:
           VITE_SUPABASE_URL: https://api.efsanebaharat.appsgo.cloud
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       - run: node --test tests/business-info.test.mjs tests/production-config.test.mjs tests/commerce-document.test.mjs tests/stock-management-busy.test.mjs
+      - run: node --test tests/media.test.mjs tests/media-performance.test.mjs
       - name: Production Docker image
         run: docker build --build-arg VITE_SUPABASE_URL --build-arg VITE_SUPABASE_ANON_KEY -t efsane-frontend-ci .
         env:

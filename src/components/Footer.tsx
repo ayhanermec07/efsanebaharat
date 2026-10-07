@@ -1,3 +1,4 @@
+import { SiteImage } from './SiteImage'
 import { Link } from 'react-router-dom'
 import { ShieldCheck, Sprout, Truck } from 'lucide-react'
 import SellerInformation from './SellerInformation'
@@ -16,7 +17,7 @@ export default function Footer() {
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg text-emerald-700">
                 {logo.url ? (
-                  <img src={getImageUrl(logo.url)} alt={`${siteInfo.siteName} logosu`} className="h-full w-full object-contain object-center" />
+                  <SiteImage variant="thumb" src={getImageUrl(logo.url)} alt={`${siteInfo.siteName} logosu`} className="h-full w-full object-contain object-center" />
                 ) : themeLoading ? null : <Sprout className="h-7 w-7" aria-hidden="true" />}
               </div>
               <div>

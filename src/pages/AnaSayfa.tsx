@@ -1,3 +1,4 @@
+import { SiteImage } from '../components/SiteImage'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronLeft, ChevronRight, Sprout } from 'lucide-react'
@@ -150,7 +151,7 @@ export default function AnaSayfa() {
               </div>
             </div>
           <div className="shop-hero-art aspect-[4/3] md:aspect-square lg:aspect-[4/3]">
-            {heroImage ? <img src={heroImage} alt={activeBanner?.banner_gorseli ? activeBanner.ad : heroProduct?.urun_adi || 'Baharat seçkimiz'} className="h-full w-full object-contain" fetchPriority="high" /> : <div className="flex flex-col items-center gap-4 text-emerald-700"><Sprout className="h-16 w-16 stroke-1" aria-hidden="true" /><span className="font-display text-2xl">Sofranıza bir tutam lezzet</span></div>}
+            {heroImage ? <SiteImage variant="hero" loading="eager" src={heroImage} alt={activeBanner?.banner_gorseli ? activeBanner.ad : heroProduct?.urun_adi || 'Baharat seçkimiz'} className="h-full w-full object-contain" fetchPriority="high" /> : <div className="flex flex-col items-center gap-4 text-emerald-700"><Sprout className="h-16 w-16 stroke-1" aria-hidden="true" /><span className="font-display text-2xl">Sofranıza bir tutam lezzet</span></div>}
           </div>
         </div>
           {banners.length > 1 && (
@@ -229,7 +230,8 @@ export default function AnaSayfa() {
                 >
                   <div className="flex aspect-[4/3] w-full items-center justify-center bg-zinc-50 p-4">
                     {logoUrl ? (
-                      <img
+                      <SiteImage
+                        sizes="(min-width: 1280px) 16vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
                         src={logoUrl}
                         alt={`${marka.marka_adi} logosu`}
                         className="max-h-full max-w-full object-contain transition duration-200 group-hover:scale-[1.03]"
@@ -307,7 +309,7 @@ function ProductRail({ title, link, products, total, page = 0, onPageChange }: P
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {products.map((urun) => (
-          <UrunKart key={urun.id} urun={urun} />
+          <UrunKart key={urun.id} urun={urun} imageSizes="(min-width: 1280px) 300px, (min-width: 1024px) 25vw, 50vw" />
         ))}
       </div>
     </section>

@@ -12,3 +12,11 @@ test('üretim yalnız doğrulanmış self-hosted URL ve public anahtar kabul ede
     assert.throws(() => validateProductionConfig({ ...valid, VITE_SUPABASE_ANON_KEY: key }), /public/i)
   }
 })
+
+test('görsel dönüşümü üretimde yalnız güvenli özel alan adıyla açılır', () => {
+  const valid = { VITE_SUPABASE_URL: 'https://api.efsanebaharat.appsgo.cloud', VITE_SUPABASE_ANON_KEY: anonKey, VITE_MEDIA_TRANSFORMS: 'true' }
+  for (const url of ['', 'http://images.example.com', 'https://x.r2.dev', 'https://u:p@images.example.com', 'https://images.example.com/path']) {
+    assert.throws(() => validateProductionConfig({ ...valid, VITE_MEDIA_BASE_URL: url }), /görsel/i)
+  }
+  assert.doesNotThrow(() => validateProductionConfig({ ...valid, VITE_MEDIA_BASE_URL: 'https://images.efsanebaharat.com' }))
+})

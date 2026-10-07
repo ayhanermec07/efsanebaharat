@@ -37,10 +37,10 @@ test('sitemap yalnız izinli sabit mağaza yollarını duyurur', () => {
   const sitemap = readFileSync(path.join(root, 'public/sitemap.xml'), 'utf8')
   const urls = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(match => match[1])
   assert.deepEqual(urls, [
-    'https://efsanebaharat.appsgo.cloud/',
-    'https://efsanebaharat.appsgo.cloud/urunler',
-    'https://efsanebaharat.appsgo.cloud/en-cok-satan',
-    'https://efsanebaharat.appsgo.cloud/kampanyalar',
-    'https://efsanebaharat.appsgo.cloud/bize-ulasin'
+    'https://www.efsanebaharat.com/',
+    'https://www.efsanebaharat.com/urunler',
+    'https://www.efsanebaharat.com/en-cok-satan',
+    'https://www.efsanebaharat.com/kampanyalar',
+    'https://www.efsanebaharat.com/bize-ulasin'
   ])
 })

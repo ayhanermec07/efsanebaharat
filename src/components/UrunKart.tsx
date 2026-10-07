@@ -1,3 +1,4 @@
+import { SiteImage } from './SiteImage'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowUpRight, Check, PackageOpen, ShoppingBag } from 'lucide-react'
@@ -9,13 +10,14 @@ import { formatPrice } from '../lib/currency'
 
 interface UrunKartProps {
   urun: any
+  imageSizes?: string
   kampanya?: {
     indirim_tipi: 'yuzde' | 'tutar'
     indirim_degeri: number
   } | null
 }
 
-export default function UrunKart({ urun, kampanya }: UrunKartProps) {
+export default function UrunKart({ urun, kampanya, imageSizes }: UrunKartProps) {
   const { user, grupIskontoOrani, ozelIskontoOrani } = useAuth()
   const { sepeteEkle } = useSepet()
   const navigate = useNavigate()
@@ -109,7 +111,8 @@ export default function UrunKart({ urun, kampanya }: UrunKartProps) {
       <Link to={`/urun/${urun.id}`} className="relative block bg-brand-soft">
         <div className="aspect-square w-full overflow-hidden">
           {ilkGorsel && !imgError ? (
-            <img
+            <SiteImage
+              sizes={imageSizes}
               src={ilkGorsel}
               alt={urun.urun_adi}
               className="h-full w-full object-contain p-3 transition duration-300 group-hover:scale-[1.03] sm:p-5"

@@ -1,26 +1,18 @@
 import { supabase } from '../lib/supabase'
 
 export const uploadImage = async (file: File, bucket = 'urun-gorselleri'): Promise<string | null> => {
+    if (file.size > 8 * 1024 * 1024) return null
     try {
-        const fileExt = file.name.split('.').pop()
-        const fileName = `${Date.now()}_${Math.random()}.${fileExt}`
-        const filePath = `${fileName}`
-
-        const { error: uploadError } = await supabase.storage
-            .from(bucket)
-            .upload(filePath, file)
-
-        if (uploadError) {
-            throw uploadError
-        }
-
-        const { data } = supabase.storage
-            .from(bucket)
-            .getPublicUrl(filePath)
-
-        return data.publicUrl
-    } catch (error) {
-        console.error('Görsel yükleme hatası:', error)
-        return null
-    }
+        const imageData = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(String(reader.result))
+            reader.onerror = () => reject(new Error('Görsel okunamadı'))
+            reader.readAsDataURL(file)
+        })
+        const { data, error } = await supabase.functions.invoke('image-storage-upload', {
+            body: { imageData, bucketName: bucket, fileName: file.name },
+        })
+        if (error || !data?.success || !data?.data?.publicUrl) return null
+        return data.data.publicUrl
+    } catch { return null }
 }

@@ -1,3 +1,4 @@
+import { SiteImage } from './SiteImage'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { ChevronDown, LayoutDashboard, LogOut, Menu, Search, ShoppingBag, Sprout, User, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -182,7 +183,7 @@ export default function Header() {
               style={logo.url ? { width: logoSize, height: logoSize } : undefined}
             >
               {logo.url ? (
-                <img
+                <SiteImage variant="thumb" loading="eager"
                   src={getImageUrl(logo.url)}
                   alt={`${siteInfo.siteName} logosu`}
                   fetchPriority="high"
@@ -321,7 +322,7 @@ export default function Header() {
                         >
                           <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-zinc-100">
                             {urun.ana_gorsel_url ? (
-                              <img src={getImageUrl(urun.ana_gorsel_url)} alt={urun.urun_adi} className="h-full w-full object-contain" />
+                              <SiteImage variant="thumb" src={getImageUrl(urun.ana_gorsel_url)} alt={urun.urun_adi} className="h-full w-full object-contain" />
                             ) : (
                               <div className="site-primary-bg flex h-full w-full items-center justify-center text-white">{urun.urun_adi.charAt(0)}</div>
                             )}

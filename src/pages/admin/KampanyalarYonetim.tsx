@@ -1,3 +1,4 @@
+import { SiteImage } from '../../components/SiteImage'
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Plus, Edit, Trash2, Calendar, Tag, TrendingUp, Copy, Check, RefreshCw, Image as ImageIcon, Save } from 'lucide-react';
@@ -332,7 +333,7 @@ export default function KampanyalarYonetim() {
                 <div className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
                   
                   {kampanya.banner_gorseli && (
-                    <img
+                    <SiteImage variant="thumb"
                       src={getImageUrl(kampanya.banner_gorseli)}
                       alt={`${kampanya.ad} bannerı`}
                       className="h-28 w-full rounded-lg border border-gray-100 object-cover md:w-48"
@@ -784,7 +785,7 @@ export default function KampanyalarYonetim() {
                                 <div className="aspect-[21/9] w-full rounded-xl bg-gray-200 overflow-hidden relative border border-gray-300 shadow-inner flex items-center justify-center">
                                   {formData.banner_gorseli ? (
                                     <>
-                                      <img src={formData.banner_gorseli} alt="Banner" className="w-full h-full object-cover" />
+                                      <SiteImage variant="thumb" src={formData.banner_gorseli} alt="Banner" className="w-full h-full object-cover" />
                                       <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center p-4">
                                         <div className="text-white">
                                           <h5 className="font-bold text-lg">{formData.ad || 'Kampanya Adı'}</h5>
