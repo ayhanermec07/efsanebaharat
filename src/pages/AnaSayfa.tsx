@@ -1,5 +1,5 @@
 import { SiteImage } from '../components/SiteImage'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronLeft, ChevronRight, Sprout } from 'lucide-react'
 import CanliDestekWidget from '../components/CanliDestekWidget'
@@ -7,28 +7,28 @@ import UrunKart from '../components/UrunKart'
 import { publicSupabase } from '../lib/supabase'
 import { loadPublicCatalog } from '../lib/catalog'
 import { getImageUrl } from '../utils/imageUtils'
+import CampaignCarousel from '../components/CampaignCarousel'
+import { homeCampaignSlides, type CampaignSlide } from '../lib/home-campaigns'
 import { useAuth } from '../contexts/AuthContext'
 
-const pageSize = 4
+const pageSize = 5
 
 export default function AnaSayfa() {
-  const [banners, setBanners] = useState<any[]>([])
+  const [banners, setBanners] = useState<CampaignSlide[]>([])
   const [oneCikanUrunler, setOneCikanUrunler] = useState<any[]>([])
   const [enCokSatanlar, setEnCokSatanlar] = useState<any[]>([])
   const [yeniEklenenler, setYeniEklenenler] = useState<any[]>([])
   const [markalar, setMarkalar] = useState<any[]>([])
-  const [currentBanner, setCurrentBanner] = useState(0)
   const [bestsellerPage, setBestsellerPage] = useState(0)
   const [newProductsPage, setNewProductsPage] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const hasLoadedRef = useRef(false)
   const { musteriData } = useAuth()
   
   const musteriTipi = musteriData?.musteri_tipi || 'musteri'
 
   useEffect(() => {
-    if (hasLoadedRef.current) return
+    let active = true
 
     async function loadData() {
       try {
@@ -37,7 +37,7 @@ export default function AnaSayfa() {
         const now = new Date().toISOString()
 
         const [catalog, campaignResponse] = await Promise.all([
-          loadPublicCatalog({ limit: 16, sirala: 'yeni', meta: true }),
+          loadPublicCatalog({ limit: 15, sirala: 'yeni', meta: true }),
           publicSupabase
             .from('kampanyalar')
             .select('id, ad, aciklama, banner_gorseli, kapsam, kategori_id, marka_id, kod, hedef_grup, sira_no')
@@ -48,66 +48,43 @@ export default function AnaSayfa() {
             .gte('bitis_tarihi', now)
             .order('sira_no')
         ])
+        if (!active) return
         // DTO ürün, görsel ve yalnız izinli satış satırlarını iç içe döndürür.
         const products = catalog.urunler
-        setOneCikanUrunler(products.slice(0, 4))
-        setEnCokSatanlar(products.slice(0, 12))
+        setOneCikanUrunler(products.slice(0, 5))
+        setEnCokSatanlar(products.slice(0, 15))
         setYeniEklenenler(products)
         setMarkalar(catalog.markalar || [])
-        if (campaignResponse.error) {
-          console.error('Ana sayfa kampanyaları yüklenemedi:', campaignResponse.error)
-        } else {
-          setBanners(campaignResponse.data || [])
-        }
-        hasLoadedRef.current = true
+        const campaigns = campaignResponse.data || []
+        if (campaignResponse.error) console.error('Ana sayfa kampanyaları yüklenemedi:', campaignResponse.error)
+        const artwork = campaigns.length ? await publicSupabase.from('kampanya_banner')
+          .select('id, kampanya_id, gorsel_url, baslik').eq('aktif', true)
+          .in('kampanya_id', campaigns.map(campaign => campaign.id)).order('goruntuleme_sirasi').order('id') : null
+        if (artwork?.error) console.error('Kampanya bannerları yüklenemedi:', artwork.error)
+        if (active) setBanners(homeCampaignSlides(campaigns, artwork?.data || []))
       } catch (err) {
         console.error('Veri yükleme hatası:', err)
-        setError('Veriler yüklenirken bir hata oluştu.')
+        if (active) setError('Veriler yüklenirken bir hata oluştu.')
       } finally {
-        setLoading(false)
+        if (active) setLoading(false)
       }
     }
 
     loadData()
+    return () => { active = false }
   }, [musteriTipi])
 
-  useEffect(() => {
-    setCurrentBanner((current) => Math.min(current, Math.max(banners.length - 1, 0)))
-
-    if (banners.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-
-    const interval = window.setInterval(() => {
-      setCurrentBanner((current) => (current + 1) % banners.length)
-    }, 6000)
-
-    return () => window.clearInterval(interval)
-  }, [banners.length])
-
-  const activeBanner = banners[currentBanner]
   const heroProduct = oneCikanUrunler.find(product => product.urun_gorselleri?.[0]?.gorsel_url || product.ana_gorsel_url)
-  const heroImage = getImageUrl(activeBanner?.banner_gorseli || heroProduct?.urun_gorselleri?.[0]?.gorsel_url || heroProduct?.ana_gorsel_url)
-  const heroTitle = activeBanner?.ad || 'Sofranın sırrı, bir tutam baharat.'
-  const heroText = activeBanner?.aciklama || 'Tanıdık tatları yeniden keşfedin. Mutfağınızın vazgeçilmez baharatları bir arada.'
-  
-  let heroLink = '/urunler'
-  if (activeBanner) {
-    if (activeBanner.kapsam === 'kategori' && activeBanner.kategori_id) {
-      heroLink = `/urunler?kategori=${activeBanner.kategori_id}&kampanya=${activeBanner.id}`
-    } else if (activeBanner.kapsam === 'marka' && activeBanner.marka_id) {
-      heroLink = `/urunler?marka=${activeBanner.marka_id}&kampanya=${activeBanner.id}`
-    } else {
-      heroLink = `/urunler?kampanya=${activeBanner.id}`
-    }
-  }
-
-  const nextBanner = () => setCurrentBanner((prev) => (prev + 1) % Math.max(banners.length, 1))
-  const prevBanner = () => setCurrentBanner((prev) => (prev - 1 + Math.max(banners.length, 1)) % Math.max(banners.length, 1))
+  const heroImage = getImageUrl(heroProduct?.urun_gorselleri?.[0]?.gorsel_url || heroProduct?.ana_gorsel_url)
+  const heroTitle = 'Sofranın sırrı, bir tutam baharat.'
+  const heroText = 'Tanıdık tatları yeniden keşfedin. Mutfağınızın vazgeçilmez baharatları bir arada.'
+  const heroLink = '/urunler'
 
   if (loading) {
     return (
       <div className="shop-container py-16">
-        <div className="grid gap-4 md:grid-cols-4">
-          {[0, 1, 2, 3].map((item) => (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          {[0, 1, 2, 3, 4].map((item) => (
             <div key={item} className="h-72 animate-pulse rounded-lg bg-white shadow-sm" />
           ))}
         </div>
@@ -131,10 +108,10 @@ export default function AnaSayfa() {
   return (
     <div className="min-w-0">
       <section className="shop-container py-7 sm:py-10 lg:py-12">
-        <div className="grid items-center gap-7 md:grid-cols-2 md:gap-10 lg:gap-16">
+        {banners.length ? <CampaignCarousel slides={banners} /> : <div className="grid items-center gap-7 md:grid-cols-2 md:gap-10 lg:gap-16">
             <div className="min-w-0 py-2">
               <p className="shop-eyebrow">
-                {activeBanner ? 'Öne çıkan kampanya' : 'Günlük mutfağınıza'}
+                Günlük mutfağınıza
               </p>
               <h1 className="mt-4 max-w-xl text-4xl leading-[1.12] text-brand-ink sm:text-5xl lg:text-6xl">
                 {heroTitle}
@@ -144,42 +121,16 @@ export default function AnaSayfa() {
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Link to={heroLink} className="shop-btn-primary">
-                  {activeBanner ? 'Kampanyayı incele' : 'Baharatları keşfet'}
+                  Baharatları keşfet
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
                 <Link to="/kampanyalar" className="shop-btn-secondary">Kampanyalar</Link>
               </div>
             </div>
           <div className="shop-hero-art aspect-[4/3] md:aspect-square lg:aspect-[4/3]">
-            {heroImage ? <SiteImage variant="hero" loading="eager" src={heroImage} alt={activeBanner?.banner_gorseli ? activeBanner.ad : heroProduct?.urun_adi || 'Baharat seçkimiz'} className="h-full w-full object-contain" fetchPriority="high" /> : <div className="flex flex-col items-center gap-4 text-emerald-700"><Sprout className="h-16 w-16 stroke-1" aria-hidden="true" /><span className="font-display text-2xl">Sofranıza bir tutam lezzet</span></div>}
+            {heroImage ? <SiteImage variant="hero" loading="eager" src={heroImage} alt={heroProduct?.urun_adi || 'Baharat seçkimiz'} className="h-full w-full object-contain" fetchPriority="high" /> : <div className="flex flex-col items-center gap-4 text-emerald-700"><Sprout className="h-16 w-16 stroke-1" aria-hidden="true" /><span className="font-display text-2xl">Sofranıza bir tutam lezzet</span></div>}
           </div>
-        </div>
-          {banners.length > 1 && (
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap gap-1" aria-label="Kampanya seçimi">
-                {banners.map((banner, index) => (
-                  <button
-                    key={banner.id}
-                  type="button"
-                  onClick={() => setCurrentBanner(index)}
-                    className="grid h-11 w-11 place-items-center rounded-lg"
-                    aria-label={`${index + 1}. kampanyayı göster`}
-                    aria-current={index === currentBanner}
-                  >
-                    <span className={`h-2 min-w-2 rounded-full transition-all ${index === currentBanner ? 'site-primary-bg w-6' : 'bg-zinc-300'}`} />
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <button type="button" onClick={prevBanner} className="shop-icon-button" aria-label="Önceki banner">
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <button type="button" onClick={nextBanner} className="shop-icon-button" aria-label="Sonraki banner">
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          )}
+        </div>}
       </section>
 
       {oneCikanUrunler.length > 0 && (
@@ -307,9 +258,9 @@ function ProductRail({ title, link, products, total, page = 0, onPageChange }: P
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
         {products.map((urun) => (
-          <UrunKart key={urun.id} urun={urun} imageSizes="(min-width: 1280px) 300px, (min-width: 1024px) 25vw, 50vw" />
+          <UrunKart key={urun.id} urun={urun} imageSizes="(min-width: 1280px) 230px, (min-width: 1024px) 20vw, (min-width: 768px) 33vw, 50vw" />
         ))}
       </div>
     </section>

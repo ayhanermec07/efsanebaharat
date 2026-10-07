@@ -741,7 +741,7 @@ export default function KampanyalarYonetim() {
                                 Ana Sayfada Göster
                               </h4>
                               <p className="text-sm text-gray-500 mt-1">
-                                Bu kampanya, aktif olduğu tarihlerde ana sayfanın en üst alanında dönüşümlü olarak gösterilir.
+                                Görselli kampanyalar aktif oldukları tarihlerde ana sayfa banner alanında 6 saniyede bir döner.
                               </p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
@@ -771,10 +771,11 @@ export default function KampanyalarYonetim() {
                                 </div>
                                 <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                                   <label className="block text-sm font-medium text-gray-700 mb-2">Banner Görseli</label>
+                                  <p className="mb-3 text-xs text-gray-500">Yatay görsel için 1600 × 500 px önerilir. Görsel kırpılmadan gösterilir; görselsiz kampanyalar banner alanına eklenmez.</p>
                                   <ImageUpload
                                     maxFiles={1}
                                     bucketName="banner-gorselleri"
-                                    onUploadComplete={(urls) => setFormData({ ...formData, banner_gorseli: urls[0] || '' })}
+                                    onUploadComplete={(urls) => setFormData(current => ({ ...current, banner_gorseli: urls[0] || '' }))}
                                     existingImages={formData.banner_gorseli ? [formData.banner_gorseli] : []}
                                     maxSizeMB={8}
                                   />
@@ -785,7 +786,7 @@ export default function KampanyalarYonetim() {
                                 <div className="aspect-[21/9] w-full rounded-xl bg-gray-200 overflow-hidden relative border border-gray-300 shadow-inner flex items-center justify-center">
                                   {formData.banner_gorseli ? (
                                     <>
-                                      <SiteImage variant="thumb" src={formData.banner_gorseli} alt="Banner" className="w-full h-full object-cover" />
+                                      <SiteImage variant="thumb" src={formData.banner_gorseli} alt="Banner" className="w-full h-full object-contain" />
                                       <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center p-4">
                                         <div className="text-white">
                                           <h5 className="font-bold text-lg">{formData.ad || 'Kampanya Adı'}</h5>
