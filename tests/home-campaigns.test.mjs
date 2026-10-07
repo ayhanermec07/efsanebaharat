@@ -28,3 +28,9 @@ test('Marka ve genel kampanyalarda doğru filtre bağlantısı oluşur', () => {
  assert.equal(result[0].href, '/urunler?marka=brand&kampanya=c1')
  assert.equal(result[1].href, '/urunler?kampanya=all')
 })
+
+test('Yönetici ve ziyaretçi müşteri kampanyalarını, bayi yalnız bayi kampanyalarını sorgular', () => {
+ const { homeCampaignAudience } = module.exports
+ for (const type of ['admin', 'musteri', null, undefined]) assert.equal(homeCampaignAudience(type), 'musteri')
+ assert.equal(homeCampaignAudience('bayi'), 'bayi')
+})

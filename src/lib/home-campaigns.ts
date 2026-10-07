@@ -34,3 +34,8 @@ export function homeCampaignSlides(campaigns: HomeCampaign[], artwork: CampaignA
     return campaign.banner_gorseli?.trim() ? [{ id: `campaign:${campaign.id}`, title: campaign.ad || 'Kampanya', image: campaign.banner_gorseli.trim(), href }] : []
   })
 }
+
+// Yönetici mağaza önizlemesi normal müşteri kampanyalarını kullanır.
+export function homeCampaignAudience(customerType?: string | null): 'bayi' | 'musteri' {
+  return customerType === 'bayi' ? 'bayi' : 'musteri'
+}

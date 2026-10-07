@@ -8,7 +8,7 @@ import { publicSupabase } from '../lib/supabase'
 import { loadPublicCatalog } from '../lib/catalog'
 import { getImageUrl } from '../utils/imageUtils'
 import CampaignCarousel from '../components/CampaignCarousel'
-import { homeCampaignSlides, type CampaignSlide } from '../lib/home-campaigns'
+import { homeCampaignAudience, homeCampaignSlides, type CampaignSlide } from '../lib/home-campaigns'
 import { useAuth } from '../contexts/AuthContext'
 
 const pageSize = 5
@@ -25,7 +25,7 @@ export default function AnaSayfa() {
   const [error, setError] = useState<string | null>(null)
   const { musteriData } = useAuth()
   
-  const musteriTipi = musteriData?.musteri_tipi || 'musteri'
+  const musteriTipi = homeCampaignAudience(musteriData?.musteri_tipi)
 
   useEffect(() => {
     let active = true
