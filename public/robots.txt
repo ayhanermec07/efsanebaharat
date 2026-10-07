@@ -12,4 +12,4 @@ Disallow: /odeme-
 Disallow: /sorularim
 Disallow: /urun/
 
-Sitemap: https://efsanebaharat.appsgo.cloud/sitemap.xml
+Sitemap: https://www.efsanebaharat.com/sitemap.xml

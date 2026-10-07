@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CheckCircle2, Info, LockKeyhole, UserPlus } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { CUSTOMER_PASSWORD_HINT, isValidCustomerPassword } from '../lib/password-policy'
 
 export default function Kayit() {
   const [formData, setFormData] = useState({
@@ -15,7 +16,7 @@ export default function Kayit() {
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     setError('')
-    if (formData.password.length < 12) return setError('Şifreniz en az 12 karakter olmalıdır.')
+    if (!isValidCustomerPassword(formData.password)) return setError(CUSTOMER_PASSWORD_HINT)
     if (formData.password !== formData.passwordConfirmation) return setError('Şifre ve şifre tekrarı aynı olmalıdır.')
 
     setLoading(true)
@@ -69,7 +70,8 @@ export default function Kayit() {
         <div className="grid gap-4 sm:grid-cols-2"><Field label="Ad" name="ad" value={formData.ad} onChange={handleChange} required autoComplete="given-name" /><Field label="Soyad" name="soyad" value={formData.soyad} onChange={handleChange} required autoComplete="family-name" /></div>
         <div className="grid gap-4 sm:grid-cols-2"><Field label="Telefon numarası" name="telefon" type="tel" value={formData.telefon} onChange={handleChange} required autoComplete="tel" /><Field label="E-posta adresi" name="email" type="email" value={formData.email} onChange={handleChange} required autoComplete="email" /></div>
         <label className="block"><span className="mb-1.5 block text-sm font-bold text-zinc-700">Adres <span className="font-normal text-zinc-500">(isteğe bağlı)</span></span><textarea name="adres" value={formData.adres} onChange={handleChange} rows={4} className="shop-input resize-y" autoComplete="street-address" /></label>
-        <div className="grid gap-4 sm:grid-cols-2"><Field label="Şifre" name="password" type="password" value={formData.password} onChange={handleChange} required minLength={12} autoComplete="new-password" /><Field label="Şifre tekrarı" name="passwordConfirmation" type="password" value={formData.passwordConfirmation} onChange={handleChange} required minLength={12} autoComplete="new-password" /></div>
+        <div className="grid gap-4 sm:grid-cols-2"><Field label="Şifre" name="password" type="password" value={formData.password} onChange={handleChange} required minLength={8} autoComplete="new-password" /><Field label="Şifre tekrarı" name="passwordConfirmation" type="password" value={formData.passwordConfirmation} onChange={handleChange} required minLength={8} autoComplete="new-password" /></div>
+        <p className="text-xs text-zinc-600">{CUSTOMER_PASSWORD_HINT}</p>
         <button type="submit" disabled={loading} className="shop-btn-primary min-h-11 w-full">{loading ? <><span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" /> Kayıt yapılıyor...</> : <><LockKeyhole className="h-5 w-5" /> Kayıt ol</>}</button>
       </form>
       <div className="mt-6 text-center text-sm text-zinc-600">Zaten hesabınız var mı? <Link to="/giris" className="font-bold text-emerald-800 hover:text-orange-800">Giriş yap</Link></div>

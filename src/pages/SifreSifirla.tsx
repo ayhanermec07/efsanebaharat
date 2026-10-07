@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Eye, EyeOff, KeyRound, Mail } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { CUSTOMER_PASSWORD_HINT, isValidCustomerPassword } from '../lib/password-policy'
 
 export default function SifreSifirla({ mode = 'request' }: { mode?: 'request' | 'update' }) {
   const [email, setEmail] = useState('')
@@ -59,8 +60,8 @@ export default function SifreSifirla({ mode = 'request' }: { mode?: 'request' | 
   async function updatePassword(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (loading) return
-    if (password.length < 12) {
-      setError('Yeni şifre en az 12 karakter olmalıdır.')
+    if (!isValidCustomerPassword(password)) {
+      setError(CUSTOMER_PASSWORD_HINT)
       return
     }
     if (password !== confirmation) {
@@ -109,16 +110,16 @@ export default function SifreSifirla({ mode = 'request' }: { mode?: 'request' | 
                 <div>
                   <label htmlFor="new-password" className="mb-1.5 block text-sm font-semibold text-zinc-800">Yeni şifre</label>
                   <div className="relative">
-                    <input id="new-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={12} required value={password} onChange={(event) => setPassword(event.target.value)} className="shop-input pr-12" />
+                    <input id="new-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} className="shop-input pr-12" />
                     <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'} className="absolute inset-y-0 right-0 flex min-w-11 items-center justify-center text-zinc-600 focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700">
                       {showPassword ? <EyeOff className="h-5 w-5" aria-hidden="true" /> : <Eye className="h-5 w-5" aria-hidden="true" />}
                     </button>
                   </div>
-                  <p className="mt-1 text-xs text-zinc-600">En az 12 karakter kullanın.</p>
+                  <p className="mt-1 text-xs text-zinc-600">{CUSTOMER_PASSWORD_HINT}</p>
                 </div>
                 <div>
                   <label htmlFor="confirm-password" className="mb-1.5 block text-sm font-semibold text-zinc-800">Yeni şifreyi tekrar girin</label>
-                  <input id="confirm-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={12} required value={confirmation} onChange={(event) => setConfirmation(event.target.value)} className="shop-input" />
+                  <input id="confirm-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={8} required value={confirmation} onChange={(event) => setConfirmation(event.target.value)} className="shop-input" />
                 </div>
                 <button type="submit" disabled={loading} className="shop-btn-primary min-h-11 w-full">{loading ? 'Güncelleniyor...' : 'Şifreyi güncelle'}</button>
               </form>
