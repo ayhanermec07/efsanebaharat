@@ -1,3 +1,4 @@
+import { ArtDecoration } from '../components/ArtDecoration'
 import { SiteImage } from '../components/SiteImage'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -307,14 +308,14 @@ export default function Sepet() {
       )}
 
       {sepetItems.length === 0 ? (
-        <div className="flex min-h-[360px] flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-center shadow-sm">
-          <ShoppingBag className="h-16 w-16 text-brand-muted" />
-          <h2 className="mt-4 text-2xl font-bold text-zinc-950">Sepetiniz boş</h2>
+        <div className="support-empty-cart flex min-h-[360px] flex-col items-center justify-center rounded-lg p-6 text-center sm:p-8">
+          <ArtDecoration kind="pouch" />
+          <h2 className="mt-4 text-2xl font-bold text-zinc-950">Sepetin henüz boş</h2>
           <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">
-            Ürünleri inceleyip size uygun sortiyi seçtiğinizde sepet burada hazır olacak.
+            Mutfağına bir tutam lezzet kat. Sevdiğin baharatları keşfet, birlikte hazırlayalım.
           </p>
           <Link to="/urunler" className="shop-btn-primary mt-6">
-            Alışverişe başla
+            Ürünleri keşfet
           </Link>
         </div>
       ) : (

@@ -1,6 +1,8 @@
+import { ArtDecoration } from '../components/ArtDecoration'
+import toast from 'react-hot-toast'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertCircle, ArrowRight, Calendar, PackageSearch, Percent, RotateCcw, Tag } from 'lucide-react'
+import { AlertCircle, ArrowRight, Calendar, Check, Copy, PackageSearch, Percent, RotateCcw, Tag } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
 import { useAuth } from '../contexts/AuthContext'
 import { loadPublicCatalog, type CatalogProduct } from '../lib/catalog'
@@ -31,6 +33,18 @@ export default function Kampanyalar() {
   const [kampanyalar, setKampanyalar] = useState<KampanyaWithProducts[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  async function copyCode(kampanya: Kampanya) {
+    if (!kampanya.kod) return
+    setCopiedId(null)
+    try {
+      await navigator.clipboard.writeText(kampanya.kod)
+      setCopiedId(kampanya.id)
+    } catch {
+      toast.error('Kod kopyalanamadı. Kodu seçerek kopyalayabilirsiniz.')
+    }
+  }
 
   const loadKampanyalarWithProducts = useCallback(async () => {
     try {
@@ -122,20 +136,25 @@ export default function Kampanyalar() {
         <div className="space-y-8">
           {kampanyalar.map((kampanya) => (
             <section key={kampanya.id} className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
-              <div className="border-b border-zinc-100 bg-orange-50 p-4 sm:p-5">
+              <div className="support-coupon p-4 sm:p-5">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div className="min-w-0">
                     <div className="mb-2 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex min-h-[30px] items-center gap-1 rounded-full bg-red-600 px-3 text-xs font-bold text-white">
+                      <span className="support-coupon-discount inline-flex min-h-[30px] items-center gap-1 rounded-full px-3 text-xs font-bold text-white">
                         <Percent className="h-4 w-4" />
                         {kampanya.indirim_tipi === 'yuzde' ? `%${kampanya.indirim_degeri} indirim` : `${kampanya.indirim_degeri} TL indirim`}
                       </span>
                       {kampanya.kod && (
-                        <span className="rounded-full border border-orange-200 bg-white px-3 py-1 text-xs font-bold text-orange-700">
-                          {kampanya.kod}
-                        </span>
+                        <div className="support-coupon-code text-sm">
+                          <strong>{kampanya.kod}</strong>
+                          <button type="button" onClick={() => copyCode(kampanya)} aria-label={`${kampanya.kod} kampanya kodunu kopyala`} className="support-coupon-copy">
+                            {copiedId === kampanya.id ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
+                            <span aria-live="polite">{copiedId === kampanya.id ? 'Kopyalandı ✓' : 'Kodu kopyala'}</span>
+                          </button>
+                        </div>
                       )}
                     </div>
+                    <ArtDecoration kind="leaf" className="support-coupon-motif" />
                     <h2 className="break-words text-2xl font-bold text-zinc-950">{kampanya.ad}</h2>
                     {kampanya.aciklama && <p className="mt-1 text-sm leading-6 text-zinc-600">{kampanya.aciklama}</p>}
                   </div>

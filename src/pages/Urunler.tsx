@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { AlertCircle, ArrowUpDown, Loader2, PackageSearch, RotateCcw, Search, SlidersHorizontal, Tag, X } from 'lucide-react'
+import { AlertCircle, ArrowUpDown, Loader2, PackageSearch, RotateCcw, SlidersHorizontal, Tag, X } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
-import CatalogToolbar from '../components/CatalogToolbar'
+import { ArtDecoration } from '../components/ArtDecoration'
+import './urunler-filters.css'
 import CategoryBanner from '../components/CategoryBanner'
 import { useAuth } from '../contexts/AuthContext'
 import { buildCategoryTree, getCategoryBranchIds, getCategoryPath, loadCategories } from '../lib/category-hierarchy'
@@ -18,7 +19,6 @@ import {
 } from '../lib/catalog'
 
 const PAGE_SIZE = 24
-const SEARCH_DEBOUNCE_MS = 350
 
 type FilterKey = 'q' | 'kategori' | 'marka' | 'kampanya' | 'sirala'
 
@@ -48,8 +48,11 @@ export default function Urunler() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null)
-  const [aramaText, setAramaText] = useState(q)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [leafSwing, setLeafSwing] = useState(0)
+  const filterRegionRef = useRef<HTMLElement>(null)
+  const filterButtonRef = useRef<HTMLButtonElement>(null)
+  const filterDrawerRef = useRef<HTMLDivElement>(null)
   const [reloadKey, setReloadKey] = useState(0)
   const pageControllerRef = useRef<AbortController | null>(null)
   const metaLoadedRef = useRef(false)
@@ -75,16 +78,15 @@ export default function Urunler() {
     }, { replace })
   }, [setSearchParams])
 
-  // URL dışarıdan değişirse (geri tuşu, header araması) input'u eşitle.
   useEffect(() => {
-    setAramaText((current) => (current.trim() === q ? current : q))
-  }, [q])
-
-  useEffect(() => {
-    if (aramaText.trim() === q.trim()) return
-    const timeout = window.setTimeout(() => updateParams({ q: aramaText }, true), SEARCH_DEBOUNCE_MS)
-    return () => window.clearTimeout(timeout)
-  }, [aramaText, q, updateParams])
+    if (!filtersOpen) return
+    filterDrawerRef.current?.querySelector<HTMLSelectElement>('select')?.focus({ preventScroll: true })
+    const outside = (event: PointerEvent) => {
+      if (!filterRegionRef.current?.contains(event.target as Node)) setFiltersOpen(false)
+    }
+    document.addEventListener('pointerdown', outside)
+    return () => document.removeEventListener('pointerdown', outside)
+  }, [filtersOpen])
 
   const viewerKey = `${user?.id || 'anon'}:${musteriData?.musteri_tipi || ''}`
 
@@ -156,7 +158,6 @@ export default function Urunler() {
   }
 
   const clearFilters = () => {
-    setAramaText('')
     updateParams({ q: '', kategori: '', marka: '', kampanya: '', sirala: '' })
   }
 
@@ -167,58 +168,69 @@ export default function Urunler() {
 
   return (
     <div className="min-w-0">
-      <CatalogToolbar>
-        <div className="flex min-h-11 items-center justify-between gap-3 lg:hidden">
-          <button type="button" onClick={() => setFiltersOpen(value => !value)} aria-expanded={filtersOpen} aria-controls="catalog-filters" aria-label="Filtreler" className="flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold hover:bg-brand-soft">
-            {filtersOpen ? <X className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />} Filtreler
-            {hasFilters && <span className="h-2 w-2 rounded-full bg-brand" aria-label="Filtre etkin" />}
-          </button>
-          <span className="min-w-0 truncate text-xs text-brand-muted" aria-live="polite">{loading ? 'Ürünler yükleniyor' : loadError ? 'Ürünler yüklenemedi' : `${toplam} ürün`}</span>
-        </div>
-        <div id="catalog-filters" className={`${filtersOpen ? 'grid' : 'hidden'} ${subCategories.length > 0 ? 'lg:grid-cols-[minmax(150px,1.2fr)_repeat(4,minmax(0,1fr))_auto]' : 'lg:grid-cols-[minmax(150px,1.2fr)_repeat(3,minmax(0,1fr))_auto]'} max-h-[calc(100dvh-var(--store-header-height,120px)-80px)] grid-cols-1 gap-3 overflow-y-auto overscroll-contain py-2 sm:grid-cols-2 lg:grid lg:max-h-none lg:items-end lg:overflow-visible lg:py-0`}>
-          <label className="min-w-0">
-            <span className="mb-1 block text-xs font-semibold text-brand-muted">Ürün ara</span>
-            <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
-              <input type="search" value={aramaText} onChange={event => setAramaText(event.target.value)} maxLength={100} placeholder="Ürün veya marka..." className="shop-input py-2 pl-9 text-sm" />
-            </div>
-          </label>
-          <div className="min-w-0">
-            <label htmlFor="catalog-main-category" className="mb-1 block text-xs font-semibold text-brand-muted">Ana kategori</label>
-            <select id="catalog-main-category" value={mainCategoryId} onChange={event => updateParams({ kategori: event.target.value })} className="shop-input py-2 text-sm">
-              <option value="">Tüm kategoriler</option>
-              {kategori && !categoryPath.length && <option value={kategori}>Seçili kategori</option>}
-              {categoryTree.map(({ category }) => <option key={category.id} value={category.id}>{category.kategori_adi}</option>)}
-            </select>
+      <section ref={filterRegionRef} aria-label="Ürün filtreleri" className="leaf-catalog-filters"
+        onKeyDown={event => {
+          if (event.key === 'Escape' && filtersOpen) {
+            event.preventDefault()
+            setFiltersOpen(false)
+            filterButtonRef.current?.focus()
+          }
+        }}>
+        <button ref={filterButtonRef} type="button" aria-label="Filtreler" aria-expanded={filtersOpen}
+          aria-controls={filtersOpen ? 'catalog-filters' : undefined} className="leaf-catalog-trigger"
+          onClick={() => { setLeafSwing(value => value + 1); setFiltersOpen(value => !value) }}>
+          <span key={leafSwing} className={`leaf-catalog-art ${leafSwing ? 'leaf-catalog-art-swing' : ''}`}>
+            <ArtDecoration kind="leaf" />
+          </span>
+          <SlidersHorizontal className="leaf-catalog-symbol" size={17} aria-hidden="true" />
+          {hasFilters && <span className="leaf-catalog-active" aria-label="Filtre etkin" />}
+        </button>
+        {filtersOpen && <div ref={filterDrawerRef} id="catalog-filters" className="leaf-catalog-drawer">
+          <div className="leaf-catalog-drawer-heading">
+            <span>Filtreler</span>
+            <button type="button" aria-label="Filtreleri kapat" onClick={() => { setFiltersOpen(false); filterButtonRef.current?.focus() }}>
+              <X size={17} aria-hidden="true" />
+            </button>
           </div>
-          {subCategories.length > 0 && <div className="min-w-0">
-            <label htmlFor="catalog-sub-category" className="mb-1 block text-xs font-semibold text-brand-muted">Alt kategori</label>
-            <select id="catalog-sub-category" value={kategori === mainCategoryId ? '' : kategori} onChange={event => updateParams({ kategori: event.target.value || mainCategoryId })} className="shop-input py-2 text-sm">
-              <option value="">Tüm alt kategoriler</option>
-              {subCategories.map(category => <option key={category.id} value={category.id}>{category.label}</option>)}
-            </select>
+          <div className="leaf-catalog-fields">
+            <div className="min-w-0">
+              <label htmlFor="catalog-main-category" className="mb-1 block text-xs font-semibold text-brand-muted">Ana kategori</label>
+              <select id="catalog-main-category" value={mainCategoryId} onChange={event => updateParams({ kategori: event.target.value })} className="shop-input py-2 text-sm">
+                <option value="">Tüm kategoriler</option>
+                {kategori && !categoryPath.length && <option value={kategori}>Seçili kategori</option>}
+                {categoryTree.map(({ category }) => <option key={category.id} value={category.id}>{category.kategori_adi}</option>)}
+              </select>
+            </div>
+            {subCategories.length > 0 && <div className="min-w-0">
+              <label htmlFor="catalog-sub-category" className="mb-1 block text-xs font-semibold text-brand-muted">Alt kategori</label>
+              <select id="catalog-sub-category" value={kategori === mainCategoryId ? '' : kategori} onChange={event => updateParams({ kategori: event.target.value || mainCategoryId })} className="shop-input py-2 text-sm">
+                <option value="">Tüm alt kategoriler</option>
+                {subCategories.map(category => <option key={category.id} value={category.id}>{category.label}</option>)}
+              </select>
+            </div>}
+            <label className="min-w-0">
+              <span className="mb-1 block text-xs font-semibold text-brand-muted">Marka</span>
+              <select value={marka} onChange={event => updateParams({ marka: event.target.value })} className="shop-input py-2 text-sm">
+                <option value="">Tüm markalar</option>
+                {markalar.map(item => <option key={item.id} value={item.id}>{item.marka_adi}</option>)}
+              </select>
+            </label>
+            <label className="min-w-0">
+              <span className="mb-1 flex items-center gap-1 text-xs font-semibold text-brand-muted"><ArrowUpDown className="h-3 w-3" /> Sıralama</span>
+              <select value={sirala} onChange={event => updateParams({ sirala: event.target.value })} className="shop-input py-2 text-sm">
+                {CATALOG_SORTS.map(sort => <option key={sort.value} value={sort.value}>{sort.label}</option>)}
+              </select>
+            </label>
+            <button type="button" onClick={clearFilters} className="flex min-h-11 items-center justify-center gap-1 rounded-lg px-2 text-xs font-semibold text-brand-muted hover:bg-brand-soft"><RotateCcw className="h-4 w-4" /> Temizle</button>
+          </div>
+          {activeCampaign && <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-brand-muted">
+            <Tag className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{activeCampaign.ad || activeCampaign.baslik}</span>
+            <button type="button" onClick={() => updateParams({ kampanya: '' })} aria-label="Kampanya filtresini kaldır" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg hover:bg-brand-soft"><X className="h-4 w-4" /></button>
           </div>}
-          <label className="min-w-0">
-            <span className="mb-1 block text-xs font-semibold text-brand-muted">Marka</span>
-            <select value={marka} onChange={event => updateParams({ marka: event.target.value })} className="shop-input py-2 text-sm">
-              <option value="">Tüm markalar</option>
-              {markalar.map(item => <option key={item.id} value={item.id}>{item.marka_adi}</option>)}
-            </select>
-          </label>
-          <label className="min-w-0">
-            <span className="mb-1 flex items-center gap-1 text-xs font-semibold text-brand-muted"><ArrowUpDown className="h-3 w-3" /> Sıralama</span>
-            <select value={sirala} onChange={event => updateParams({ sirala: event.target.value })} className="shop-input py-2 text-sm">
-              {CATALOG_SORTS.map(sort => <option key={sort.value} value={sort.value}>{sort.label}</option>)}
-            </select>
-          </label>
-          <button type="button" onClick={clearFilters} className="flex min-h-11 items-center justify-center gap-1 rounded-lg px-2 text-xs font-semibold text-brand-muted hover:bg-brand-soft"><RotateCcw className="h-4 w-4" /> Temizle</button>
-        </div>
-        {activeCampaign && <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-brand-muted">
-          <Tag className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{activeCampaign.ad || activeCampaign.baslik}</span>
-          <button type="button" onClick={() => updateParams({ kampanya: '' })} aria-label="Kampanya filtresini kaldır" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg hover:bg-brand-soft"><X className="h-4 w-4" /></button>
         </div>}
-      </CatalogToolbar>
-      <div className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-      {categoryPath[0] ? <CategoryBanner key={categoryPath[0].id} category={categoryPath[0]} /> : <div className="shop-page-heading mb-6">
+      </section>
+      <div className="leaf-catalog-content w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      {categoryPath[0] ? <CategoryBanner key={categoryPath[0].id} category={categoryPath[0]} categories={kategoriler} themeCategoryId={kategori} /> : <div className="shop-page-heading mb-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">
             <div className="shop-eyebrow">

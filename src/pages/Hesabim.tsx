@@ -1,9 +1,10 @@
+import { ArtDecoration } from '../components/ArtDecoration'
 import { paymentStatusLabel } from '../lib/payment-methods'
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Package, User as UserIcon, Truck, Copy, Check, ExternalLink, Pencil, X, Clock3, LayoutDashboard, LogOut } from 'lucide-react'
+import { User as UserIcon, Truck, Copy, Check, ExternalLink, Pencil, X, Clock3, LayoutDashboard, LogOut } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { loadCustomerOrders } from '../lib/account-orders'
 import { formatPrice } from '../lib/currency'
@@ -121,7 +122,7 @@ export default function Hesabim() {
   }
 
   return (
-    <div className="container mx-auto min-w-0 px-4 py-8">
+    <div className="support-account container mx-auto min-w-0 px-4 py-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Hesabım</h1>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -154,10 +155,10 @@ export default function Hesabim() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Profil Bilgileri */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex justify-between items-start mb-6">
-              <div className="flex items-center space-x-4">
+        <div className="min-w-0 lg:col-span-1">
+          <div className="support-account-panel rounded-lg">
+            <div className="support-profile-heading flex justify-between items-start mb-6">
+              <div className="support-profile-person flex items-center">
                 <div className="w-16 h-16 bg-brand rounded-full flex items-center justify-center">
                   <UserIcon className="w-8 h-8 text-white" />
                 </div>
@@ -310,10 +311,10 @@ export default function Hesabim() {
         </div>
 
         {/* Siparişler */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="min-w-0 lg:col-span-2">
+          <div className="support-account-panel rounded-lg">
             <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
-              <Package className="w-6 h-6" />
+              <ArtDecoration kind="parcel" className="support-parcel" />
               <span>Siparişlerim</span>
             </h2>
 
@@ -322,10 +323,10 @@ export default function Hesabim() {
             ) : (
               <div className="space-y-4">
                 {siparisler.map((siparis) => (
-                  <div key={siparis.id} className="border rounded-lg p-4 hover:shadow-md transition">
+                  <div key={siparis.id} className="support-order">
                     <div className="mb-3"><OrderDocument orderId={siparis.id} orderNumber={siparis.siparis_no} /></div>
                     <OrderReturn orderId={siparis.id}/>
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+                    <div className="support-order-heading flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                       <div>
                         <p className="break-all font-semibold text-gray-900">
                           Sipariş No: {siparis.siparis_no}
@@ -351,15 +352,15 @@ export default function Hesabim() {
                           <span className="font-semibold text-blue-900">Kargo Bilgileri</span>
                         </div>
                         <div className="space-y-2 text-sm">
-                          <div className="flex items-center justify-between">
+                          <div className="support-shipping-row flex items-center justify-between">
                             <span className="text-gray-700">Kargo Firması:</span>
                             <span className="font-medium text-gray-900">
                               {kargoFirmalari[siparis.kargo_firmasi]?.label || siparis.kargo_firmasi}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between">
+                          <div className="support-shipping-row flex items-center justify-between">
                             <span className="text-gray-700">Takip No:</span>
-                            <div className="flex items-center gap-2">
+                            <div className="support-tracking-number flex items-center gap-2">
                               <span className="font-medium text-gray-900 font-mono">
                                 {siparis.kargo_takip_no}
                               </span>
@@ -379,7 +380,7 @@ export default function Hesabim() {
                             </div>
                           </div>
                           {siparis.tahmini_teslimat_tarihi && (
-                            <div className="flex items-center justify-between">
+                            <div className="support-shipping-row flex items-center justify-between">
                               <span className="text-gray-700">Tahmini Teslimat:</span>
                               <span className="font-medium text-gray-900">
                                 {new Date(siparis.tahmini_teslimat_tarihi).toLocaleDateString('tr-TR')}
@@ -412,7 +413,7 @@ export default function Hesabim() {
                       ))}
                     </div>
 
-                    <div className="border-t pt-4 flex justify-between items-center">
+                    <div className="support-order-total pt-4 flex justify-between items-center">
                       <span className="font-semibold text-gray-900">Toplam</span>
                       <span className="text-xl font-bold text-orange-600">
                         {formatPrice(siparis.toplam_tutar == null ? null : Number(siparis.toplam_tutar))}

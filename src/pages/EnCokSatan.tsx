@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { AlertCircle, PackageSearch, RotateCcw, Star, TrendingUp } from 'lucide-react'
+import { AlertCircle, PackageSearch, RotateCcw, Star } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
 import CatalogToolbar from '../components/CatalogToolbar'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { fetchInBatches } from '../utils/supabaseBatch'
+import CategoryArtwork from '../components/CategoryArtwork'
 
 export default function EnCokSatan() {
   const { musteriData } = useAuth()
@@ -156,19 +157,14 @@ export default function EnCokSatan() {
         </div>
       </CatalogToolbar>
       <div className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-      <div className="shop-page-heading mb-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <div className="shop-eyebrow">
-              <TrendingUp className="h-4 w-4" />
-              Populer raf
-            </div>
-            <h1 className="mt-3 text-3xl font-bold sm:text-4xl">En çok satanlar</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-brand-muted">
-              {siralama === 'otomatik' ? 'Satış verilerine göre öne çıkan ürünler.' : 'Panelden özel seçilmiş ürünler.'}
-            </p>
-          </div>
+      <div className="bestseller-art-heading mb-6 flex min-w-0 items-center justify-between gap-3 border-b border-brand-line pb-4">
+        <div className="min-w-0">
+          <h1 className="break-words text-2xl font-semibold sm:text-3xl">En çok satanlar</h1>
+          <p className="mt-2 text-xs leading-5 text-brand-muted sm:text-sm">
+            {siralama === 'otomatik' ? 'Satış verilerine göre öne çıkan ürünler.' : 'Panelden özel seçilmiş ürünler.'}
+          </p>
         </div>
+        <CategoryArtwork theme="spice" part="upper" className="bestseller-heading-art" />
       </div>
 
       {loading ? (

@@ -1,0 +1,46 @@
+.art-decoration { display:block; width:160px; aspect-ratio:1; flex-shrink:0; background-image:url('/artwork/support.webp'); background-size:300% 200%; background-repeat:no-repeat; pointer-events:none; }
+.support-footer { position:relative; isolation:isolate; overflow:hidden; background:#f5eddf; }
+.support-footer .support-footer-divider { width:min(320px, 80%); height:80px; aspect-ratio:auto; margin:0 auto -12px; }
+.support-footer .support-footer-corner { position:absolute; width:110px; bottom:-25px; right:-25px; opacity:.45; z-index:-1; transform:rotate(-25deg); }
+.support-empty-cart { border:1px solid #dfcbb0; background:#faf6ec; }
+.support-empty-cart .art-decoration { width:210px; max-width:100%; }
+.support-contact { background:#f7f2e8; color:#45382d; }
+.support-contact .support-contact-heading { font-family:var(--font-display, Georgia, serif); font-weight:500; color:#4d3d2e; }
+.support-contact .support-contact-paper { border:1px solid #dfcdb2; background:#fffdf7; box-shadow:0 4px 16px #72573808; }
+.support-contact .support-contact-art { position:relative; width:190px; height:190px; margin:0 auto; }
+.support-contact .support-contact-art .art-decoration { position:absolute; inset:0; width:100%; }
+.support-contact .support-envelope-open { opacity:1; transition:opacity .25s ease, transform .35s ease; }
+.support-contact .support-envelope-closed { opacity:0; transition:opacity .3s .15s ease, transform .35s .1s ease; transform:translateY(8px); }
+.support-contact .is-sent .support-envelope-open { opacity:0; transform:scaleY(.8) translateY(8px); }
+.support-contact .is-sent .support-envelope-closed { opacity:1; transform:translateY(0); }
+.support-contact .support-envelope-check { position:absolute; right:25px; bottom:27px; width:32px; height:32px; padding:6px; border-radius:50%; color:#fff; background:#557143; animation:support-check-in .35s ease; }
+.support-contact .support-contact-confirmation { text-align:center; padding:24px 16px; }
+.support-contact input, .support-contact select, .support-contact textarea { background:#fffef9; border-color:#d8c9b5; min-height:44px; color:#45382d; }
+.support-contact .support-contact-note { background:#eee8da; border:1px dashed #d1bda1; color:#655342; }
+.support-contact .support-contact-note h3, .support-contact .support-contact-note ul { color:inherit; }
+.support-contact .support-message-counter { gap:12px; flex-wrap:wrap; }
+.support-account { color:#45382d; }
+.support-account .support-account-panel { min-width:0; border:1px solid #dfcbb0; background:#fffdf7; box-shadow:none; padding:20px; }
+.support-account .support-order { min-width:0; border:4px double #d8c1a1; border-radius:3px; background:#fffdf7; padding:16px; }
+.support-account .support-order-heading { border-bottom:1px dashed #d8c1a1; padding-bottom:12px; }
+.support-account .support-order-total { border-top:1px dashed #d8c1a1; gap:12px; flex-wrap:wrap; }
+.support-account .support-parcel { width:56px; }
+.support-account button, .support-account a { min-height:44px; }
+.support-account .support-profile-heading { gap:12px; }
+.support-account .support-profile-person { min-width:0; gap:12px; }
+.support-account .support-profile-person > div:first-child { flex-shrink:0; }
+.support-account .support-profile-person > div:last-child { min-width:0; overflow-wrap:anywhere; }
+.support-account .support-order p, .support-account .support-account-panel p { overflow-wrap:anywhere; }
+.support-account .support-shipping-row { flex-wrap:wrap; gap:6px 12px; }
+.support-account .support-tracking-number { min-width:0; max-width:100%; }
+.support-account .support-tracking-number span { overflow-wrap:anywhere; min-width:0; }
+.support-coupon { position:relative; background-color:#f4e7cf; background-image:radial-gradient(#b4997630 .6px, transparent .6px); background-size:5px 5px; border-bottom:1px dashed #c58a66; border-left:3px dotted #b97455; border-right:3px dotted #b97455; }
+.support-coupon .support-coupon-discount { background:#a35e42; }
+.support-coupon .support-coupon-code { display:inline-flex; align-items:center; gap:12px; flex-wrap:wrap; min-width:0; max-width:100%; padding:4px 12px; background:#fffaf0; border:1px dashed #bf9272; color:#764c34; }
+.support-coupon .support-coupon-code strong { overflow-wrap:anywhere; min-width:0; }
+.support-coupon .support-coupon-copy { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:4px 8px; font-size:12px; color:#714630; font-weight:600; }
+.support-coupon .support-coupon-copy:focus-visible { outline:2px solid #714630; outline-offset:2px; }
+.support-coupon .support-coupon-motif { width:54px; }
+@keyframes support-check-in { from { opacity:0; transform:scale(.7); } to { opacity:1; transform:scale(1); } }
+@media (min-width:640px) { .support-account .support-account-panel { padding:24px; } }
+@media (prefers-reduced-motion:reduce) { .support-contact .support-envelope-open, .support-contact .support-envelope-closed { transition:none; } .support-contact .support-envelope-check { animation:none; } }

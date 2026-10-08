@@ -10,6 +10,11 @@ import { supabase } from '../lib/supabase'
 import { akilliBirimGoster } from '../utils/birimDonusturucu'
 import { getImageUrl } from '../utils/imageUtils'
 import { kademeliIskontoUygula } from '../utils/iskonto'
+import CategoryArtwork from '../components/CategoryArtwork'
+import AccessibleModal from '../components/admin/AccessibleModal'
+import { loadCategories } from '../lib/category-hierarchy'
+import { resolveCategoryTheme } from '../lib/category-artwork'
+import type { CatalogCategory } from '../lib/catalog'
 
 export default function UrunDetay() {
   const { id } = useParams()
@@ -25,6 +30,23 @@ export default function UrunDetay() {
   const [loading, setLoading] = useState(true)
   const [loadState, setLoadState] = useState<'ready' | 'not-found' | 'error'>('ready')
   const requestSequence = useRef(0)
+  const successTimer = useRef<number>()
+  const mounted = useRef(true)
+  const [imageOpen, setImageOpen] = useState(false)
+  const [categories, setCategories] = useState<CatalogCategory[]>([])
+
+  useEffect(() => {
+    let active = true
+    loadCategories(supabase, true).then(data => { if (active) setCategories(data) }).catch(() => { if (active) setCategories([]) })
+    return () => { active = false }
+  }, [])
+  useEffect(() => {
+    mounted.current = true
+    setImageOpen(false)
+    setEklendi(false)
+    setEkleniyor(false)
+    return () => { mounted.current = false; window.clearTimeout(successTimer.current) }
+  }, [id, musteriData?.musteri_tipi])
 
   const iskontoInfo = useMemo(() => {
     if (!secilenStok) return null
@@ -115,6 +137,7 @@ export default function UrunDetay() {
     const fiyat = iskontoInfo?.varMi ? iskontoInfo.yeniFiyat : Number(secilenStok.fiyat || 0)
 
     setEkleniyor(true)
+    const requestId = requestSequence.current
     const result = await sepeteEkle({
       stok_varyant_id: secilenStok.id,
       urun_id: urun.id,
@@ -127,12 +150,14 @@ export default function UrunDetay() {
       gorsel_url: gorsel,
       min_siparis_miktari: secilenStok.min_siparis_miktari
     })
+    if (!mounted.current || requestId !== requestSequence.current) return
     setEkleniyor(false)
 
     // "Sepete eklendi" yalnız sunucu başarı döndürdüğünde gösterilir.
     if (!result.ok) return
     setEklendi(true)
-    window.setTimeout(() => setEklendi(false), 2000)
+    window.clearTimeout(successTimer.current)
+    successTimer.current = window.setTimeout(() => setEklendi(false), 1500)
   }
 
   if (loading) {
@@ -146,9 +171,10 @@ export default function UrunDetay() {
   if (loadState === 'not-found') return <div className="shop-container py-16 text-center"><h1 className="text-2xl font-bold text-zinc-950">Ürün bulunamadı</h1><p className="mt-2 text-zinc-600">Ürün kaldırılmış veya bağlantı geçersiz olabilir.</p><button type="button" onClick={() => navigate('/urunler')} className="mt-5 min-h-10 rounded-lg bg-zinc-950 px-4 text-white">Ürünlere dön</button></div>
   if (loadState === 'error') return <div className="shop-container py-16 text-center"><AlertCircle className="mx-auto h-10 w-10 text-red-600" /><h1 className="mt-3 text-2xl font-bold text-zinc-950">Ürün yüklenemedi</h1><p className="mt-2 text-zinc-600">Bağlantıyı kontrol edip tekrar deneyin.</p><button type="button" onClick={loadUrun} className="mx-auto mt-5 flex min-h-10 items-center gap-2 rounded-lg bg-zinc-950 px-4 text-white"><RotateCcw className="h-4 w-4" />Tekrar dene</button></div>
 
-  const gorseller = urun.urun_gorselleri || []
+  const gorseller = urun.urun_gorselleri?.length ? urun.urun_gorselleri : urun.ana_gorsel_url ? [{ id: 'main', gorsel_url: urun.ana_gorsel_url }] : []
   const fiyat = iskontoInfo?.varMi ? iskontoInfo.yeniFiyat : Number(secilenStok?.fiyat || 0)
   const minimumMiktar = secilenStok?.min_siparis_miktari || 1
+  const detailTheme = resolveCategoryTheme(categories, urun.kategori_id, 'urun_detay_temasi')
 
   return (
     <div className="shop-container py-6 sm:py-8">
@@ -157,6 +183,7 @@ export default function UrunDetay() {
           <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
             <div className="aspect-square bg-zinc-100">
               {gorseller.length > 0 ? (
+                <button type="button" onClick={() => setImageOpen(true)} aria-label={`${urun.urun_adi} görselini büyük aç`} className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">
                 <SiteImage
                   variant="detail"
                   loading="eager"
@@ -166,6 +193,7 @@ export default function UrunDetay() {
                   alt={urun.urun_adi}
                   className="h-full w-full object-contain p-3"
                 />
+                </button>
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-brand-soft">
                   <div className="flex h-28 w-28 items-center justify-center rounded-full bg-zinc-950 text-5xl font-bold text-white">
@@ -193,7 +221,9 @@ export default function UrunDetay() {
         </section>
 
         <aside className="min-w-0">
-          <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 lg:sticky lg:top-24">
+          <div className="product-purchase-art rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 lg:sticky lg:top-24">
+            <CategoryArtwork theme={detailTheme} part="upper" className="product-upper-art" />
+            <div className={detailTheme !== 'plain' ? 'product-heading relative' : ''}>
             <div className="shop-eyebrow">
               <Sprout className="h-4 w-4" />
               {urun.markalar?.marka_adi || urun.kategoriler?.kategori_adi || 'Efsane Baharat'}
@@ -201,6 +231,7 @@ export default function UrunDetay() {
             <h1 className="mt-3 break-words text-3xl font-bold leading-tight text-zinc-950 sm:text-4xl">
               {urun.urun_adi}
             </h1>
+            </div>
             {urun.aciklama && (
               <p className="mt-4 text-sm leading-7 text-zinc-600 sm:text-base">{urun.aciklama}</p>
             )}
@@ -284,7 +315,7 @@ export default function UrunDetay() {
               onClick={() => { void handleSepeteEkle() }}
               disabled={!secilenStok || ekleniyor}
               aria-busy={ekleniyor}
-              className={`mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg px-4 font-bold transition disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500 ${eklendi
+              className={`product-cart-button mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg px-4 font-bold transition disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500 ${eklendi
                 ? 'bg-emerald-600 text-white'
                 : 'bg-brand text-white hover:bg-emerald-800'
                 }`}
@@ -303,6 +334,7 @@ export default function UrunDetay() {
                 <span className="min-w-0 text-right font-bold text-zinc-900">{urun.markalar?.marka_adi || '-'}</span>
               </div>
             </div>
+            <CategoryArtwork theme={detailTheme} part="lower" className="product-lower-art" />
           </div>
         </aside>
       </div>
@@ -310,6 +342,9 @@ export default function UrunDetay() {
       <div className="mt-8">
         <UrunSoruModul urunId={urun.id} urunAdi={urun.urun_adi} />
       </div>
+      <AccessibleModal open={imageOpen} title={urun.urun_adi} onClose={() => setImageOpen(false)} className="max-w-6xl" closeLabel="Büyük görseli kapat">
+        <SiteImage variant="detail" src={getImageUrl(gorseller[secilenGorsel]?.gorsel_url)} alt={urun.urun_adi} className="product-large-image" sizes="(min-width: 1280px) 1100px, 95vw" />
+      </AccessibleModal>
     </div>
   )
 }

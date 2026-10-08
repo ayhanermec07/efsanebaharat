@@ -64,6 +64,8 @@ export interface CatalogCategory {
   aciklama?: string | null
   banner_desktop_url?: string | null
   banner_mobile_url?: string | null
+  urun_detay_temasi?: string | null
+  banner_temasi?: string | null
 }
 
 export interface CatalogBrand {

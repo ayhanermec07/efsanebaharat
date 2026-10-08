@@ -7,6 +7,8 @@ import { taxonomyPageRange, taxonomySearchPattern, TAXONOMY_PAGE_SIZE } from '..
 import { getCategoryBranchIds, getCategoryPath, loadCategories } from '../../lib/category-hierarchy'
 import type { CatalogCategory } from '../../lib/catalog'
 import AccessibleModal from '../../components/admin/AccessibleModal'
+import CategoryArtwork from '../../components/CategoryArtwork'
+import { CATEGORY_THEMES, resolveCategoryTheme } from '../../lib/category-artwork'
 
 export default function Kategoriler() {
   const [kategoriler, setKategoriler] = useState<any[]>([])
@@ -31,7 +33,9 @@ export default function Kategoriler() {
     aktif_durum: true,
     gorsel_url: '',
     banner_desktop_url: '',
-    banner_mobile_url: ''
+    banner_mobile_url: '',
+    urun_detay_temasi: null as string | null,
+    banner_temasi: null as string | null
   })
 
   const parentOptions = useMemo(() => {
@@ -160,7 +164,9 @@ export default function Kategoriler() {
       aktif_durum: kategori.aktif_durum,
       gorsel_url: kategori.gorsel_url || '',
       banner_desktop_url: kategori.banner_desktop_url || '',
-      banner_mobile_url: kategori.banner_mobile_url || ''
+      banner_mobile_url: kategori.banner_mobile_url || '',
+      urun_detay_temasi: kategori.urun_detay_temasi ?? null,
+      banner_temasi: kategori.banner_temasi ?? null
     })
     setModalOpen(true)
   }
@@ -175,7 +181,9 @@ export default function Kategoriler() {
       aktif_durum: true,
       gorsel_url: '',
       banner_desktop_url: '',
-      banner_mobile_url: ''
+      banner_mobile_url: '',
+      urun_detay_temasi: null,
+      banner_temasi: null
     })
     setModalOpen(false)
   }
@@ -358,6 +366,24 @@ export default function Kategoriler() {
                     : 'Önerilen: 780 × 640 px. Yazısız, üst %40’ı sade; kategori kompozisyonu altta. 768 px altındaki ekranlarda gösterilir.'} Ana kategorinin banner’ı alt kategorilerde de kullanılır.</p>
                   <ImageUpload maxFiles={1} bucketName="kategori-gorselleri" maxSizeMB={8} previewFit="contain" existingImages={formData[field] ? [formData[field]] : []} onUploadComplete={urls => setFormData(current => ({ ...current, [field]: urls[0] || '' }))} />
                 </section>)}
+
+                {(['urun_detay_temasi', 'banner_temasi'] as const).map(field => {
+                  const previewId = editingId || '__preview__'
+                  const previewCategories = [...allCategories.filter(category => category.id !== previewId), { ...formData, id: previewId }]
+                  const theme = resolveCategoryTheme(previewCategories, previewId, field)
+                  return <section key={field} className="min-w-0 space-y-2">
+                    <label htmlFor={field} className="block text-sm font-medium text-gray-700">{field === 'urun_detay_temasi' ? 'Ürün detay teması' : 'Kategori banner teması'}</label>
+                    <select id={field} value={formData[field] ?? ''} onChange={event => setFormData(current => ({ ...current, [field]: event.target.value || null }))} className="shop-input min-w-0">
+                      <option value="">Üst kategoriden al</option>
+                      <option value="plain">Sade</option>
+                      {CATEGORY_THEMES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+                    </select>
+                    <p className="text-xs leading-5 text-gray-500">{field === 'urun_detay_temasi' ? 'Üst çizim ve alt fotoğraf satın alma alanında gösterilir.' : 'Tema seçilirse çizimli şablon kullanılır. Tema atanmadığında yüklenmiş banner görselleri gösterilir.'} Sade seçimi üst kategoriden gelen temayı kapatır.</p>
+                    <div className="flex min-w-0 justify-between overflow-hidden rounded-lg border bg-brand-paper p-2" aria-label="Tema önizlemesi">
+                      {theme === 'plain' ? <p className="p-3 text-sm text-gray-500">Sade görünüm</p> : <><CategoryArtwork theme={theme} part="upper" className="!w-28" /><CategoryArtwork theme={theme} part={field === 'urun_detay_temasi' ? 'lower' : 'upper'} className="!w-28" /></>}
+                    </div>
+                  </section>
+                })}
 
                 <div className="flex items-center">
                   <input

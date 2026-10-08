@@ -1,3 +1,4 @@
+import { ArtDecoration } from './ArtDecoration'
 import { SiteImage } from './SiteImage'
 import { Link } from 'react-router-dom'
 import { ShieldCheck, Sprout, Truck } from 'lucide-react'
@@ -10,7 +11,9 @@ export default function Footer() {
   const { logo, siteInfo, loading: themeLoading } = useTheme()
 
   return (
-    <footer className="mt-auto border-t border-brand-line bg-brand-soft text-brand-ink">
+    <footer className="support-footer mt-auto border-t border-brand-line bg-brand-soft text-brand-ink">
+      <ArtDecoration kind="divider" className="support-footer-divider" />
+      <ArtDecoration kind="leaf" className="support-footer-corner" />
       <div className="shop-container py-10 sm:py-12">
         <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="min-w-0">

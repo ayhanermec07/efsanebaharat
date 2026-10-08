@@ -1,13 +1,13 @@
 import { SiteImage } from '../components/SiteImage'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ChevronLeft, ChevronRight, Sprout } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Award } from 'lucide-react'
 import CanliDestekWidget from '../components/CanliDestekWidget'
 import UrunKart from '../components/UrunKart'
 import { publicSupabase } from '../lib/supabase'
 import { loadPublicCatalog } from '../lib/catalog'
 import { getImageUrl } from '../utils/imageUtils'
-import CampaignCarousel from '../components/CampaignCarousel'
+import HomeHero from '../components/HomeHero'
 import { homeCampaignAudience, homeCampaignSlides, type CampaignSlide } from '../lib/home-campaigns'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -74,64 +74,15 @@ export default function AnaSayfa() {
     return () => { active = false }
   }, [musteriTipi])
 
-  const heroProduct = oneCikanUrunler.find(product => product.urun_gorselleri?.[0]?.gorsel_url || product.ana_gorsel_url)
-  const heroImage = getImageUrl(heroProduct?.urun_gorselleri?.[0]?.gorsel_url || heroProduct?.ana_gorsel_url)
-  const heroTitle = 'Sofranın sırrı, bir tutam baharat.'
-  const heroText = 'Tanıdık tatları yeniden keşfedin. Mutfağınızın vazgeçilmez baharatları bir arada.'
-  const heroLink = '/urunler'
-
-  if (loading) {
-    return (
-      <div className="shop-container py-16">
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-          {[0, 1, 2, 3, 4].map((item) => (
-            <div key={item} className="h-72 animate-pulse rounded-lg bg-white shadow-sm" />
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="shop-container flex min-h-[60vh] items-center justify-center py-16">
-        <div className="max-w-md rounded-lg border border-red-100 bg-white p-6 text-center shadow-sm">
-          <p className="mb-4 font-semibold text-red-600">{error}</p>
-          <button type="button" onClick={() => window.location.reload()} className="shop-btn-primary">
-            Tekrar dene
-          </button>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-w-0">
       <section className="shop-container py-7 sm:py-10 lg:py-12">
-        {banners.length ? <CampaignCarousel slides={banners} /> : <div className="grid items-center gap-7 md:grid-cols-2 md:gap-10 lg:gap-16">
-            <div className="min-w-0 py-2">
-              <p className="shop-eyebrow">
-                Günlük mutfağınıza
-              </p>
-              <h1 className="mt-4 max-w-xl text-4xl leading-[1.12] text-brand-ink sm:text-5xl lg:text-6xl">
-                {heroTitle}
-              </h1>
-              <p className="mt-5 max-w-md text-base leading-7 text-brand-muted">
-                {heroText}
-              </p>
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Link to={heroLink} className="shop-btn-primary">
-                  Baharatları keşfet
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-                <Link to="/kampanyalar" className="shop-btn-secondary">Kampanyalar</Link>
-              </div>
-            </div>
-          <div className="shop-hero-art aspect-[4/3] md:aspect-square lg:aspect-[4/3]">
-            {heroImage ? <SiteImage variant="hero" loading="eager" src={heroImage} alt={heroProduct?.urun_adi || 'Baharat seçkimiz'} className="h-full w-full object-contain" fetchPriority="high" /> : <div className="flex flex-col items-center gap-4 text-emerald-700"><Sprout className="h-16 w-16 stroke-1" aria-hidden="true" /><span className="font-display text-2xl">Sofranıza bir tutam lezzet</span></div>}
-          </div>
-        </div>}
+        <HomeHero campaigns={banners} />
       </section>
+
+      {loading && <div className="shop-container py-8" aria-label="Ürünler yükleniyor" aria-busy="true"><div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">{[0, 1, 2, 3, 4].map(item => <div key={item} className="h-72 animate-pulse rounded-lg bg-white" />)}</div></div>}
+      {error && <div role="alert" className="shop-container py-8"><div className="rounded-lg border border-red-100 bg-white p-6 text-center"><p className="mb-4 font-semibold text-red-600">{error}</p><button type="button" onClick={() => window.location.reload()} className="shop-btn-primary">Tekrar dene</button></div></div>}
 
       {oneCikanUrunler.length > 0 && (
         <ProductRail title="Öne çıkan ürünler" link="/urunler" products={oneCikanUrunler} />
@@ -222,12 +173,25 @@ interface ProductRailProps {
 
 function ProductRail({ title, link, products, total, page = 0, onPageChange }: ProductRailProps) {
   const pageCount = Math.ceil((total || products.length) / pageSize)
+  const section = useRef<HTMLElement>(null)
+  const [revealed, setRevealed] = useState(false)
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        setRevealed(true)
+        observer.disconnect()
+      }
+    }, { threshold: 0.08 })
+    if (section.current) observer.observe(section.current)
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <section className="shop-container py-8 sm:py-10">
+    <section ref={section} className={`home-rail shop-container py-8 sm:py-10 ${revealed ? 'home-rail-ready' : ''}`}>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h2 className="text-2xl text-brand-ink sm:text-3xl">{title}</h2>
+          <h2 className="home-rail-title text-2xl sm:text-3xl">{title === 'En çok satanlar' && <span className="home-bestseller-mark"><Award className="h-5 w-5" aria-hidden="true" /></span>}{title}</h2>
         </div>
         <div className="flex items-center gap-2">
           {onPageChange && pageCount > 1 && (
@@ -236,7 +200,7 @@ function ProductRail({ title, link, products, total, page = 0, onPageChange }: P
                 type="button"
                 onClick={() => onPageChange(Math.max(0, page - 1))}
                 disabled={page === 0}
-                className="grid h-10 w-10 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-800 disabled:opacity-40"
+                className="grid h-11 w-11 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-800 disabled:opacity-40"
                 aria-label="Önceki sayfa"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -245,7 +209,7 @@ function ProductRail({ title, link, products, total, page = 0, onPageChange }: P
                 type="button"
                 onClick={() => onPageChange(Math.min(pageCount - 1, page + 1))}
                 disabled={page >= pageCount - 1}
-                className="grid h-10 w-10 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-800 disabled:opacity-40"
+                className="grid h-11 w-11 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-800 disabled:opacity-40"
                 aria-label="Sonraki sayfa"
               >
                 <ChevronRight className="h-5 w-5" />

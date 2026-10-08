@@ -1,9 +1,10 @@
+import { ArtDecoration } from '../components/ArtDecoration'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import SellerInformation from '../components/SellerInformation'
 import { supabase } from '../lib/supabase'
-import { MessageSquare, Send, CheckCircle } from 'lucide-react'
+import { Send, Check } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const KONULAR = [
@@ -78,10 +79,7 @@ export default function BizeUlasin() {
       })
       toast.success('Sorunuz başarıyla gönderildi')
 
-      setTimeout(() => {
-        setSuccess(false)
-      }, 5000)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Soru gönderme hatası:', error)
       toast.error('Mesajınız gönderilemedi. Lütfen tekrar deneyin.')
     } finally {
@@ -100,38 +98,31 @@ export default function BizeUlasin() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="support-contact min-h-screen py-8 sm:py-12">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                <MessageSquare className="w-8 h-8 text-orange-600" />
-              </div>
+            <div className={`support-contact-art ${success ? 'is-sent' : ''}`}>
+              <ArtDecoration kind="envelope-open" className="support-envelope-open" />
+              <ArtDecoration kind="envelope-closed" className="support-envelope-closed" />
+              {success && <Check className="support-envelope-check" aria-hidden="true" />}
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Bize Ulaşın</h1>
+            <h1 className="support-contact-heading text-3xl mb-2 sm:text-4xl">Bize Ulaşın</h1>
             <p className="text-gray-600">
               Sorularınızı, önerilerinizi veya sorunlarınızı bizimle paylaşın.
             </p>
           </div>
 
-          <section aria-label="İşletme ve iletişim bilgileri" className="mb-6 min-w-0 space-y-4 rounded-lg border border-gray-200 bg-white p-5 text-gray-700">
+          <section aria-label="İşletme ve iletişim bilgileri" className="support-contact-paper mb-6 min-w-0 space-y-4 rounded-lg p-5 text-gray-700">
             <SellerInformation variant="contact" />
           </section>
 
-          {/* Success Message */}
           {success && (
-            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-green-900">Mesajınız Alındı</h3>
-                  <p className="text-sm text-green-700">
-                    Sorunuz başarıyla iletildi. Yanıt durumunu hesabınızdan takip edebilirsiniz.
-                  </p>
-                </div>
-              </div>
+            <div role="status" className="support-contact-confirmation support-contact-paper mb-6 rounded-lg">
+              <h2 className="support-contact-heading text-2xl">Mesajınız bize ulaştı</h2>
+              <p className="mt-3 text-sm leading-6">Bizimle paylaştığınız için teşekkür ederiz. Yanıt durumunu hesabınızdan takip edebilirsiniz.</p>
+              <button type="button" onClick={() => setSuccess(false)} className="shop-btn-secondary mt-5">Yeni mesaj yaz</button>
             </div>
           )}
 
@@ -140,7 +131,7 @@ export default function BizeUlasin() {
               <p className="text-gray-700">Mesaj göndermek için hesabınıza giriş yapın. Sorunuzun yanıtını hesabınızdan takip edebilirsiniz.</p>
               <Link to="/giris" state={{ from: '/bize-ulasin' }} className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-brand px-6 py-3 font-semibold text-white hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700">Giriş yap</Link>
             </div>
-          ) : <div className="bg-white rounded-lg shadow-sm p-6 md:p-8">
+          ) : !success && <div className="support-contact-paper rounded-lg p-5 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Konu Seçimi */}
               <div>
@@ -181,7 +172,7 @@ export default function BizeUlasin() {
                   maxLength={1000}
                   required
                 />
-                <div className="flex items-center justify-between mt-2">
+                <div className="support-message-counter flex items-center justify-between mt-2">
                   <div>
                     {errors.soru_metni && (
                       <p id="iletisim-mesaj-hata" className="text-sm text-red-600">{errors.soru_metni}</p>
@@ -228,7 +219,7 @@ export default function BizeUlasin() {
           </div>}
 
           {/* Info Box */}
-          {user && <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          {user && <div className="support-contact-note mt-8 rounded-lg p-5">
             <h3 className="font-semibold text-blue-900 mb-3">Bilgilendirme</h3>
             <ul className="space-y-2 text-sm text-blue-800">
               <li className="flex items-start">

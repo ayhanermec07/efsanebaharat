@@ -1,3 +1,4 @@
+import BotanicalBanner from './BotanicalBanner'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
@@ -41,7 +42,7 @@ export default function CampaignCarousel({ slides }: { slides: CampaignSlide[] }
       move(event.key === 'ArrowRight' ? 1 : -1)
     }
   }}>
-    <h1 className="sr-only">Efsane Baharat kampanyaları</h1>
+
     <div className="touch-pan-y overflow-hidden rounded-lg border border-brand-line bg-brand-soft" onPointerDown={event => {
       if (event.pointerType === 'touch') touch.current = { x: event.clientX, y: event.clientY }
     }} onPointerCancel={() => { touch.current = null }} onPointerUp={event => {
@@ -55,9 +56,9 @@ export default function CampaignCarousel({ slides }: { slides: CampaignSlide[] }
       }
     }} onClickCapture={event => { if (performance.now() < suppressClickUntil.current) { event.preventDefault(); event.stopPropagation() } }}>
       <div key={slide.id} role="group" aria-roledescription="slayt" aria-label={`${activeIndex + 1} / ${slides.length}: ${slide.title}`} aria-live={paused ? 'polite' : 'off'} className="campaign-slide">
-        <Link to={slide.href} aria-label={`${slide.title} kampanyasını incele`} className="block aspect-[2/1] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-brand md:aspect-[16/5]">
+        {slide.id === 'botanical' ? <BotanicalBanner /> : <Link to={slide.href} aria-label={`${slide.title} kampanyasını incele`} className="block aspect-[2/1] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-brand md:aspect-[16/5]">
           <SiteImage src={slide.image} variant="hero" sizes="(min-width: 1280px) 1216px, calc(100vw - 32px)" loading="eager" fetchPriority={activeIndex === 0 ? 'high' : 'auto'} alt={slide.title} className="h-full w-full object-contain" />
-        </Link>
+        </Link>}
       </div>
     </div>
     {slides.length > 1 && <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2">

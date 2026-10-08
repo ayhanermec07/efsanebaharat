@@ -1,0 +1,39 @@
+.home-hero { min-width:0; }
+.home-intro, .botanical-banner { position:relative; width:100%; aspect-ratio:2/1; overflow:hidden; background:#f8f2e6; }
+.home-intro { border:1px solid #dfcbb0; }
+.home-intro video { width:100%; height:100%; object-fit:cover; display:block; }
+.home-intro-skip { position:absolute; bottom:12px; right:12px; display:inline-flex; align-items:center; justify-content:center; gap:14px; min-height:44px; min-width:80px; padding:8px 18px; border:1px solid #dfcbb0; border-radius:3px; background:#fffaf0ed; color:#425b32; font-size:14px; }
+.home-intro-skip:focus-visible, .botanical-banner-link:focus-visible { outline:2px solid #425b32; outline-offset:3px; }
+.botanical-banner { isolation:isolate; }
+.botanical-banner .botanical-banner-upper, .botanical-banner .botanical-banner-lower { position:absolute; pointer-events:none; z-index:-1; opacity:.82; width:34%; aspect-ratio:1; }
+.botanical-banner .botanical-banner-upper { top:-35%; left:-12%; transform:rotate(-15deg); }
+.botanical-banner .botanical-banner-lower { bottom:-35%; right:-10%; transform:rotate(12deg); }
+.botanical-banner-copy { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100%; padding:14px 30px; text-align:center; }
+.botanical-banner-eyebrow { margin:0 0 6px; color:#69734d; text-transform:uppercase; font-size:9px; letter-spacing:.16em; }
+.botanical-banner h1, .botanical-banner h2 { margin:0; font-family:var(--font-display, Georgia, serif); font-weight:500; font-size:27px; line-height:1.14; color:#36552d; }
+.botanical-banner-link { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; margin-top:6px; color:#36552d; font-size:12px; border-bottom:1px solid #a6ad87; }
+.home-rail { min-width:0; }
+.home-rail-title { display:flex; align-items:center; gap:10px; color:#4d4435; }
+.home-bestseller-mark { display:inline-flex; width:36px; height:36px; align-items:center; justify-content:center; border:1px solid #bb995d; border-radius:50%; color:#967438; }
+.home-rail-ready { animation:home-rail-in .5s ease both; }
+@keyframes home-rail-in { from { opacity:.55; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+@media (min-width:390px) { .botanical-banner h1, .botanical-banner h2 { font-size:30px; } }
+@media (min-width:640px) { .botanical-banner h1, .botanical-banner h2 { font-size:40px; } .botanical-banner-eyebrow { font-size:11px; margin-bottom:10px; } .botanical-banner-link { font-size:14px; margin-top:12px; } }
+@media (min-width:768px) { .home-intro, .botanical-banner { aspect-ratio:16/5; } .botanical-banner h1, .botanical-banner h2 { font-size:42px; } .botanical-banner .botanical-banner-upper { width:35%; top:-43%; left:-3%; } .botanical-banner .botanical-banner-lower { width:35%; bottom:-45%; right:-3%; } }
+@media (min-width:1024px) { .botanical-banner h1, .botanical-banner h2 { font-size:58px; } .botanical-banner-eyebrow { font-size:12px; margin-bottom:14px; } .botanical-banner-link { margin-top:20px; } }
+@media (prefers-reduced-motion:reduce) { .home-rail-ready { animation:none; } }
+
+.home-intro-backdrop { position:absolute; inset:0; }
+.home-intro video { position:relative; transition:opacity 350ms ease; }
+.home-intro-copy { position:absolute; top:0; bottom:0; right:0; display:flex; flex-direction:column; justify-content:center; width:55%; padding:12px 16px 34px 4px; text-align:center; color:#3c532f; transition:opacity 350ms ease; }
+.home-intro-copy h1 { font-family:var(--font-display, Georgia, serif); font-size:20px; font-weight:500; line-height:1.2; text-wrap:balance; }
+.home-intro-copy p { display:none; }
+.home-intro-exiting video, .home-intro-exiting .home-intro-copy, .home-intro-exiting .home-intro-skip { opacity:0; pointer-events:none; }
+.home-intro-skip { transition:opacity 350ms ease; }
+@media (min-width:390px) { .home-intro-copy h1 { font-size:22px; } }
+@media (min-width:768px) { .home-intro-copy { padding:24px 40px; } .home-intro-copy h1 { font-size:36px; } .home-intro-copy p { display:block; font-size:13px; margin-top:16px; color:#655e48; } }
+@media (min-width:1024px) { .home-intro-copy h1 { font-size:48px; } .home-intro-copy p { font-size:15px; } }
+@media (prefers-reduced-motion:reduce) { .home-intro video, .home-intro-copy, .home-intro-skip { transition:none; } }
+
+.home-intro-controls-spacer { height:52px; }
+.home-intro-copy { background:linear-gradient(90deg, transparent, #f8f2e6bd 25%, #f8f2e6e6); }
