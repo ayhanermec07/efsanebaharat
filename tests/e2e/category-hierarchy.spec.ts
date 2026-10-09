@@ -169,6 +169,33 @@ test('alt kategori URLsi ana seçimi belirler; ana değişince alt seçim sıfı
   await noOverflow(page)
 })
 
+test('onaylı banner ve detay temaları ayrı kaydedilir ve doğru çiftlerle önizlenir', async ({ page }, testInfo) => {
+  await adminSession(page)
+  await page.goto('/admin/kategoriler')
+  const row = page.viewportSize()!.width < 640
+    ? page.locator('.sm\\:hidden > div').filter({ has: page.getByText('Baharatlar', { exact:true }) })
+    : page.getByRole('row').filter({ has: page.getByText('Baharatlar', { exact:true }) })
+  await row.getByRole('button',{name:'Düzenle',exact:true}).click()
+  const dialog=page.getByRole('dialog',{name:'Kategori Düzenle'})
+  await dialog.getByLabel('Ürün detay teması',{exact:true}).selectOption('oil')
+  await dialog.getByLabel('Kategori banner teması',{exact:true}).selectOption('spice')
+  await expect(dialog.locator('[data-approved-artwork="oil"]')).toHaveCount(2)
+  await expect(dialog.locator('[data-approved-artwork="category"]')).toHaveCount(2)
+  const save=page.waitForRequest(r=>r.method()==='PATCH' && r.url().includes('/rest/v1/kategoriler'))
+  await dialog.getByRole('button',{name:'Güncelle',exact:true}).click()
+  expect((await save).postDataJSON()).toMatchObject({urun_detay_temasi:'oil',banner_temasi:'spice'})
+  await expect(dialog).not.toBeVisible()
+  await row.getByRole('button',{name:'Düzenle',exact:true}).click()
+  await expect(dialog.getByLabel('Ürün detay teması',{exact:true})).toHaveValue('oil')
+  await expect(dialog.getByLabel('Kategori banner teması',{exact:true})).toHaveValue('spice')
+  await dialog.getByLabel('Kategori banner teması',{exact:true}).selectOption('plain')
+  await expect(dialog.locator('[data-approved-artwork="category"]')).toHaveCount(0)
+  await expect(dialog.locator('[data-approved-artwork="oil"]')).toHaveCount(2)
+  await dialog.getByText('Sade görünüm',{exact:true}).scrollIntoViewIfNeeded()
+  await page.screenshot({path:testInfo.outputPath('approved-admin-independent-themes.png')})
+  await noOverflow(page)
+})
+
 test('yönetim üst kategoriyi sayfa dışından seçer; döngü oluşturan seçenekleri çıkarır', async ({ page }, testInfo) => {
   await adminSession(page)
   await page.goto('/admin/kategoriler')

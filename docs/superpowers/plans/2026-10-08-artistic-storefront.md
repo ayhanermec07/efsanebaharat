@@ -33,7 +33,7 @@ ORİKA sade bırakılır. Tuz, lokum, canlı verili alanlar ve diğer geçici ka
 
 ## Uygulama ve yayın sırası
 
-1. Ortak görselleri üret; şeffaf WebP atlaslarına dönüştür. Videosu 120 gerçek kare / 24 fps / 5 saniye olarak kodlanır; masaüstü ve mobil ayrı dosyadır.
+1. Onaylı özgün görselleri kayıpsız WebP olarak kullan; taslak arayüzünü dışarıda bırakan SVG görünüm bölgeleriyle motifleri göster. Yeniden üretilmiş alternatif atlas kullanma. Videosu 120 gerçek kare / 24 fps / 5 saniye olarak kodlanır; masaüstü ve mobil ayrı dosyadır.
 2. Kategori alanlarını nullable migration ile ekle; yalnız tanınan kategorilerin boş tema alanlarını doldur. RLS, satış veya ödeme kurallarını değiştirme. `public-catalog` meta alanlarını güncelle.
 3. Yaprak, kategori bannerı, ürün detayı ve kartları bağla; yardımcı sayfaları tamamla.
 4. Birim kontrolleri, TypeScript, ESLint, üretim build; 360/390/768/1440 px tarayıcı kabulü. Gerçek video süresi ve oynatma, hata geri dönüşü, hareket azaltma, URL filtreleri, dropdown klavyesi ve modal odağı doğrulanır.
@@ -53,3 +53,15 @@ ORİKA sade bırakılır. Tuz, lokum, canlı verili alanlar ve diğer geçici ka
 ## Çalışma kaydı
 
 Frontend/backend ayrı Git depolarında `design/artistic-storefront-20261008` izole çalışma ağacı kullanıldı. Bağımsız kart, kategori ve yardımcı sayfa işleri mevcut paralel ajanlarla yürütüldü; kök uygulama ve yayın koordinasyonunu yaptı. Görseller `public/artwork/` içindedir; üretim sitesinin geçici Codex dosyalarına bağımlılığı yoktur. Yeni çalışma zamanı bağımlılığı eklenmedi.
+
+## Onaya uygunluk düzeltmesi
+
+İlk sürümdeki yeniden üretilmiş motifler onaylı çizimlerle aynı değildi. Özgün 22 kaynak görsele dönüldü; kaynak/piksel doğrulaması 22/22 geçti. Ayrıntılı karar matrisi: [Onay uygunluk denetimi](../../artwork/2026-10-08-onay-uygunluk-denetimi.md). Önceki doğrulama sayıları ilk uygulamanın tarihsel kaydıdır; görsel eşitlik kanıtı değildir. Son doğrulama aşağıya ayrıca kaydedilir.
+
+Son doğrulama: kaynak görsel eşitliği 22/22, birim 85/85, mağaza 44/44, banner 16/16, admin bağımsız tema kaydı 4/4 geçti. Son yerleşim değişikliklerinde hedefli filtre/kategori 12/12 ve intro 4/4 tekrar geçti. TypeScript/ESLint ve üretim build temiz. Tarayıcı testleri kontrollü verilerle yereldir; canlı yayın yapılmadı.
+
+## 9 Ekim kapanışı
+
+Kullanıcının son talebi yalnız Git gönderimidir; Coolify güvenlik değişikliği nedeniyle canlı yayın bekletilir. Önceki seçimlerle tekrar karşılaştırma ve bağımsız inceleme tamamlandı. İki yanlı çok satanlar motifleri, ilk görünümde sıralı kart hareketi, 1. saniyeden sonra slogan ve 3–5. saniyede botanik geçiş, sepet ikonunun basma tepkisi ve hareket azaltmada yaprağın ton geri bildirimi düzeltildi. Kaynaklar yeniden üretilmiş alternatifler değil, onaylı 22 özgün dosyadır.
+
+Son kontroller: 85 birim, 44 mağaza, son değişiklikler için 12 hedefli yaprak/çok satanlar, 24 banner ve 4 yönetici tema testi geçti. TypeScript/ESLint temiz. Backend katalog testleri 7/7. Canlı kategori eşlemesi ve migration yürütme kabulü sonraki yayın adımındadır. Ayrıntılar `docs/artwork/2026-10-08-onay-uygunluk-denetimi.md` içindedir.

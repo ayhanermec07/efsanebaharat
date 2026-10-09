@@ -1,0 +1,2 @@
+.approved-artwork { display:block; height:auto; flex-shrink:0; overflow:hidden; pointer-events:none; mix-blend-mode:multiply; }
+.approved-artwork image { pointer-events:none; }

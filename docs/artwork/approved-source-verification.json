@@ -1,0 +1,160 @@
+{
+  "checkedOn": "2026-10-09",
+  "method": "Browser decoded RGBA pixel equality and original SHA-256",
+  "results": [
+    {
+      "theme": "spice",
+      "original": "exec-8fbdbab3-55f8-434f-91c7-0b315a3385fd.png",
+      "sourceSha256": "6321d648e809a92501399036451bf48e5a5249a24e2ce4e2e7c5bc8d23a10bef",
+      "pixelIdentical": true,
+      "assetSha256": "b9337e866791d1901c0da2a43007a5bdf6062464fcae8698423b9ec0481e45f7"
+    },
+    {
+      "theme": "oil",
+      "original": "exec-dc8b567d-7b0c-42f2-8f39-0a949c442e89.png",
+      "sourceSha256": "785566f2519aeb01f0ce4aaa8e99276f4ebf02542ee54a261dd4083af74e87b9",
+      "pixelIdentical": true,
+      "assetSha256": "f38f74a28c8b5c7a0200ce67fd8561cc91889e357d7ca463d0ecec06fa46ce87"
+    },
+    {
+      "theme": "soap",
+      "original": "exec-07cbcdca-ead7-44be-8fd8-2f834e2c4a95.png",
+      "sourceSha256": "d007a791a709ab31433d46ac559ab991dfee56001fda1dacc0378a5ef60407c6",
+      "pixelIdentical": true,
+      "assetSha256": "60d44988a4093bbe88c3f29054389beeb190d5129a3828a3f8fd84e94bfd7b76"
+    },
+    {
+      "theme": "delight",
+      "original": "exec-373b573f-487b-4562-afc0-d2b208bf0147.png",
+      "sourceSha256": "9210fc8ec71726d612264fce316e53952280f80c70948d87be65993c0f0a3a7a",
+      "pixelIdentical": true,
+      "assetSha256": "12e043180a34202e4a16c8b14af039072330559f77cd91157987be785a187556"
+    },
+    {
+      "theme": "water",
+      "original": "exec-a1f5920b-267a-4504-9fef-2fac5d91f6ce.png",
+      "sourceSha256": "c69404e76e7328679a4d3dc7a09cce5b239e745bb6e557e672439413e23ffa5b",
+      "pixelIdentical": true,
+      "assetSha256": "14b9502ac81b3c020af2fe2af0ab18e37542c5b250bf8d2990f3852b0d35ce17"
+    },
+    {
+      "theme": "paste",
+      "original": "exec-6d65b6a1-1461-411f-99b0-d49f7b3a4ace.png",
+      "sourceSha256": "72f03a3ee70fb725fc6feeb3cb80df659370d68338140472710b1900dbb752a8",
+      "pixelIdentical": true,
+      "assetSha256": "70fc27ff4fedf11a46b10638696cf9cf1fdd18fd757d2dedb7df2725f14f4c35"
+    },
+    {
+      "theme": "essence",
+      "original": "exec-3e202db3-3416-4991-85f2-9ffe92b5174d.png",
+      "sourceSha256": "77ffe434d9a2d4cc853330733a56be9b0e8d80f617bdf833a065e2c18cd0c7c3",
+      "pixelIdentical": true,
+      "assetSha256": "aad4560886a333194a619e89405e1184ed849e6d45e635b9fa4c74e3baed948d"
+    },
+    {
+      "theme": "color",
+      "original": "exec-647f6036-f10e-4746-beaf-6d5d79e37966.png",
+      "sourceSha256": "e48b75e35c5ed01223df76f4ca3c5e88b5d65267c4ba7a8f8f7c2ab39a8ab208",
+      "pixelIdentical": true,
+      "assetSha256": "31407d3ba18e999346ba755519ed4ad7fa9f82deb1401b10fe69c090bca2758c"
+    },
+    {
+      "theme": "cream",
+      "original": "exec-c2f6a5e7-4d18-4b3a-ae15-e1aa3e3d4101.png",
+      "sourceSha256": "398b8737d0e98eeb295a7f772034c2de144f7cb0ac1710acdb5de4922c0ced2e",
+      "pixelIdentical": true,
+      "assetSha256": "36d307469a1fa0723b12cc792eadcef1f0a636825f83d1fc9ecfafaf72d0224c"
+    },
+    {
+      "theme": "molasses",
+      "original": "exec-13475732-c714-4684-b791-a48261b47ea7.png",
+      "sourceSha256": "27857145345f8f49d6c131897795c667cce6334a11fd8d63182e2c0325d84510",
+      "pixelIdentical": true,
+      "assetSha256": "c96e244197c397b60a908f97e84f54dc2e65718c7d2706245255d43a964a00f0"
+    },
+    {
+      "theme": "vinegar",
+      "original": "exec-40b31095-83e7-4c1f-9780-7adb2eb78338.png",
+      "sourceSha256": "fbe2c9320d65602f2c19483b0e825ffa2a614f55476627b917992fc2a7c99e40",
+      "pixelIdentical": true,
+      "assetSha256": "009f1f43fa4518e383876d2a39796c55bc8ed5b7fa6065152786e9f0df7be863"
+    },
+    {
+      "theme": "shampoo",
+      "original": "exec-ba6bc5b3-41b6-49fc-9fd9-c8129c406901.png",
+      "sourceSha256": "516f705363975e5fc4371188f8afb0d2b6d814521ff274ff8f7426adf295cc4f",
+      "pixelIdentical": true,
+      "assetSha256": "5003f89be1aca3ec42d7903fe4031e3120cc173cf3c878b593a12f4739deaca4"
+    },
+    {
+      "theme": "salt",
+      "original": "exec-45605d3e-de47-4da6-a790-54c305289c15.png",
+      "sourceSha256": "a88dbec23b906b8bfd526c639a5ac0979b35ea71e3cfc172dc5eaccf6e64d8a8",
+      "pixelIdentical": true,
+      "assetSha256": "4ad1530479b2ced87fa1ee445e0e369d3eaff402795ea1984dc957e7cef20594"
+    },
+    {
+      "theme": "leaf",
+      "original": "exec-37b99d6c-04d8-495e-acac-3da7f4a2275a.png",
+      "sourceSha256": "ca34bea7a63d20419a0652fc03bdd61d343a362ebda6ea8de417b2cef16dc441",
+      "pixelIdentical": true,
+      "assetSha256": "4359132eda382467f11694d4f6fb2aa9c543b805b8893b289a685616e9e917f0"
+    },
+    {
+      "theme": "pouch",
+      "original": "exec-9dcc2628-61ae-471e-a106-014441ec1ff0.png",
+      "sourceSha256": "f9b41d888944d9478dbe7a9721a5cde7a4c432f8ec6eec54829aca5d029271f8",
+      "pixelIdentical": true,
+      "assetSha256": "2b37b95cc4d6919ee16cdc57e691f40edec5fa201f80065c0ce1b85bb32c80fd"
+    },
+    {
+      "theme": "contact",
+      "original": "exec-901c5a68-a9bb-4093-8869-79d43bab3164.png",
+      "sourceSha256": "9ef0a00d642825959b9613943e34dedb32eaa0cd5f709352717c5f2301e7f845",
+      "pixelIdentical": true,
+      "assetSha256": "f21851ee3bcbf56f2f9a65e1935e834a5a7e30caaae20fe0f6bc9b0b5eb4c756"
+    },
+    {
+      "theme": "parcel",
+      "original": "exec-2ce0b4b5-26aa-446f-9fd7-8d415fa61851.png",
+      "sourceSha256": "785ca283b29719bdc0aae682ca6e92136648145f07ff669b586245d485f0506d",
+      "pixelIdentical": true,
+      "assetSha256": "14993bf6fa9d020c19ff4821eebc5b668b920d0d7abceede9df12320cfa6dfbb"
+    },
+    {
+      "theme": "footer",
+      "original": "exec-161f5b9f-20f5-4871-a1d2-c3cf936f757a.png",
+      "sourceSha256": "21ccbb6da1bbd0d7da74e36db80b56a54efcc441c6fe4484d80075e18f04f6e2",
+      "pixelIdentical": true,
+      "assetSha256": "2a5a4914ddfe38e19fe33ef57c46692dc47df675a4c20fea1423b7ba40e5fcc0"
+    },
+    {
+      "theme": "bestseller",
+      "original": "exec-daaaf362-b81d-4a24-be28-72d7ae12637f.png",
+      "sourceSha256": "48cd9e1d00037b258b1a582bdea7180237eb45f08030afc847325d8844af2e3a",
+      "pixelIdentical": true,
+      "assetSha256": "6e2faf92e47bbc7429d579d3730d8496c2c886e6bbb4aec9e210fa270aef84f6"
+    },
+    {
+      "theme": "category",
+      "original": "exec-792ccf76-f8d1-4a07-a5fa-137ff8f62a96.png",
+      "sourceSha256": "acb6f80bd3d856c8f3db5bfed7e7f15a7e9e4264c259a24effe28c8dd79de3b9",
+      "pixelIdentical": true,
+      "assetSha256": "6e45ab95b5b2bf25c8ed862e19d6c19bca8c49c70221f00355477744344dee86"
+    },
+    {
+      "theme": "coupon",
+      "original": "exec-06c29145-40f6-463b-996c-8c84b42bf8e9.png",
+      "sourceSha256": "a954f143648973847891d5fcc9874d309726518f3aa320d9d891ad58cb5350c6",
+      "pixelIdentical": true,
+      "assetSha256": "de62ccfb2d2dbea142170f7c299cd30a799a7c0b4510b6f39d7da9a851b84ef5"
+    },
+    {
+      "theme": "home",
+      "original": "exec-f9d960d8-b894-4cdd-af02-c4616f27316e.png",
+      "sourceSha256": "b115d42ad6edf654b00859f28e8a51cc872806cc5c4ae81232c4edcb21b59582",
+      "pixelIdentical": true,
+      "assetSha256": "70727c07cd07d3ef4654b5f32bbae23a80887cfc40b9add5d716e09a8b3a19e4"
+    }
+  ]
+}

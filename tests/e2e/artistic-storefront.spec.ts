@@ -70,12 +70,58 @@ test('thirty package variants remain bounded and keyboard-selectable at every wi
   await noOverflow(page)
 })
 
+test('approved leaf stays attached to header while the compact filters open beside it', async ({ page }, testInfo) => {
+  await page.goto(`/urunler?kategori=${child}`)
+  const trigger = page.locator('.leaf-catalog-trigger')
+  const before = (await trigger.boundingBox())!
+  await expect(page.locator('#catalog-filters')).toHaveCount(0)
+  await trigger.click()
+  const drawer = page.locator('#catalog-filters')
+  await expect(drawer).toBeVisible()
+  await expect(page.locator('.leaf-catalog-art')).toHaveCSS('animation-name', 'catalog-leaf-swing')
+  await expect(drawer.locator('input[type="search"], input[type="text"]')).toHaveCount(0)
+  await expect(drawer.locator('select')).toHaveCount(4)
+  const after = (await trigger.boundingBox())!, panel = (await drawer.boundingBox())!
+  expect(after).toEqual(before)
+  if (page.viewportSize()!.width >= 1024) {
+    expect(panel.x).toBeGreaterThan(before.x + before.width)
+    expect(panel.height).toBeLessThanOrEqual(before.height + 4)
+  } else expect(panel.y).toBeGreaterThanOrEqual(before.y + before.height)
+  await page.screenshot({ path: testInfo.outputPath('approved-leaf-filters.png') })
+  await page.getByRole('button', { name:'Filtreleri kapat', exact:true }).click()
+  await expect(trigger).toBeFocused()
+  await expect(drawer).toHaveCount(0)
+  await noOverflow(page)
+})
+
+test('all thirteen approved detail families retain original top and complementary bottom artwork', async ({ page }, testInfo) => {
+  test.setTimeout(90_000) // Thirteen complete page loads and screenshots per viewport.
+  await page.route('**/rest/v1/urun_stoklari*', route => route.fulfill({ json:stocks.slice(0,3) }))
+  await page.route('**/rest/v1/urunler*', route => route.fulfill({ json:{...product,urun_stoklari:stocks.slice(0,3)} }))
+  for (const theme of ['spice','oil','soap','delight','water','paste','essence','color','cream','molasses','vinegar','shampoo','salt']) {
+    const themed = categories.map(c => ({ ...c, urun_detay_temasi:theme }))
+    await page.route('**/rest/v1/kategoriler*', route => {
+      const query = new URL(route.request().url()).searchParams
+      return route.fulfill({ json:query.has('id') ? themed.find(c=>`eq.${c.id}`===query.get('id')) : themed })
+    })
+    await page.goto(`/urun/${productId}`)
+    const purchase = page.locator('.product-purchase-art')
+    await expect(purchase.locator(`[data-approved-artwork="${theme}"]`)).toHaveCount(2)
+    const windows = await purchase.locator('.category-artwork').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('viewBox')))
+    expect(windows[0]).not.toBe(windows[1])
+    await purchase.scrollIntoViewIfNeeded()
+    await purchase.screenshot({ path:testInfo.outputPath(`approved-detail-${theme}.png`) })
+    await noOverflow(page)
+  }
+})
+
 test('detail inherits artwork and opens a focus-trapped large image without zoom', async ({ page }, testInfo) => {
   await page.goto(`/urun/${productId}`)
   const purchase = page.locator('.product-purchase-art')
   await expect(purchase.locator('.category-artwork')).toHaveCount(2)
   const upper = purchase.locator('.product-upper-art'), lower = purchase.locator('.product-lower-art')
-  await expect(upper).toHaveCSS('background-position', '0% 0%')
+  await expect(upper).toHaveAttribute('data-approved-artwork', 'spice')
+  await expect(upper.locator('image')).toHaveAttribute('href', '/artwork/approved/spice.webp')
   expect((await lower.boundingBox())!.y).toBeGreaterThan((await purchase.getByRole('button', { name: 'Sepete ekle', exact: true }).boundingBox())!.y)
   const opener = page.getByRole('button', { name: `${product.urun_adi} görselini büyük aç` })
   await opener.click()
@@ -102,13 +148,13 @@ test('category retains root title with two decorative drawings', async ({ page }
   await expect(banner.locator('.category-artwork')).toHaveCount(2)
   await expect(banner.locator('img')).toHaveCount(0)
   await expect(banner.locator('.category-artwork').first()).toHaveAttribute('aria-hidden', 'true')
-  const sheets = await page.evaluate(async () => Promise.all(['upper', 'lower'].map(part => new Promise<{ width: number; height: number }>((resolve, reject) => {
+  const sheets = await page.evaluate(async () => Promise.all(['category', 'spice'].map(part => new Promise<{ width: number; height: number }>((resolve, reject) => {
     const image = new Image()
     image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight })
     image.onerror = () => reject(new Error(`Artwork sheet ${part} unavailable`))
-    image.src = `/artwork/theme-${part}.webp`
+    image.src = `/artwork/approved/${part}.webp`
   }))))
-  for (const sheet of sheets) { expect(sheet.width).toBeGreaterThan(0); expect(sheet.width).toBe(sheet.height) }
+  expect(sheets).toEqual([{ width: 1536, height: 1024 }, { width: 1448, height: 1086 }])
   await noOverflow(page)
   await page.screenshot({ path: testInfo.outputPath('theme-banner.png') })
 })
@@ -138,8 +184,7 @@ test('selected child overrides its inherited banner theme while keeping the root
     await expect(banner.getByRole('heading', { level: 1 })).toHaveText('Baharatlar')
     await expect(banner.locator('.category-artwork')).toHaveCount(theme === 'plain' ? 0 : 2)
     if (theme === 'soap') {
-      const position = await banner.locator('.category-artwork').first().evaluate(element => parseFloat(getComputedStyle(element).backgroundPositionX))
-      expect(position).toBeCloseTo(200 / 3, 3)
+      await expect(banner.locator('.category-artwork').first()).toHaveAttribute('data-approved-artwork', 'soap')
     }
     await expect(banner.locator('img')).toHaveCount(0)
     await noOverflow(page)
@@ -167,6 +212,18 @@ test('contact keeps failed messages and shows the sent envelope only after succe
   await page.screenshot({ path: testInfo.outputPath('contact-sent.png') })
 })
 
+test('account retains approved parcel and readable order records at every width', async ({ page }, testInfo) => {
+  await session(page)
+  await page.route('**/rest/v1/siparisler*', route=>route.fulfill({json:[{id:id(555),siparis_no:'EB-2026-000123',olusturma_tarihi:'2026-10-08T10:00:00Z',siparis_durumu:'hazirlaniyor',payment_method:'havale',odeme_durumu:'odendi',toplam_tutar:125,kargo_durumu:'hazirlaniyor'}]}))
+  await page.goto('/hesabim')
+  await expect(page.getByRole('heading',{name:'Hesabım',exact:true})).toBeVisible()
+  await expect(page.locator('[data-approved-artwork="parcel"]')).toHaveCount(1)
+  await expect(page.locator('.support-order')).toContainText('EB-2026-000123')
+  await page.locator('.support-order').scrollIntoViewIfNeeded()
+  await page.screenshot({path:testInfo.outputPath('approved-account.png')})
+  await noOverflow(page)
+})
+
 test('empty cart has a usable discovery link at every width', async ({ page }, testInfo) => {
   await session(page)
   await page.goto('/sepet')
@@ -181,10 +238,33 @@ test('bestseller heading reveals its drawing once and stays compact', async ({ p
   await page.goto('/en-cok-satan')
   const heading = page.locator('.bestseller-art-heading')
   await expect(heading.getByRole('heading', { level: 1 })).toHaveText('En çok satanlar')
-  const drawing = heading.locator('.category-artwork')
-  await expect(drawing).toHaveCount(1)
-  await expect(drawing).toHaveCSS('animation-iteration-count', '1')
+  const drawing = heading.locator('[data-approved-artwork="bestseller"]')
+  await expect(drawing).toHaveCount(2)
+  await expect(drawing.first()).toHaveCSS('animation-iteration-count', '1')
   expect((await heading.boundingBox())!.height).toBeLessThanOrEqual(160)
   await noOverflow(page)
   await page.screenshot({ path: testInfo.outputPath('bestseller-heading.png') })
+})
+
+test('bestseller cards enter in sequence once when visible and respect reduced motion', async ({ page }) => {
+  await page.addInitScript(() => {
+    const entered: string[] = []
+    Object.assign(window, { productEntrances: entered })
+    document.addEventListener('animationstart', event => {
+      if (event.animationName === 'product-enter') entered.push(getComputedStyle(event.target as Element).animationDelay)
+    })
+  })
+  await page.route('**/rest/v1/urunler?*', route => route.fulfill({ json: [product, { ...product, id: id(7) }] }))
+  await page.goto('/en-cok-satan')
+  const cards = page.locator('.staggered-products > div')
+  await expect(cards).toHaveCount(2)
+  await cards.first().scrollIntoViewIfNeeded()
+  await expect.poll(() => page.evaluate(() => (window as unknown as { productEntrances: string[] }).productEntrances)).toEqual(['0s', '0.06s'])
+  await expect(cards.first()).toHaveCSS('animation-name', 'none')
+  await page.getByRole('button', { name: 'Önerilen', exact: true }).click()
+  await page.getByRole('button', { name: 'Otomatik', exact: true }).click()
+  await expect(cards).toHaveCount(2)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(cards.first()).toHaveCSS('animation-name', 'none')
+  await noOverflow(page)
 })

@@ -1,9 +1,11 @@
 import { SiteImage } from '../components/SiteImage'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Award } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArtDecoration } from '../components/ArtDecoration'
 import CanliDestekWidget from '../components/CanliDestekWidget'
 import UrunKart from '../components/UrunKart'
+import StaggeredProducts from '../components/StaggeredProducts'
 import { publicSupabase } from '../lib/supabase'
 import { loadPublicCatalog } from '../lib/catalog'
 import { getImageUrl } from '../utils/imageUtils'
@@ -173,25 +175,12 @@ interface ProductRailProps {
 
 function ProductRail({ title, link, products, total, page = 0, onPageChange }: ProductRailProps) {
   const pageCount = Math.ceil((total || products.length) / pageSize)
-  const section = useRef<HTMLElement>(null)
-  const [revealed, setRevealed] = useState(false)
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return
-    const observer = new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) {
-        setRevealed(true)
-        observer.disconnect()
-      }
-    }, { threshold: 0.08 })
-    if (section.current) observer.observe(section.current)
-    return () => observer.disconnect()
-  }, [])
 
   return (
-    <section ref={section} className={`home-rail shop-container py-8 sm:py-10 ${revealed ? 'home-rail-ready' : ''}`}>
+    <section className="home-rail shop-container py-8 sm:py-10">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h2 className="home-rail-title text-2xl sm:text-3xl">{title === 'En çok satanlar' && <span className="home-bestseller-mark"><Award className="h-5 w-5" aria-hidden="true" /></span>}{title}</h2>
+          <h2 className="home-rail-title text-2xl sm:text-3xl">{title === 'En çok satanlar' && <ArtDecoration kind="bestseller-left" className="!w-10 sm:!w-16" />}<span className="min-w-0">{title}</span>{title === 'En çok satanlar' && <ArtDecoration kind="bestseller-right" className="!w-10 sm:!w-16" />}</h2>
         </div>
         <div className="flex items-center gap-2">
           {onPageChange && pageCount > 1 && (
@@ -222,11 +211,11 @@ function ProductRail({ title, link, products, total, page = 0, onPageChange }: P
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+      <StaggeredProducts className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
         {products.map((urun) => (
           <UrunKart key={urun.id} urun={urun} imageSizes="(min-width: 1280px) 230px, (min-width: 1024px) 20vw, (min-width: 768px) 33vw, 50vw" />
         ))}
-      </div>
+      </StaggeredProducts>
     </section>
   )
 }

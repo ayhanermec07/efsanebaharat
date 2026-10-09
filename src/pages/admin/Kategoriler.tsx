@@ -8,6 +8,7 @@ import { getCategoryBranchIds, getCategoryPath, loadCategories } from '../../lib
 import type { CatalogCategory } from '../../lib/catalog'
 import AccessibleModal from '../../components/admin/AccessibleModal'
 import CategoryArtwork from '../../components/CategoryArtwork'
+import { ArtDecoration } from '../../components/ArtDecoration'
 import { CATEGORY_THEMES, resolveCategoryTheme } from '../../lib/category-artwork'
 
 export default function Kategoriler() {
@@ -380,7 +381,7 @@ export default function Kategoriler() {
                     </select>
                     <p className="text-xs leading-5 text-gray-500">{field === 'urun_detay_temasi' ? 'Üst çizim ve alt fotoğraf satın alma alanında gösterilir.' : 'Tema seçilirse çizimli şablon kullanılır. Tema atanmadığında yüklenmiş banner görselleri gösterilir.'} Sade seçimi üst kategoriden gelen temayı kapatır.</p>
                     <div className="flex min-w-0 justify-between overflow-hidden rounded-lg border bg-brand-paper p-2" aria-label="Tema önizlemesi">
-                      {theme === 'plain' ? <p className="p-3 text-sm text-gray-500">Sade görünüm</p> : <><CategoryArtwork theme={theme} part="upper" className="!w-28" /><CategoryArtwork theme={theme} part={field === 'urun_detay_temasi' ? 'lower' : 'upper'} className="!w-28" /></>}
+                      {theme === 'plain' ? <p className="p-3 text-sm text-gray-500">Sade görünüm</p> : field === 'banner_temasi' && theme === 'spice' ? <><ArtDecoration kind="category-left" className="!w-28" /><ArtDecoration kind="category-right" className="!w-28" /></> : <><CategoryArtwork theme={theme} part="upper" className="!w-28" /><CategoryArtwork theme={theme} part="lower" className="!w-28" /></>}
                     </div>
                   </section>
                 })}

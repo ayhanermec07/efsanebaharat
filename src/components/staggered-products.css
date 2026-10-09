@@ -1,0 +1,3 @@
+.staggered-products.is-visible > div { animation-name:product-enter; animation-duration:450ms; animation-timing-function:ease-out; animation-fill-mode:backwards; }
+@keyframes product-enter { from { opacity:.35; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+@media (prefers-reduced-motion:reduce) { .staggered-products.is-visible > div { animation:none; } }

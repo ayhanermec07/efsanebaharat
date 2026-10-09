@@ -3,6 +3,7 @@ import { PackageSearch } from 'lucide-react'
 import type { CatalogCategory } from '../lib/catalog'
 import { imageSources } from '../utils/media'
 import CategoryArtwork from './CategoryArtwork'
+import { ArtDecoration } from './ArtDecoration'
 import { hasCategoryTheme, resolveCategoryTheme } from '../lib/category-artwork'
 
 export default function CategoryBanner({ category, categories = [category], themeCategoryId = category.id }: { category: CatalogCategory; categories?: CatalogCategory[]; themeCategoryId?: string }) {
@@ -23,8 +24,7 @@ export default function CategoryBanner({ category, categories = [category], them
   const description = category.aciklama?.trim()
   const theme = resolveCategoryTheme(categories, themeCategoryId, 'banner_temasi')
   if (hasCategoryTheme(categories, themeCategoryId, 'banner_temasi')) return <div key={`${themeCategoryId}:${theme}`} className="shop-page-heading category-template relative isolate overflow-hidden !rounded-none" data-category-banner={category.id}>
-    <CategoryArtwork theme={theme} part="upper" />
-    <CategoryArtwork theme={theme} part="upper" className="[transform:rotate(180deg)]" />
+    {theme === 'spice' ? <><ArtDecoration kind="category-left" className="category-artwork" /><ArtDecoration kind="category-right" className="category-artwork" /></> : <><CategoryArtwork theme={theme} part="upper" /><CategoryArtwork theme={theme} part="lower" /></>}
     <div className="category-template-copy min-w-0">
       <h1 className="break-words text-3xl font-bold sm:text-4xl">{category.kategori_adi}</h1>
       {description && <p className="mt-2 whitespace-pre-line break-words text-sm leading-6 text-brand-muted sm:text-base">{description}</p>}

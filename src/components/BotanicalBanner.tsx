@@ -1,17 +1,15 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
-import CategoryArtwork from './CategoryArtwork'
+import { ArtDecoration } from './ArtDecoration'
 import '../styles/artistic-home.css'
 
 export default function BotanicalBanner({ preview = false }: { preview?: boolean }) {
   const Heading = preview ? 'h2' : 'h1'
   return <div className="botanical-banner">
-    <CategoryArtwork theme="spice" part="upper" className="botanical-banner-upper" />
-    <CategoryArtwork theme="spice" part="lower" className="botanical-banner-lower" />
+    <ArtDecoration kind="home-left" className="botanical-banner-upper" />
+    <ArtDecoration kind="home-right" className="botanical-banner-lower" />
     <div className="botanical-banner-copy">
-      <p className="botanical-banner-eyebrow">Mutfağınızın vazgeçilmezi</p>
-      <Heading>Sofranın sırrı,<br />bir tutam baharat.</Heading>
-      {preview ? <span className="botanical-banner-link">Baharatları keşfet <ArrowRight className="h-4 w-4" aria-hidden="true" /></span> : <Link to="/urunler" className="botanical-banner-link">Baharatları keşfet <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>}
+      <Heading>Sofranıza<br />her zaman lezzet</Heading>
+      {preview ? <span className="botanical-banner-link">Ürünleri keşfet</span> : <Link to="/urunler" className="botanical-banner-link">Ürünleri keşfet</Link>}
     </div>
   </div>
 }

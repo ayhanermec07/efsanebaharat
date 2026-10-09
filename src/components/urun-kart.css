@@ -15,6 +15,8 @@
 .product-variant-option[aria-selected="true"] { background: #eaf0df; }
 .product-variant-option:hover { background: #f1f3e9; }
 .product-card-add:active { transform: scale(.975); }
+.product-card-add svg { transition:transform 180ms ease; }
+.product-card-add:active svg { transform:translateY(-2px) rotate(-4deg); }
 @media (min-width: 640px) {
   .product-card-content { padding: 16px; gap: 12px; }
   .product-card-title { min-height: 48px; font-size: 17px; line-height: 24px; }
@@ -23,4 +25,5 @@
 @media (prefers-reduced-motion: reduce) {
   .product-card *, .product-variant-popup * { transition: none !important; animation: none !important; }
   .product-card-add:active { transform: none; }
+  .product-card-add:active svg { transform:none; }
 }

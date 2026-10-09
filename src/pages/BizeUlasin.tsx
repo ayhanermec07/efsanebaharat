@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import SellerInformation from '../components/SellerInformation'
 import { supabase } from '../lib/supabase'
-import { Send, Check } from 'lucide-react'
+import { Send } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const KONULAR = [
@@ -106,7 +106,6 @@ export default function BizeUlasin() {
             <div className={`support-contact-art ${success ? 'is-sent' : ''}`}>
               <ArtDecoration kind="envelope-open" className="support-envelope-open" />
               <ArtDecoration kind="envelope-closed" className="support-envelope-closed" />
-              {success && <Check className="support-envelope-check" aria-hidden="true" />}
             </div>
             <h1 className="support-contact-heading text-3xl mb-2 sm:text-4xl">Bize Ulaşın</h1>
             <p className="text-gray-600">

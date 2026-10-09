@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { AlertCircle, ArrowUpDown, Loader2, PackageSearch, RotateCcw, SlidersHorizontal, Tag, X } from 'lucide-react'
+import { AlertCircle, ArrowUpDown, Loader2, PackageSearch, RotateCcw, Tag, X } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
 import { ArtDecoration } from '../components/ArtDecoration'
 import './urunler-filters.css'
@@ -182,7 +182,6 @@ export default function Urunler() {
           <span key={leafSwing} className={`leaf-catalog-art ${leafSwing ? 'leaf-catalog-art-swing' : ''}`}>
             <ArtDecoration kind="leaf" />
           </span>
-          <SlidersHorizontal className="leaf-catalog-symbol" size={17} aria-hidden="true" />
           {hasFilters && <span className="leaf-catalog-active" aria-label="Filtre etkin" />}
         </button>
         {filtersOpen && <div ref={filterDrawerRef} id="catalog-filters" className="leaf-catalog-drawer">

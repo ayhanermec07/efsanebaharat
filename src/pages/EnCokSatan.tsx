@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AlertCircle, PackageSearch, RotateCcw, Star } from 'lucide-react'
 import UrunKart from '../components/UrunKart'
+import StaggeredProducts from '../components/StaggeredProducts'
 import CatalogToolbar from '../components/CatalogToolbar'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { fetchInBatches } from '../utils/supabaseBatch'
-import CategoryArtwork from '../components/CategoryArtwork'
+import { ArtDecoration } from '../components/ArtDecoration'
 
 export default function EnCokSatan() {
   const { musteriData } = useAuth()
@@ -158,13 +159,14 @@ export default function EnCokSatan() {
       </CatalogToolbar>
       <div className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <div className="bestseller-art-heading mb-6 flex min-w-0 items-center justify-between gap-3 border-b border-brand-line pb-4">
-        <div className="min-w-0">
+        <ArtDecoration kind="bestseller-left" className="bestseller-heading-art !w-10 sm:!w-20" />
+        <div className="min-w-0 text-center">
           <h1 className="break-words text-2xl font-semibold sm:text-3xl">En çok satanlar</h1>
           <p className="mt-2 text-xs leading-5 text-brand-muted sm:text-sm">
             {siralama === 'otomatik' ? 'Satış verilerine göre öne çıkan ürünler.' : 'Panelden özel seçilmiş ürünler.'}
           </p>
         </div>
-        <CategoryArtwork theme="spice" part="upper" className="bestseller-heading-art" />
+        <ArtDecoration kind="bestseller-right" className="bestseller-heading-art !w-10 sm:!w-20" />
       </div>
 
       {loading ? (
@@ -187,11 +189,11 @@ export default function EnCokSatan() {
           <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">Bu raf için gösterilecek ürün bulunamadı.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        <StaggeredProducts className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {urunler.map((urun) => (
             <UrunKart key={urun.id} urun={urun} />
           ))}
-        </div>
+        </StaggeredProducts>
       )}
       </div>
     </div>

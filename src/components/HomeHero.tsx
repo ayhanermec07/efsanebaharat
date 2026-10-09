@@ -13,6 +13,7 @@ export default function HomeHero({ campaigns }: { campaigns: CampaignSlide[] }) 
   })
   const [source] = useState(() => window.matchMedia('(max-width: 767px)').matches ? '/artwork/spice-intro-mobile.webm' : '/artwork/spice-intro-desktop.webm')
   const [exiting, setExiting] = useState(false)
+  const [playbackTime, setPlaybackTime] = useState(0)
   const exitingRef = useRef(false)
   const exitTimer = useRef<number>()
   const video = useRef<HTMLVideoElement>(null)
@@ -46,15 +47,17 @@ export default function HomeHero({ campaigns }: { campaigns: CampaignSlide[] }) 
   return <div className="home-hero">
     {intro ? <><div className={`home-intro ${exiting ? 'home-intro-exiting' : ''}`} aria-label="Baharatlardan bir karşılama">
       <div className="home-intro-backdrop" aria-hidden="true"><BotanicalBanner preview /></div>
-      <video ref={video} src={source} autoPlay muted playsInline preload="auto" poster="/artwork/spice-intro-poster.webp" aria-hidden="true" onEnded={finish} onError={finish} onPlaying={() => {
+      <video ref={video} src={source} autoPlay muted playsInline preload="auto" poster="/artwork/spice-intro-poster.webp" aria-hidden="true"
+        style={{ opacity: exiting ? 0 : Math.min(1, Math.max(0, (5 - playbackTime) / 2)) }}
+        onTimeUpdate={event => setPlaybackTime(event.currentTarget.currentTime)} onEnded={finish} onError={finish} onPlaying={() => {
         window.clearTimeout(loadingTimer.current)
         window.clearTimeout(playbackTimer.current)
-        playbackTimer.current = window.setTimeout(finish, 4650)
+        playbackTimer.current = window.setTimeout(finish, 5200)
       }}>
       </video>
-      <div className="home-intro-copy">
-        <h1>Efsane lezzetler<br />her zaman yanınızda.</h1>
-        <p>Mutfağınıza ilham veren tatları keşfedin.</p>
+      <div className="home-intro-copy" style={{ opacity: exiting ? 0 : Math.max(0, Math.min(1, (playbackTime - 1) / .6, (5 - playbackTime) / 2)) }}>
+        <p>Doğadan sofranıza</p>
+        <h1>Efsane lezzetler<br />her zaman yanınızda</h1>
       </div>
       <button type="button" onClick={finish} className="home-intro-skip">Atla <span aria-hidden="true">→</span></button>
     </div>{campaigns.length > 0 && <div className="home-intro-controls-spacer" aria-hidden="true" />}</> : <CampaignCarousel slides={withBotanicalSlide(campaigns)} />}

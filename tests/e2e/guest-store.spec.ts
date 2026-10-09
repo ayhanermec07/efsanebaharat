@@ -57,7 +57,7 @@ test('Anadolu Aktarı teması, görünür arama ve mobil menü klavyesi birlikte
   test.setTimeout(90_000)
   await page.route('**/rest/v1/kampanyalar*', (route) => route.fulfill({ json: [] }))
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await expect(page.getByRole('heading', { name: 'Sofranın sırrı, bir tutam baharat.' })).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole('heading', { name: 'Sofranıza her zaman lezzet' })).toBeVisible({ timeout: 20_000 })
   await expect(page.locator('header input[aria-label="Ürün ara"]')).toBeVisible()
   await expect.poll(() => page.locator('header .font-display').evaluate(element => getComputedStyle(element).fontFamily)).toContain('Source Serif 4')
   await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--site-primary-color').trim())).toBe('#34513c')

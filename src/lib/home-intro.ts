@@ -5,5 +5,5 @@ export function shouldPlayIntro(seen: boolean, reducedMotion: boolean) {
   return !seen && !reducedMotion
 }
 export function withBotanicalSlide(campaigns: CampaignSlide[]): CampaignSlide[] {
-  return [{ id: 'botanical', title: 'Sofranın sırrı, bir tutam baharat.', href: '/urunler', image: '' }, ...campaigns]
+  return [{ id: 'botanical', title: 'Sofranıza her zaman lezzet', href: '/urunler', image: '' }, ...campaigns]
 }

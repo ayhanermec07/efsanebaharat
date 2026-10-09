@@ -1,14 +1,15 @@
-.art-decoration { display:block; width:160px; aspect-ratio:1; flex-shrink:0; background-image:url('/artwork/support.webp'); background-size:300% 200%; background-repeat:no-repeat; pointer-events:none; }
+.art-decoration { display:block; width:160px; flex-shrink:0; pointer-events:none; }
 .support-footer { position:relative; isolation:isolate; overflow:hidden; background:#f5eddf; }
-.support-footer .support-footer-divider { width:min(320px, 80%); height:80px; aspect-ratio:auto; margin:0 auto -12px; }
-.support-footer .support-footer-corner { position:absolute; width:110px; bottom:-25px; right:-25px; opacity:.45; z-index:-1; transform:rotate(-25deg); }
+.support-footer .support-footer-divider { width:min(240px, 65%); margin:20px auto -12px; }
+.support-footer .support-footer-corner { position:absolute; width:140px; bottom:0; right:0; opacity:.6; z-index:-1; }
+.support-footer .support-footer-left { left:0; right:auto; }
 .support-empty-cart { border:1px solid #dfcbb0; background:#faf6ec; }
 .support-empty-cart .art-decoration { width:210px; max-width:100%; }
 .support-contact { background:#f7f2e8; color:#45382d; }
 .support-contact .support-contact-heading { font-family:var(--font-display, Georgia, serif); font-weight:500; color:#4d3d2e; }
 .support-contact .support-contact-paper { border:1px solid #dfcdb2; background:#fffdf7; box-shadow:0 4px 16px #72573808; }
 .support-contact .support-contact-art { position:relative; width:190px; height:190px; margin:0 auto; }
-.support-contact .support-contact-art .art-decoration { position:absolute; inset:0; width:100%; }
+.support-contact .support-contact-art .art-decoration { position:absolute; top:24px; left:0; width:100%; }
 .support-contact .support-envelope-open { opacity:1; transition:opacity .25s ease, transform .35s ease; }
 .support-contact .support-envelope-closed { opacity:0; transition:opacity .3s .15s ease, transform .35s .1s ease; transform:translateY(8px); }
 .support-contact .is-sent .support-envelope-open { opacity:0; transform:scaleY(.8) translateY(8px); }

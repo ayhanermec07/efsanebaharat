@@ -56,7 +56,7 @@ export default function CampaignCarousel({ slides }: { slides: CampaignSlide[] }
       }
     }} onClickCapture={event => { if (performance.now() < suppressClickUntil.current) { event.preventDefault(); event.stopPropagation() } }}>
       <div key={slide.id} role="group" aria-roledescription="slayt" aria-label={`${activeIndex + 1} / ${slides.length}: ${slide.title}`} aria-live={paused ? 'polite' : 'off'} className="campaign-slide">
-        {slide.id === 'botanical' ? <BotanicalBanner /> : <Link to={slide.href} aria-label={`${slide.title} kampanyasını incele`} className="block aspect-[2/1] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-brand md:aspect-[16/5]">
+        {slide.id === 'botanical' ? <BotanicalBanner /> : <Link to={slide.href} aria-label={`${slide.title} kampanyasını incele`} className="block aspect-[2/1] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-brand md:aspect-[5/1]">
           <SiteImage src={slide.image} variant="hero" sizes="(min-width: 1280px) 1216px, calc(100vw - 32px)" loading="eager" fetchPriority={activeIndex === 0 ? 'high' : 'auto'} alt={slide.title} className="h-full w-full object-contain" />
         </Link>}
       </div>

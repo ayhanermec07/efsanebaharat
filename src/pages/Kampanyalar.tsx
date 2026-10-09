@@ -154,7 +154,7 @@ export default function Kampanyalar() {
                         </div>
                       )}
                     </div>
-                    <ArtDecoration kind="leaf" className="support-coupon-motif" />
+                    <ArtDecoration kind="coupon" className="support-coupon-motif" />
                     <h2 className="break-words text-2xl font-bold text-zinc-950">{kampanya.ad}</h2>
                     {kampanya.aciklama && <p className="mt-1 text-sm leading-6 text-zinc-600">{kampanya.aciklama}</p>}
                   </div>

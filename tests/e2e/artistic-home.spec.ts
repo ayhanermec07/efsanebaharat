@@ -57,19 +57,25 @@ test('real intro video advances and fades to a botanical banner after five secon
     })
     observer.observe(element, { attributes: true, attributeFilter: ['class'] })
   })
-  await expect(page.getByRole('heading', { name: 'Efsane lezzetler her zaman yanınızda.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Efsane lezzetler her zaman yanınızda' })).toBeVisible()
+  if (page.viewportSize()!.width === 768) {
+    const caption = (await page.locator('.home-intro-copy p').boundingBox())!
+    const skip = (await page.getByRole('button', {name:'Atla'}).boundingBox())!
+    expect(caption.y).toBeGreaterThanOrEqual(skip.y + skip.height)
+  }
   await noOverflow(page)
   await page.screenshot({ path: testInfo.outputPath('home-intro.png') })
   await expect(page.locator('.home-intro')).not.toBeVisible({ timeout: 9000 })
   expect(await page.evaluate(() => (window as unknown as { introFadeObserved: boolean }).introFadeObserved)).toBe(true)
   const banner = page.locator('.campaign-slide .botanical-banner')
   await expect(banner).toBeVisible()
+  await expect(page.locator('.campaign-slide')).toHaveCSS('opacity','1')
   expect(Math.abs((await banner.boundingBox())!.height - start.height)).toBeLessThanOrEqual(2)
   expect(Math.abs((await page.locator('.home-hero').boundingBox())!.height - startHero.height)).toBeLessThanOrEqual(2)
   await page.screenshot({ path: testInfo.outputPath('home-botanical.png') })
   await page.mouse.move(0, 0)
   await expect(page.getByRole('group', { name: /2 \/ 2: Fixture indirimi/ })).toBeVisible({ timeout: 9000 })
-  await expect(page.getByRole('group', { name: /1 \/ 2: Sofranın sırrı/ })).toBeVisible({ timeout: 9000 })
+  await expect(page.getByRole('group', { name: /1 \/ 2: Sofranıza her zaman lezzet/ })).toBeVisible({ timeout: 9000 })
   await noOverflow(page)
 })
 
@@ -105,5 +111,24 @@ test('no campaigns leaves the botanical first slide static', async ({ page }) =>
   await page.goto('/')
   await expect(page.locator('.campaign-slide .botanical-banner')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sonraki banner' })).toHaveCount(0)
+  await noOverflow(page)
+})
+
+test('intro reveals its slogan after one second and dissolves into the botanical scene from three seconds', async ({ page }) => {
+  await page.goto('/')
+  const video = page.locator('.home-intro video')
+  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.readyState)).toBeGreaterThanOrEqual(2)
+  await video.evaluate((el: HTMLVideoElement) => { el.pause(); el.currentTime = 0 })
+  await expect(page.locator('.home-intro-copy')).toHaveCSS('opacity', '0')
+  await video.evaluate((el: HTMLVideoElement) => { el.currentTime = 2 })
+  await expect(page.locator('.home-intro-copy')).toHaveCSS('opacity', '1')
+  await video.evaluate((el: HTMLVideoElement) => { el.currentTime = 4 })
+  await expect.poll(() => video.evaluate(el => Number(getComputedStyle(el).opacity))).toBeCloseTo(.5, 1)
+})
+
+test('home bestseller title retains both approved motifs', async ({ page }) => {
+  await page.goto('/')
+  const title = page.getByRole('heading', { name: 'En çok satanlar', exact: true })
+  await expect(title.locator('[data-approved-artwork="bestseller"]')).toHaveCount(2)
   await noOverflow(page)
 })
