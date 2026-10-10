@@ -1,0 +1,1012 @@
+[
+  {
+    "key": "divider",
+    "input": "exec-92a6e5cf-47be-4681-a4fc-edc099b0a570.png",
+    "region": [
+      0.35,
+      0.14,
+      0.33,
+      0.19
+    ],
+    "maxSize": 600
+  },
+  {
+    "key": "footer-brand",
+    "input": "exec-92a6e5cf-47be-4681-a4fc-edc099b0a570.png",
+    "region": [
+      0.13,
+      0.33,
+      0.22,
+      0.3
+    ],
+    "maxSize": 600
+  },
+  {
+    "key": "footer-left",
+    "input": "exec-92a6e5cf-47be-4681-a4fc-edc099b0a570.png",
+    "region": [
+      0,
+      0.63,
+      0.25,
+      0.37
+    ],
+    "maxSize": 600
+  },
+  {
+    "key": "footer-right",
+    "input": "exec-92a6e5cf-47be-4681-a4fc-edc099b0a570.png",
+    "region": [
+      0.77,
+      0.63,
+      0.23,
+      0.37
+    ],
+    "maxSize": 600
+  },
+  {
+    "key": "bestseller-left",
+    "input": "exec-e76b457c-16f8-48e9-8c60-898d1f13114a.png",
+    "region": [
+      0,
+      0,
+      0.5,
+      1
+    ],
+    "maxSize": 600
+  },
+  {
+    "key": "bestseller-right",
+    "input": "exec-e76b457c-16f8-48e9-8c60-898d1f13114a.png",
+    "region": [
+      0.5,
+      0,
+      0.5,
+      1
+    ],
+    "maxSize": 600
+  },
+  {
+    "key": "parcel",
+    "input": "exec-8e0fd6a3-7c43-40d9-9c9e-89c603037521.png",
+    "maxSize": 600
+  },
+  {
+    "key": "coupon",
+    "input": "exec-d9893132-4e4e-4642-a7ca-61c310298be0.png",
+    "maxSize": 600
+  },
+  {
+    "key": "leaf",
+    "input": "exec-0b65fbea-d28f-455f-beaf-acd9d014e2fa.png",
+    "maxSize": 256
+  },
+  {
+    "key": "spice-upper",
+    "input": "exec-93a00719-4641-4ea7-8718-f2d515a3f045.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0.56
+      ],
+      [
+        0.87,
+        0.56
+      ],
+      [
+        0.8,
+        0.585
+      ],
+      [
+        0,
+        0.585
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "spice-lower",
+    "input": "exec-93a00719-4641-4ea7-8718-f2d515a3f045.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0.585
+      ],
+      [
+        0.8,
+        0.585
+      ],
+      [
+        0.87,
+        0.56
+      ],
+      [
+        1,
+        0.56
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "oil-upper",
+    "input": "exec-7a286118-6eb7-4cf0-9aaa-25fd604903b4.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0.64
+      ],
+      [
+        0,
+        0.64
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "oil-lower",
+    "input": "exec-7a286118-6eb7-4cf0-9aaa-25fd604903b4.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0.64
+      ],
+      [
+        1,
+        0.64
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "soap-upper",
+    "input": "exec-90aabf1f-ebcd-4b30-8fdb-6740fa8df5e0.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0.67
+      ],
+      [
+        0.89,
+        0.67
+      ],
+      [
+        0.8,
+        0.6
+      ],
+      [
+        0,
+        0.6
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "soap-lower",
+    "input": "exec-90aabf1f-ebcd-4b30-8fdb-6740fa8df5e0.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0.6
+      ],
+      [
+        0.8,
+        0.6
+      ],
+      [
+        0.89,
+        0.67
+      ],
+      [
+        1,
+        0.67
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "delight-upper",
+    "input": "exec-d4be547a-ffdc-40e5-898d-2417972ccec0.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0.585
+      ],
+      [
+        0.94,
+        0.585
+      ],
+      [
+        0.81,
+        0.55
+      ],
+      [
+        0,
+        0.55
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "delight-lower",
+    "input": "exec-d4be547a-ffdc-40e5-898d-2417972ccec0.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0.55
+      ],
+      [
+        0.81,
+        0.55
+      ],
+      [
+        0.94,
+        0.585
+      ],
+      [
+        1,
+        0.585
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "water-upper",
+    "input": "exec-fa4c73c8-429a-4781-88e9-3e418f47d92c.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0.56
+      ],
+      [
+        0,
+        0.56
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "water-lower",
+    "input": "exec-fa4c73c8-429a-4781-88e9-3e418f47d92c.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0.56
+      ],
+      [
+        1,
+        0.56
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "paste-upper",
+    "input": "exec-6947654a-ba97-4ba7-aeba-b052610ea91d.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0.56
+      ],
+      [
+        0,
+        0.56
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "paste-lower",
+    "input": "exec-6947654a-ba97-4ba7-aeba-b052610ea91d.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0.56
+      ],
+      [
+        1,
+        0.56
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "essence-upper",
+    "input": "exec-38025763-d05a-46b3-bcce-a3354c0e5b5e.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0.68
+      ],
+      [
+        0.78,
+        0.68
+      ],
+      [
+        0.7,
+        0.54
+      ],
+      [
+        0,
+        0.54
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "essence-lower",
+    "input": "exec-38025763-d05a-46b3-bcce-a3354c0e5b5e.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0.54
+      ],
+      [
+        0.7,
+        0.54
+      ],
+      [
+        0.78,
+        0.68
+      ],
+      [
+        1,
+        0.68
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "color-upper",
+    "input": "exec-5aaadc00-8e5e-447a-bb96-d41652011c3c.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0.55
+      ],
+      [
+        0,
+        0.55
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "color-lower",
+    "input": "exec-5aaadc00-8e5e-447a-bb96-d41652011c3c.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0.55
+      ],
+      [
+        1,
+        0.55
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "cream-upper",
+    "input": "exec-c489eec9-20d4-4de7-808d-7e2f0ff8e887.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0.56
+      ],
+      [
+        0,
+        0.56
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "cream-lower",
+    "input": "exec-c489eec9-20d4-4de7-808d-7e2f0ff8e887.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0.56
+      ],
+      [
+        1,
+        0.56
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "molasses-upper",
+    "input": "exec-f9c767c5-19f7-44de-a2c5-a70890378777.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0.47
+      ],
+      [
+        0,
+        0.47
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "molasses-lower",
+    "input": "exec-f9c767c5-19f7-44de-a2c5-a70890378777.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0.5
+      ],
+      [
+        0.65,
+        0.5
+      ],
+      [
+        0.7,
+        0.47
+      ],
+      [
+        1,
+        0.47
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "vinegar-upper",
+    "input": "exec-6463cf1c-7fa1-4c57-bd22-83d52c0dbe7a.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0.58
+      ],
+      [
+        0.74,
+        0.58
+      ],
+      [
+        0.7,
+        0.5
+      ],
+      [
+        0,
+        0.5
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "vinegar-lower",
+    "input": "exec-6463cf1c-7fa1-4c57-bd22-83d52c0dbe7a.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0.5
+      ],
+      [
+        0.7,
+        0.5
+      ],
+      [
+        0.74,
+        0.58
+      ],
+      [
+        1,
+        0.58
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "shampoo-upper",
+    "input": "exec-8439e354-762f-43d7-9343-79f707b03e15.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0.54
+      ],
+      [
+        0.73,
+        0.54
+      ],
+      [
+        0.7,
+        0.5
+      ],
+      [
+        0,
+        0.5
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "shampoo-lower",
+    "input": "exec-8439e354-762f-43d7-9343-79f707b03e15.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0.5
+      ],
+      [
+        0.7,
+        0.5
+      ],
+      [
+        0.73,
+        0.54
+      ],
+      [
+        1,
+        0.54
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "salt-upper",
+    "input": "exec-a842fd48-2d1e-42e2-aa03-1a37146b041f.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0.57
+      ],
+      [
+        0,
+        0.57
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "salt-lower",
+    "input": "exec-a842fd48-2d1e-42e2-aa03-1a37146b041f.png",
+    "region": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "polygon": [
+      [
+        0,
+        0.57
+      ],
+      [
+        1,
+        0.57
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxSize": 720
+  },
+  {
+    "key": "pouch",
+    "input": "exec-1c50a479-6295-4cf2-b275-251c83b62a54.png",
+    "maxSize": 600
+  },
+  {
+    "key": "envelope-open",
+    "input": "exec-9e5c124e-789d-4b88-8781-c2f3c64c31a8.png",
+    "region": [
+      0,
+      0,
+      0.5,
+      1
+    ],
+    "maxSize": 600
+  },
+  {
+    "key": "envelope-closed",
+    "input": "exec-9e5c124e-789d-4b88-8781-c2f3c64c31a8.png",
+    "region": [
+      0.5,
+      0,
+      0.5,
+      1
+    ],
+    "maxSize": 600
+  },
+  {
+    "key": "category-left",
+    "input": "exec-793e672b-c8cd-49e0-9f1d-4df1c7f72a5a.png",
+    "region": [
+      0,
+      0,
+      0.5,
+      1
+    ],
+    "maxSize": 600
+  },
+  {
+    "key": "category-right",
+    "input": "exec-793e672b-c8cd-49e0-9f1d-4df1c7f72a5a.png",
+    "region": [
+      0.5,
+      0,
+      0.5,
+      1
+    ],
+    "maxSize": 600
+  },
+  {
+    "key": "home-left",
+    "input": "exec-3345f0a5-3bbc-4fcf-903d-0b5c3d1423e5.png",
+    "region": [
+      0,
+      0,
+      0.5,
+      1
+    ],
+    "maxSize": 900
+  },
+  {
+    "key": "home-right",
+    "input": "exec-3345f0a5-3bbc-4fcf-903d-0b5c3d1423e5.png",
+    "region": [
+      0.5,
+      0,
+      0.5,
+      1
+    ],
+    "maxSize": 900
+  }
+]

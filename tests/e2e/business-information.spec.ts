@@ -41,6 +41,7 @@ for (const document of legalDocuments) test(`${document.title}: satıcı, taslak
   await expect(article.getByTestId('consumer-scope')).toHaveCount(document.audience === 'b2c' ? 1 : 0)
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex,nofollow')
   await expect(page.locator('footer').getByTestId('seller-information')).toContainText(businessInfo.sellerName)
+  await page.locator('footer summary').click()
   await expect(page.locator('footer').getByRole('navigation', { name: 'Yasal ve ticari bilgiler' }).getByRole('link')).toHaveCount(7)
   await noOverflow(page)
   if (document.path === '/mesafeli-satis-sozlesmesi') await page.screenshot({ path: testInfo.outputPath('sozlesme.png'), fullPage: true })

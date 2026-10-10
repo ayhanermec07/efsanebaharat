@@ -8,8 +8,8 @@
 .botanical-banner .botanical-banner-upper, .botanical-banner .botanical-banner-lower { position:absolute; pointer-events:none; z-index:-1; width:38%; bottom:0; opacity:1; }
 .botanical-banner .botanical-banner-upper { left:-7%; }
 .botanical-banner .botanical-banner-lower { right:-8%; }
-.botanical-banner .botanical-banner-upper { mask-image:linear-gradient(to right,#000 70%,transparent),linear-gradient(to bottom,transparent,#000 18%); mask-composite:intersect; }
-.botanical-banner .botanical-banner-lower { mask-image:linear-gradient(to left,#000 70%,transparent),linear-gradient(to bottom,transparent,#000 18%); mask-composite:intersect; }
+.botanical-banner .botanical-banner-upper { }
+.botanical-banner .botanical-banner-lower { }
 .botanical-banner-copy { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100%; padding:14px 30px; text-align:center; }
 .botanical-banner-eyebrow { margin:0 0 6px; color:#69734d; text-transform:uppercase; font-size:9px; letter-spacing:.16em; }
 .botanical-banner h1, .botanical-banner h2 { margin:0; font-family:var(--font-display, Georgia, serif); font-weight:500; font-size:27px; line-height:1.14; color:#36552d; }

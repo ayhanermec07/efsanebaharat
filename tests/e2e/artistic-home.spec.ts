@@ -129,6 +129,6 @@ test('intro reveals its slogan after one second and dissolves into the botanical
 test('home bestseller title retains both approved motifs', async ({ page }) => {
   await page.goto('/')
   const title = page.getByRole('heading', { name: 'En çok satanlar', exact: true })
-  await expect(title.locator('[data-approved-artwork="bestseller"]')).toHaveCount(2)
+  await expect(title.locator('[data-transparent-artwork^="bestseller-"]')).toHaveCount(2)
   await noOverflow(page)
 })

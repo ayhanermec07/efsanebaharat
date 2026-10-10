@@ -1,0 +1,254 @@
+[
+  {
+    "key": "divider",
+    "width": 515,
+    "height": 174,
+    "transparentRatio": 0.5726516534794076
+  },
+  {
+    "key": "footer-brand",
+    "width": 337,
+    "height": 281,
+    "transparentRatio": 0.44843036364687516
+  },
+  {
+    "key": "footer-left",
+    "width": 407,
+    "height": 344,
+    "transparentRatio": 0.6519818036887386
+  },
+  {
+    "key": "footer-right",
+    "width": 352,
+    "height": 346,
+    "transparentRatio": 0.5746455254607795
+  },
+  {
+    "key": "bestseller-left",
+    "width": 600,
+    "height": 400,
+    "transparentRatio": 0.6676739619262742
+  },
+  {
+    "key": "bestseller-right",
+    "width": 600,
+    "height": 391,
+    "transparentRatio": 0.6367161665801817
+  },
+  {
+    "key": "parcel",
+    "width": 600,
+    "height": 294,
+    "transparentRatio": 0.5538658742273781
+  },
+  {
+    "key": "coupon",
+    "width": 588,
+    "height": 600,
+    "transparentRatio": 0.7282975887340282
+  },
+  {
+    "key": "leaf",
+    "width": 256,
+    "height": 222,
+    "transparentRatio": 0.6916472450080401
+  },
+  {
+    "key": "spice-upper",
+    "width": 720,
+    "height": 642,
+    "transparentRatio": 0.7491842905680338
+  },
+  {
+    "key": "spice-lower",
+    "width": 720,
+    "height": 477,
+    "transparentRatio": 0.7722072601318359
+  },
+  {
+    "key": "oil-upper",
+    "width": 720,
+    "height": 694,
+    "transparentRatio": 0.7609659830729166
+  },
+  {
+    "key": "oil-lower",
+    "width": 720,
+    "height": 398,
+    "transparentRatio": 0.8375784556070963
+  },
+  {
+    "key": "soap-upper",
+    "width": 720,
+    "height": 711,
+    "transparentRatio": 0.7781531016031901
+  },
+  {
+    "key": "soap-lower",
+    "width": 720,
+    "height": 449,
+    "transparentRatio": 0.776025136311849
+  },
+  {
+    "key": "delight-upper",
+    "width": 720,
+    "height": 676,
+    "transparentRatio": 0.8059088389078776
+  },
+  {
+    "key": "delight-lower",
+    "width": 720,
+    "height": 497,
+    "transparentRatio": 0.7511240641276041
+  },
+  {
+    "key": "water-upper",
+    "width": 720,
+    "height": 608,
+    "transparentRatio": 0.8719495137532552
+  },
+  {
+    "key": "water-lower",
+    "width": 720,
+    "height": 478,
+    "transparentRatio": 0.8172067006429037
+  },
+  {
+    "key": "paste-upper",
+    "width": 720,
+    "height": 590,
+    "transparentRatio": 0.6944630940755209
+  },
+  {
+    "key": "paste-lower",
+    "width": 720,
+    "height": 508,
+    "transparentRatio": 0.8155193328857422
+  },
+  {
+    "key": "essence-upper",
+    "width": 720,
+    "height": 710,
+    "transparentRatio": 0.7583084106445312
+  },
+  {
+    "key": "essence-lower",
+    "width": 720,
+    "height": 523,
+    "transparentRatio": 0.8573023478190104
+  },
+  {
+    "key": "color-upper",
+    "width": 720,
+    "height": 579,
+    "transparentRatio": 0.924530029296875
+  },
+  {
+    "key": "color-lower",
+    "width": 720,
+    "height": 491,
+    "transparentRatio": 0.7385660807291666
+  },
+  {
+    "key": "cream-upper",
+    "width": 720,
+    "height": 586,
+    "transparentRatio": 0.8440176645914713
+  },
+  {
+    "key": "cream-lower",
+    "width": 720,
+    "height": 481,
+    "transparentRatio": 0.7604993184407552
+  },
+  {
+    "key": "molasses-upper",
+    "width": 720,
+    "height": 498,
+    "transparentRatio": 0.7901159922281901
+  },
+  {
+    "key": "molasses-lower",
+    "width": 720,
+    "height": 574,
+    "transparentRatio": 0.720068613688151
+  },
+  {
+    "key": "vinegar-upper",
+    "width": 720,
+    "height": 621,
+    "transparentRatio": 0.8161404927571615
+  },
+  {
+    "key": "vinegar-lower",
+    "width": 720,
+    "height": 541,
+    "transparentRatio": 0.7604726155598959
+  },
+  {
+    "key": "shampoo-upper",
+    "width": 720,
+    "height": 588,
+    "transparentRatio": 0.8024501800537109
+  },
+  {
+    "key": "shampoo-lower",
+    "width": 720,
+    "height": 558,
+    "transparentRatio": 0.7551504770914713
+  },
+  {
+    "key": "salt-upper",
+    "width": 720,
+    "height": 650,
+    "transparentRatio": 0.8806540171305338
+  },
+  {
+    "key": "salt-lower",
+    "width": 720,
+    "height": 475,
+    "transparentRatio": 0.7324581146240234
+  },
+  {
+    "key": "pouch",
+    "width": 600,
+    "height": 394,
+    "transparentRatio": 0.6094964345296224
+  },
+  {
+    "key": "envelope-open",
+    "width": 600,
+    "height": 379,
+    "transparentRatio": 0.38666274940732376
+  },
+  {
+    "key": "envelope-closed",
+    "width": 600,
+    "height": 391,
+    "transparentRatio": 0.49133497145996763
+  },
+  {
+    "key": "category-left",
+    "width": 600,
+    "height": 400,
+    "transparentRatio": 0.6456381062849119
+  },
+  {
+    "key": "category-right",
+    "width": 600,
+    "height": 403,
+    "transparentRatio": 0.458919650397322
+  },
+  {
+    "key": "home-left",
+    "width": 900,
+    "height": 594,
+    "transparentRatio": 0.5050700114164249
+  },
+  {
+    "key": "home-right",
+    "width": 900,
+    "height": 528,
+    "transparentRatio": 0.49192205302408126
+  }
+]

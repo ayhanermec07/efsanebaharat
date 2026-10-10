@@ -2,7 +2,7 @@
 .leaf-catalog-content { padding-top: 32px; }
 .leaf-catalog-trigger { position: relative; display: block; margin-left: 12px; width: 84px; height: 84px; border-radius: 10px; color: #6b775b; pointer-events: auto; }
 .leaf-catalog-art { position: absolute; top: 0; left: 0; width: 84px; transform-origin: 50% 0; }
-.leaf-catalog-art .art-decoration { width: 84px; mask-image:linear-gradient(to right,transparent,#000 8%,#000 92%,transparent),linear-gradient(to bottom,#000 85%,transparent); mask-composite:intersect; }
+.leaf-catalog-art .art-decoration { width:84px; height:80px; object-fit:contain; object-position:top; }
 .leaf-catalog-art-swing { animation: catalog-leaf-swing 400ms ease-in-out; }
 .leaf-catalog-active { position: absolute; left: 74px; top: 53px; width: 5px; height: 5px; border-radius: 50%; background: #6b775b; }
 .leaf-catalog-trigger:focus-visible { outline: 2px solid #77855e; outline-offset: -4px; }
