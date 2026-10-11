@@ -122,7 +122,9 @@ test('detail inherits artwork and opens a focus-trapped large image without zoom
   const upper = purchase.locator('.product-upper-art'), lower = purchase.locator('.product-lower-art')
   await expect(upper).toHaveAttribute('data-transparent-artwork', 'spice-upper')
   await expect(upper).toHaveAttribute('src', '/artwork/transparent/spice-upper.png')
-  expect((await lower.boundingBox())!.y).toBeGreaterThan((await purchase.getByRole('button', { name: 'Sepete ekle', exact: true }).boundingBox())!.y)
+  const lowerBox = (await lower.boundingBox())!, controls = (await purchase.locator('.product-purchase-controls').boundingBox())!
+  if (page.viewportSize()!.width >= 640) expect(lowerBox.x).toBeGreaterThanOrEqual(controls.x + controls.width)
+  else expect(lowerBox.y).toBeGreaterThanOrEqual(controls.y + controls.height)
   const opener = page.getByRole('button', { name: `${product.urun_adi} görselini büyük aç` })
   await opener.click()
   const dialog = page.getByRole('dialog', { name: product.urun_adi })
@@ -157,10 +159,11 @@ test('category retains root title with two decorative drawings', async ({ page }
   await page.screenshot({ path: testInfo.outputPath('theme-banner.png') })
 })
 
-test('coupon confirms only successful clipboard writes', async ({ page }) => {
+test('coupon confirms only successful clipboard writes', async ({ page }, testInfo) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => { throw new Error('denied') } } }))
   await page.goto('/kampanyalar')
   const copy = page.getByRole('button', { name: 'DENEME10 kampanya kodunu kopyala' })
+  await page.locator('.support-coupon').screenshot({path:testInfo.outputPath('approved-coupon.png')})
   await copy.click()
   await expect(page.getByText('Kod kopyalanamadı. Kodu seçerek kopyalayabilirsiniz.')).toBeVisible()
   await expect(copy).toContainText('Kodu kopyala')
@@ -195,6 +198,7 @@ test('contact keeps failed messages and shows the sent envelope only after succe
   await page.route('**/rest/v1/sorular*', route => route.request().method() === 'POST'
     ? route.fulfill({ status: succeed ? 201 : 403, json: succeed ? null : { message: 'fixture denied' } }) : route.fulfill({ json: [] }))
   await page.goto('/bize-ulasin')
+  await page.locator('.support-letter').screenshot({path:testInfo.outputPath('approved-contact.png')})
   const message = page.getByLabel('Sorunuz veya Mesajınız')
   await message.fill('Siparişime ilişkin deneme sorusu.')
   await page.getByRole('button', { name: 'Gönder', exact: true }).click()
@@ -212,13 +216,24 @@ test('contact keeps failed messages and shows the sent envelope only after succe
 
 test('account retains approved parcel and readable order records at every width', async ({ page }, testInfo) => {
   await session(page)
+  await page.route('**/rest/v1/order_return_requests*',route=>route.fulfill({json:null}))
   await page.route('**/rest/v1/siparisler*', route=>route.fulfill({json:[{id:id(555),siparis_no:'EB-2026-000123',olusturma_tarihi:'2026-10-08T10:00:00Z',siparis_durumu:'hazirlaniyor',payment_method:'havale',odeme_durumu:'odendi',toplam_tutar:125,kargo_durumu:'hazirlaniyor'}]}))
+  await page.route('**/rest/v1/siparis_urunleri*',route=>route.fulfill({json:[{id:id(556),siparis_id:id(555),urun_id:productId,miktar:1,birim_turu:'adet',toplam_fiyat:125}]}))
+  await page.route('**/rest/v1/urunler*',route=>route.fulfill({json:[product]}))
   await page.goto('/hesabim')
-  await expect(page.getByRole('heading',{name:'Hesabım',exact:true})).toBeVisible()
+  await expect(page.getByRole('heading',{name:'Hesabım',exact:true,level:1})).toBeVisible()
   await expect(page.locator('[data-transparent-artwork="parcel"]')).toHaveCount(1)
   await expect(page.locator('.support-order')).toContainText('EB-2026-000123')
-  await page.locator('.support-order').scrollIntoViewIfNeeded()
+  await expect(page.locator('.support-order-photo')).toHaveJSProperty('naturalWidth',400)
+  await page.addStyleTag({content:'html {scroll-behavior:auto!important}'})
+  await page.setViewportSize({width:page.viewportSize()!.width,height:1800})
+  await page.locator('.support-orders-heading').scrollIntoViewIfNeeded()
   await page.screenshot({path:testInfo.outputPath('approved-account.png')})
+  await page.locator('.support-order').screenshot({path:testInfo.outputPath('approved-order.png')})
+  await page.locator('.support-order summary').click()
+  await expect(page.getByLabel('Siparişinizle ilgili talebiniz')).toBeVisible()
+  await expect(page.getByRole('button',{name:'Başvuruyu gönder',exact:true})).toBeVisible()
+  await page.locator('.support-order').screenshot({path:testInfo.outputPath('approved-order-return.png')})
   await noOverflow(page)
 })
 

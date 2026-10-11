@@ -312,7 +312,7 @@ export default function Sepet() {
           <ArtDecoration kind="pouch" />
           <h2 className="mt-4 text-2xl font-bold text-zinc-950">Sepetin henüz boş</h2>
           <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500">
-            Mutfağına bir tutam lezzet kat. Sevdiğin baharatları keşfet, birlikte hazırlayalım.
+            Sofrana yakışacak lezzetleri keşfetmeye ne dersin?
           </p>
           <Link to="/urunler" className="shop-btn-primary mt-6">
             Ürünleri keşfet

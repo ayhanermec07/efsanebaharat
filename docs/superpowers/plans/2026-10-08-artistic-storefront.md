@@ -33,14 +33,18 @@ ORİKA sade bırakılır. Tuz, lokum, canlı verili alanlar ve diğer geçici ka
 
 ## Uygulama ve yayın sırası
 
-1. Onaylı özgün görselleri kayıpsız WebP olarak kullan; taslak arayüzünü dışarıda bırakan SVG görünüm bölgeleriyle motifleri göster. Yeniden üretilmiş alternatif atlas kullanma. Videosu 120 gerçek kare / 24 fps / 5 saniye olarak kodlanır; masaüstü ve mobil ayrı dosyadır.
+1. Güncel tercih (10 Ekim): onaylı motiflerden hazırlanmış, gerçek alfa kanallı şeffaf PNG kullan. SVG kırpma ve arka plan karıştırma kaldırıldı; kayıpsız WebP dosyaları yalnız referans arşividir. Videosu 120 gerçek kare / 24 fps / 5 saniye olarak kodlanır; masaüstü ve mobil ayrı dosyadır.
 2. Kategori alanlarını nullable migration ile ekle; yalnız tanınan kategorilerin boş tema alanlarını doldur. RLS, satış veya ödeme kurallarını değiştirme. `public-catalog` meta alanlarını güncelle.
 3. Yaprak, kategori bannerı, ürün detayı ve kartları bağla; yardımcı sayfaları tamamla.
 4. Birim kontrolleri, TypeScript, ESLint, üretim build; 360/390/768/1440 px tarayıcı kabulü. Gerçek video süresi ve oynatma, hata geri dönüşü, hareket azaltma, URL filtreleri, dropdown klavyesi ve modal odağı doğrulanır.
 5. Bağımsız kod incelemesi; önemli bulguları kapat. Commit/push sonrası yalnız iki sanat migrationı ve katalog fonksiyonunu uygula, frontend kesin commit ile yayınlanır. Canlı kabul sağlıklı yayın ve gerçek kategori/ürün verisiyle yapılır.
 6. Bilgi bankası ve bu kayıtta gerçek yayın durumunu güncelle. Canlı yayın gerçekleşmeden tamamlandı denmez.
 
-## Doğrulama kaydı
+## Güncel durum — 11 Ekim 2026
+
+Yerleşim düzeltmeleri ve karşılaştırma: `docs/artwork/2026-10-11-design-fidelity.md`. 10 Ekim kategori migrationları canlıya uygulandı; aşağıdaki ilk uygulamaya ait bekleyen migration kayıtları tarihseldir. Canlı frontend 11 Ekim kontrolde hâlâ eski footer/SVG sunumunu gösteriyor; Git ile canlı aynı kabul edilmemeli.
+
+## İlk uygulamanın doğrulama kaydı
 
 - Birim paketi: 85/85 geçti.
 - Kategori tarayıcı paketi: 44 geçti, 4 mevcut koşullu test atlandı.

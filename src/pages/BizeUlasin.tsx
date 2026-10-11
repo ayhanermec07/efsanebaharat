@@ -101,25 +101,21 @@ export default function BizeUlasin() {
     <div className="support-contact min-h-screen py-8 sm:py-12">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
+          <div className={`support-letter support-contact-paper ${success ? 'is-sent' : ''}`}>
+          <div className="support-letter-heading">
             <div className={`support-contact-art ${success ? 'is-sent' : ''}`}>
               <ArtDecoration kind="envelope-open" className="support-envelope-open" />
               <ArtDecoration kind="envelope-closed" className="support-envelope-closed" />
             </div>
-            <h1 className="support-contact-heading text-3xl mb-2 sm:text-4xl">Bize Ulaşın</h1>
-            <p className="text-gray-600">
-              Sorularınızı, önerilerinizi veya sorunlarınızı bizimle paylaşın.
-            </p>
+            {!success && <div className="support-letter-title">
+              <h1 className="support-contact-heading">Bize yazın</h1>
+              <p>Sorularınızı, önerilerinizi veya sorunlarınızı bizimle paylaşın.</p>
+            </div>}
           </div>
 
-          <section aria-label="İşletme ve iletişim bilgileri" className="support-contact-paper mb-6 min-w-0 space-y-4 rounded-lg p-5 text-gray-700">
-            <SellerInformation variant="contact" />
-          </section>
-
           {success && (
-            <div role="status" className="support-contact-confirmation support-contact-paper mb-6 rounded-lg">
-              <h2 className="support-contact-heading text-2xl">Mesajınız bize ulaştı</h2>
+            <div role="status" className="support-contact-confirmation mb-6">
+              <h1 className="support-contact-heading text-2xl">Mesajınız bize ulaştı</h1>
               <p className="mt-3 text-sm leading-6">Bizimle paylaştığınız için teşekkür ederiz. Yanıt durumunu hesabınızdan takip edebilirsiniz.</p>
               <button type="button" onClick={() => setSuccess(false)} className="shop-btn-secondary mt-5">Yeni mesaj yaz</button>
             </div>
@@ -130,7 +126,7 @@ export default function BizeUlasin() {
               <p className="text-gray-700">Mesaj göndermek için hesabınıza giriş yapın. Sorunuzun yanıtını hesabınızdan takip edebilirsiniz.</p>
               <Link to="/giris" state={{ from: '/bize-ulasin' }} className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-brand px-6 py-3 font-semibold text-white hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700">Giriş yap</Link>
             </div>
-          ) : !success && <div className="support-contact-paper rounded-lg p-5 md:p-8">
+          ) : !success && <div className="support-letter-form">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Konu Seçimi */}
               <div>
@@ -216,6 +212,11 @@ export default function BizeUlasin() {
               </button>
             </form>
           </div>}
+
+          </div>
+          <section aria-label="İşletme ve iletişim bilgileri" className="support-contact-paper mt-6 min-w-0 space-y-4 rounded-lg p-5 text-gray-700">
+            <SellerInformation variant="contact" />
+          </section>
 
           {/* Info Box */}
           {user && <div className="support-contact-note mt-8 rounded-lg p-5">

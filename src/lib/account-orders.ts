@@ -16,20 +16,21 @@ export async function loadCustomerOrders(client: Pick<SupabaseClient, 'from'>, c
   if (lineError) throw lineError
 
   const productIds = [...new Set((lines || []).map(line => line.urun_id).filter(Boolean))]
-  let productNames = new Map<string, string>()
+  let productsById = new Map<string, { urun_adi: string; ana_gorsel_url?: string | null }>()
   if (productIds.length) {
     const { data: products, error: productError } = await client
       .from('urunler')
-      .select('id, urun_adi')
+      .select('id, urun_adi, ana_gorsel_url')
       .in('id', productIds)
     if (productError) throw productError
-    productNames = new Map((products || []).map(product => [product.id, product.urun_adi]))
+    productsById = new Map((products || []).map(product => [product.id, product]))
   }
 
   const linesByOrder = new Map<string, typeof lines>()
   for (const line of lines || []) {
     const group = linesByOrder.get(line.siparis_id) || []
-    group.push({ ...line, urun_adi: productNames.get(line.urun_id) || 'Ürün' })
+    const product = productsById.get(line.urun_id)
+    group.push({ ...line, urun_adi: product?.urun_adi || 'Ürün', gorsel_url: product?.ana_gorsel_url || null })
     linesByOrder.set(line.siparis_id, group)
   }
   return orders.map(order => ({ ...order, siparis_urunleri: linesByOrder.get(order.id) || [] }))

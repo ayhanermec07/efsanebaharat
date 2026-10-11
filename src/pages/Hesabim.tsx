@@ -8,6 +8,7 @@ import { User as UserIcon, Truck, Copy, Check, ExternalLink, Pencil, X, Clock3, 
 import toast from 'react-hot-toast'
 import { loadCustomerOrders } from '../lib/account-orders'
 import { formatPrice } from '../lib/currency'
+import { SiteImage } from '../components/SiteImage'
 import OrderDocument from '../components/OrderDocument'
 import OrderReturn from '../components/OrderReturn'
 
@@ -313,10 +314,7 @@ export default function Hesabim() {
         {/* Siparişler */}
         <div className="min-w-0 lg:col-span-2">
           <div className="support-account-panel rounded-lg">
-            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
-              <ArtDecoration kind="parcel" className="support-parcel" />
-              <span>Siparişlerim</span>
-            </h2>
+            <div className="support-orders-heading"><div><h2>Siparişlerim</h2><p>Siparişlerinizi ve teslimat durumlarını buradan takip edebilirsiniz.</p></div><ArtDecoration kind="parcel" className="support-parcel" /></div>
 
             {siparisler.length === 0 ? (
               <p className="text-gray-500 text-center py-8">Henüz siparişiniz bulunmuyor</p>
@@ -324,8 +322,6 @@ export default function Hesabim() {
               <div className="space-y-4">
                 {siparisler.map((siparis) => (
                   <div key={siparis.id} className="support-order">
-                    <div className="mb-3"><OrderDocument orderId={siparis.id} orderNumber={siparis.siparis_no} /></div>
-                    <OrderReturn orderId={siparis.id}/>
                     <div className="support-order-heading flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                       <div>
                         <p className="break-all font-semibold text-gray-900">
@@ -404,7 +400,8 @@ export default function Hesabim() {
 
                     <div className="space-y-2 mb-4">
                       {siparis.siparis_urunleri?.map((item: any) => (
-                        <div key={item.id} className="flex items-start justify-between gap-3 text-sm">
+                        <div key={item.id} className="support-order-line flex items-center justify-between gap-3 text-sm">
+                          {item.gorsel_url && <SiteImage src={item.gorsel_url} variant="thumb" alt="" className="support-order-photo" />}
                           <span className="min-w-0 break-words text-gray-700">
                             {item.urun_adi} ({item.birim_turu}) x {item.miktar}
                           </span>
@@ -419,6 +416,7 @@ export default function Hesabim() {
                         {formatPrice(siparis.toplam_tutar == null ? null : Number(siparis.toplam_tutar))}
                       </span>
                     </div>
+                    <div className="support-order-actions"><OrderDocument orderId={siparis.id} orderNumber={siparis.siparis_no} /><OrderReturn orderId={siparis.id}/></div>
                   </div>
                 ))}
               </div>

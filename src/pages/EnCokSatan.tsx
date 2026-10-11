@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { fetchInBatches } from '../utils/supabaseBatch'
 import { ArtDecoration } from '../components/ArtDecoration'
+import '../components/category-artwork.css'
 
 export default function EnCokSatan() {
   const { musteriData } = useAuth()
@@ -158,15 +159,15 @@ export default function EnCokSatan() {
         </div>
       </CatalogToolbar>
       <div className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-      <div className="bestseller-art-heading mb-6 flex min-w-0 items-center justify-between gap-3 border-b border-brand-line pb-4">
-        <ArtDecoration kind="bestseller-left" className="bestseller-heading-art !w-10 sm:!w-20" />
+      <div className="bestseller-art-heading mb-6">
+        <ArtDecoration kind="bestseller-left" className="bestseller-heading-art" />
         <div className="min-w-0 text-center">
           <h1 className="break-words text-2xl font-semibold sm:text-3xl">En çok satanlar</h1>
           <p className="mt-2 text-xs leading-5 text-brand-muted sm:text-sm">
             {siralama === 'otomatik' ? 'Satış verilerine göre öne çıkan ürünler.' : 'Panelden özel seçilmiş ürünler.'}
           </p>
         </div>
-        <ArtDecoration kind="bestseller-right" className="bestseller-heading-art !w-10 sm:!w-20" />
+        <ArtDecoration kind="bestseller-right" className="bestseller-heading-art" />
       </div>
 
       {loading ? (

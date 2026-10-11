@@ -136,43 +136,24 @@ export default function Kampanyalar() {
         <div className="space-y-8">
           {kampanyalar.map((kampanya) => (
             <section key={kampanya.id} className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
-              <div className="support-coupon p-4 sm:p-5">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className="min-w-0">
-                    <div className="mb-2 flex flex-wrap items-center gap-2">
-                      <span className="support-coupon-discount inline-flex min-h-[30px] items-center gap-1 rounded-full px-3 text-xs font-bold text-white">
-                        <Percent className="h-4 w-4" />
-                        {kampanya.indirim_tipi === 'yuzde' ? `%${kampanya.indirim_degeri} indirim` : `${kampanya.indirim_degeri} TL indirim`}
-                      </span>
-                      {kampanya.kod && (
-                        <div className="support-coupon-code text-sm">
-                          <strong>{kampanya.kod}</strong>
-                          <button type="button" onClick={() => copyCode(kampanya)} aria-label={`${kampanya.kod} kampanya kodunu kopyala`} className="support-coupon-copy">
-                            {copiedId === kampanya.id ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
-                            <span aria-live="polite">{copiedId === kampanya.id ? 'Kopyalandı ✓' : 'Kodu kopyala'}</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <ArtDecoration kind="coupon" className="support-coupon-motif" />
-                    <h2 className="break-words text-2xl font-bold text-zinc-950">{kampanya.ad}</h2>
-                    {kampanya.aciklama && <p className="mt-1 text-sm leading-6 text-zinc-600">{kampanya.aciklama}</p>}
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center md:flex-col md:items-end">
-                    <div className="flex min-w-0 items-center gap-2 rounded-lg border border-orange-100 bg-white px-3 py-2 text-xs font-bold text-zinc-600">
-                      <Calendar className="h-4 w-4 shrink-0 text-orange-700" />
-                      <span className="break-words">{formatDate(kampanya.baslangic_tarihi)} - {formatDate(kampanya.bitis_tarihi)}</span>
-                    </div>
-                    {kampanya.toplam > kampanya.urunler.length && (
-                      <Link
-                        to={`/urunler?kampanya=${kampanya.id}`}
-                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-lg bg-zinc-950 px-3 text-xs font-bold text-white hover:bg-emerald-800"
-                      >
-                        Tümünü gör ({kampanya.toplam})
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    )}
-                  </div>
+              <div className="support-coupon">
+                <ArtDecoration kind="coupon" className="support-coupon-motif" />
+                <div className="support-coupon-heading">
+                  <p className="support-coupon-brand">EFSANE BAHARAT</p>
+                  <h2>{kampanya.ad}</h2>
+                  {kampanya.aciklama && <p className="support-coupon-description">{kampanya.aciklama}</p>}
+                  <span className="support-coupon-discount"><Percent className="h-4 w-4" aria-hidden="true" />{kampanya.indirim_tipi === 'yuzde' ? `%${kampanya.indirim_degeri} indirim` : `${kampanya.indirim_degeri} TL indirim`}</span>
+                </div>
+                {kampanya.kod && <div className="support-coupon-actions">
+                  <div className="support-coupon-code"><strong>{kampanya.kod}</strong></div>
+                  <button type="button" onClick={() => copyCode(kampanya)} aria-label={`${kampanya.kod} kampanya kodunu kopyala`} className={`support-coupon-copy ${copiedId === kampanya.id ? 'is-copied' : ''}`}>
+                    {copiedId === kampanya.id ? <Check className="h-5 w-5" aria-hidden="true" /> : <Copy className="h-5 w-5" aria-hidden="true" />}
+                    <span aria-live="polite">{copiedId === kampanya.id ? 'Kopyalandı ✓' : 'Kodu kopyala'}</span>
+                  </button>
+                </div>}
+                <div className="support-coupon-terms">
+                  <span><Calendar className="h-4 w-4 shrink-0" aria-hidden="true" />{formatDate(kampanya.baslangic_tarihi)} – {formatDate(kampanya.bitis_tarihi)}</span>
+                  {kampanya.toplam > kampanya.urunler.length && <Link to={`/urunler?kampanya=${kampanya.id}`}>Tümünü gör ({kampanya.toplam})<ArrowRight className="h-4 w-4" /></Link>}
                 </div>
               </div>
 

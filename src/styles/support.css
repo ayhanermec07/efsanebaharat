@@ -65,13 +65,50 @@
 .support-account .support-shipping-row { flex-wrap:wrap; gap:6px 12px; }
 .support-account .support-tracking-number { min-width:0; max-width:100%; }
 .support-account .support-tracking-number span { overflow-wrap:anywhere; min-width:0; }
-.support-coupon { position:relative; background-color:#f4e7cf; background-image:radial-gradient(#b4997630 .6px, transparent .6px); background-size:5px 5px; border-bottom:1px dashed #c58a66; border-left:3px dotted #b97455; border-right:3px dotted #b97455; }
-.support-coupon .support-coupon-discount { background:#a35e42; }
-.support-coupon .support-coupon-code { display:inline-flex; align-items:center; gap:12px; flex-wrap:wrap; min-width:0; max-width:100%; padding:4px 12px; background:#fffaf0; border:1px dashed #bf9272; color:#764c34; }
-.support-coupon .support-coupon-code strong { overflow-wrap:anywhere; min-width:0; }
-.support-coupon .support-coupon-copy { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:4px 8px; font-size:12px; color:#714630; font-weight:600; }
-.support-coupon .support-coupon-copy:focus-visible { outline:2px solid #714630; outline-offset:2px; }
-.support-coupon .support-coupon-motif { width:54px; }
+.support-coupon { position:relative; isolation:isolate; max-width:760px; margin:24px auto; padding:24px 20px 24px 42px; border:1px solid #d9cab4; border-radius:14px; overflow:hidden; background:#faf5e9; color:#304a39; box-shadow:0 5px 18px #68513612; }
+.support-coupon::before { content:''; position:absolute; inset:0 auto 0 0; width:24px; background:#b35f35; border-right:2px dashed #ead9bc; z-index:-1; }
+.support-coupon-heading { position:relative; min-height:130px; padding-right:76px; }
+.support-coupon-brand { font-size:11px; letter-spacing:.16em; font-weight:600; }
+.support-coupon-heading h2 { font-family:var(--font-display,Georgia,serif); font-weight:500; font-size:28px; line-height:1.2; margin:10px 0; overflow-wrap:anywhere; }
+.support-coupon-description { color:#666255; font-size:14px; line-height:1.5; overflow-wrap:anywhere; }
+.support-coupon-discount { display:inline-flex; align-items:center; gap:5px; color:#9e502e; margin:12px 0; font-size:12px; font-weight:600; }
+.support-coupon .support-coupon-motif { position:absolute; top:14px; right:8px; width:90px; z-index:-1; }
+.support-coupon-actions { display:grid; gap:14px; margin-top:12px; }
+.support-coupon-code { text-align:center; padding:12px; border:1px dashed #ae5937; border-radius:9px; color:#99502f; font-family:var(--font-display,Georgia,serif); letter-spacing:.1em; overflow-wrap:anywhere; }
+.support-coupon-copy { display:flex; align-items:center; justify-content:center; gap:12px; min-height:50px; padding:12px; border-radius:9px; color:#fffdf7; background:#34533f; font-size:16px; font-weight:600; transition:background-color .2s ease,color .2s ease; }
+.support-coupon-copy.is-copied { color:#294b36; background:#e1e7d5; }
+.support-coupon-copy:focus-visible { outline:2px solid #714630; outline-offset:2px; }
+.support-coupon-terms { display:flex; flex-wrap:wrap; gap:12px; margin-top:18px; color:#666255; font-size:12px; line-height:1.6; }
+.support-coupon-terms > span, .support-coupon-terms a { display:flex; align-items:center; gap:8px; min-width:0; }
+.support-coupon-terms a { min-height:40px; text-decoration:underline; }
+@media(min-width:640px) { .support-coupon { padding:36px 40px 32px 78px; } .support-coupon::before { width:36px; } .support-coupon-heading { padding-right:170px; min-height:175px; } .support-coupon-heading h2 { font-size:38px; } .support-coupon .support-coupon-motif { width:180px; } .support-coupon-code { font-size:24px; } }
+
 @keyframes support-check-in { from { opacity:0; transform:scale(.7); } to { opacity:1; transform:scale(1); } }
 @media (min-width:640px) { .support-account .support-account-panel { padding:24px; } }
 @media (prefers-reduced-motion:reduce) { .support-contact .support-envelope-open, .support-contact .support-envelope-closed { transition:none; } .support-contact .support-envelope-check { animation:none; } }
+
+/* Approved letter, parcel and empty-cart proportions. */
+.support-letter { padding:22px; border-radius:14px; }
+.support-letter-heading { display:flex; flex-direction:row-reverse; align-items:center; gap:12px; min-height:145px; margin-bottom:24px; }
+.support-letter-title { min-width:0; flex:1; }
+.support-letter-title h1 { font-size:32px; line-height:1.15; }
+.support-letter-title h1::after { content:''; display:block; width:54px; height:1px; margin:16px 0; background:#ad8057; }
+.support-letter-title p { color:#736b5d; font-size:13px; line-height:1.6; }
+.support-contact .support-contact-art { flex-shrink:0; width:40%; height:150px; margin:0; }
+.support-contact .support-contact-art .art-decoration { top:0; width:100%; height:100%; object-fit:contain; }
+.support-letter.is-sent .support-letter-heading { display:block; margin-bottom:0; }
+.support-letter.is-sent .support-contact-art { width:230px; max-width:100%; height:180px; margin:16px auto; }
+.support-letter-form button[type=submit] { font-family:var(--font-display,Georgia,serif); font-size:18px; }
+.support-orders-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:26px; }
+.support-orders-heading > div { min-width:0; }
+.support-orders-heading h2 { font-family:var(--font-display,Georgia,serif); font-size:30px; line-height:1.2; }
+.support-orders-heading p { margin-top:10px; color:#776d5d; font-size:13px; line-height:1.6; }
+.support-account .support-parcel { width:100px; max-width:35%; }
+.support-order-actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:18px; }
+.support-order-line > span:first-of-type { flex:1; }
+.support-order-photo { width:64px; height:64px; flex-shrink:0; border:1px solid #dfd3bf; border-radius:5px; object-fit:contain; background:#faf7ef; }
+.support-empty-cart { min-height:510px; padding:36px 24px; }
+.support-empty-cart .art-decoration { width:280px; }
+.support-empty-cart h2 { font-size:30px; font-weight:500; }
+@media(min-width:640px) { .support-letter { padding:36px 40px; } .support-letter-heading { min-height:180px; } .support-letter-title h1 { font-size:44px; } .support-contact .support-contact-art { height:200px; } .support-letter.is-sent .support-contact-art { width:300px; height:240px; } .support-account .support-parcel { width:180px; } .support-orders-heading h2 { font-size:38px; } .support-order-photo { width:90px; height:90px; } .support-empty-cart { min-height:570px; } .support-empty-cart .art-decoration { width:330px; } .support-empty-cart h2 { font-size:38px; } }
+@media(prefers-reduced-motion:reduce) { .support-coupon-copy { transition:none; } }

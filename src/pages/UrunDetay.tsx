@@ -221,7 +221,7 @@ export default function UrunDetay() {
         </section>
 
         <aside className="min-w-0">
-          <div className="product-purchase-art rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 lg:sticky lg:top-24">
+          <div className={`product-purchase-art rounded-lg border p-5 sm:p-6 lg:sticky lg:top-24 ${detailTheme !== 'plain' ? 'has-category-art' : ''}`}>
             <CategoryArtwork theme={detailTheme} part="upper" className="product-upper-art" />
             <div className={detailTheme !== 'plain' ? 'product-heading relative' : ''}>
             <div className="shop-eyebrow">
@@ -236,7 +236,7 @@ export default function UrunDetay() {
               <p className="mt-4 text-sm leading-7 text-zinc-600 sm:text-base">{urun.aciklama}</p>
             )}
 
-            <div className="mt-5 rounded-lg bg-orange-50 p-4">
+            <div className="product-price-panel mt-5">
               {iskontoInfo?.varMi ? (
                 <>
                   <div className="text-sm font-bold text-zinc-500 line-through">{formatPrice(iskontoInfo.eskiFiyat)}</div>
@@ -253,7 +253,7 @@ export default function UrunDetay() {
             {urun.urun_stoklari && urun.urun_stoklari.length > 0 && (
               <div className="mt-6">
                 <h2 className="text-sm font-bold text-zinc-950">Sorti seçimi</h2>
-                <div className="mt-2 grid grid-cols-2 gap-2">
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {urun.urun_stoklari.map((stok: any) => {
                     const stokIskontoInfo = kademeliIskontoUygula(Number(stok.fiyat || 0), grupIskontoOrani, ozelIskontoOrani)
                     const stokFiyat = stokIskontoInfo.varMi ? stokIskontoInfo.yeniFiyat : Number(stok.fiyat || 0)
@@ -263,7 +263,7 @@ export default function UrunDetay() {
                         key={stok.id}
                         type="button"
                         onClick={() => selectStok(stok)}
-                        className={`min-h-[74px] rounded-lg border p-3 text-left transition ${secilenStok?.id === stok.id
+                        className={`min-h-[56px] rounded-lg border p-2 text-left transition ${secilenStok?.id === stok.id
                           ? 'border-emerald-700 bg-emerald-50 shadow-sm'
                           : 'border-zinc-200 bg-white hover:border-orange-300'
                           }`}
@@ -279,9 +279,11 @@ export default function UrunDetay() {
               </div>
             )}
 
+            <div className="product-purchase-finish">
+            <div className="product-purchase-controls">
             <div className="mt-6">
               <h2 className="text-sm font-bold text-zinc-950">Miktar</h2>
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setMiktar(Math.max(minimumMiktar, miktar - 1))}
@@ -293,6 +295,7 @@ export default function UrunDetay() {
                 </button>
                 <input
                   type="number"
+                  aria-label="Miktar"
                   value={miktar}
                   onChange={(e) => setMiktar(Math.max(minimumMiktar, Number(e.target.value) || minimumMiktar))}
                   min={minimumMiktar}
@@ -324,6 +327,10 @@ export default function UrunDetay() {
               {eklendi ? 'Sepete eklendi' : 'Sepete ekle'}
             </button>
 
+            </div>
+            <CategoryArtwork theme={detailTheme} part="lower" className="product-lower-art" />
+            </div>
+
             <div className="mt-6 border-t border-zinc-100 pt-5 text-sm">
               <div className="flex justify-between gap-3 py-2">
                 <span className="text-zinc-500">Kategori</span>
@@ -334,7 +341,6 @@ export default function UrunDetay() {
                 <span className="min-w-0 text-right font-bold text-zinc-900">{urun.markalar?.marka_adi || '-'}</span>
               </div>
             </div>
-            <CategoryArtwork theme={detailTheme} part="lower" className="product-lower-art" />
           </div>
         </aside>
       </div>
