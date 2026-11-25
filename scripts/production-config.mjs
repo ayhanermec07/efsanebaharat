@@ -1,5 +1,6 @@
 export function validateProductionConfig(env) {
-  if (env.VITE_SUPABASE_URL !== 'https://api.efsanebaharat.appsgo.cloud') {
+  if (env.VITE_SUPABASE_URL !== 'https://api.efsanebaharat.appsgo.cloud'
+    && env.VITE_SUPABASE_URL !== 'https://supabasekong-1pxduoyvw18cvimiln0trpeh.187.77.110.152.sslip.io') {
     throw new Error('Üretim VITE_SUPABASE_URL doğrulanmış self-hosted API adresiyle eşleşmeli.')
   }
   let role
