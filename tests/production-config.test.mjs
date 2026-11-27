@@ -5,6 +5,7 @@ const anonKey = `header.${Buffer.from(JSON.stringify({ role: 'anon' })).toString
 test('üretim yalnız doğrulanmış self-hosted URL ve public anahtar kabul eder', () => {
   const valid = { VITE_SUPABASE_URL: 'https://api.efsanebaharat.appsgo.cloud', VITE_SUPABASE_ANON_KEY: anonKey }
   assert.doesNotThrow(() => validateProductionConfig(valid))
+  assert.doesNotThrow(() => validateProductionConfig({ ...valid, VITE_SUPABASE_URL: 'https://api.efsanebaharat.com' }))
   for (const url of ['https://old.supabase.co', 'http://api.efsanebaharat.appsgo.cloud', 'http://127.0.0.1:54321', 'https://api.efsanebaharat.appsgo.cloud/another', 'https://user:pass@api.efsanebaharat.appsgo.cloud']) {
     assert.throws(() => validateProductionConfig({ ...valid, VITE_SUPABASE_URL: url }), /üretim/i)
   }
@@ -13,6 +14,7 @@ test('üretim yalnız doğrulanmış self-hosted URL ve public anahtar kabul ede
   }
 })
 
+
 test('görsel dönüşümü üretimde yalnız güvenli özel alan adıyla açılır', () => {
   const valid = { VITE_SUPABASE_URL: 'https://api.efsanebaharat.appsgo.cloud', VITE_SUPABASE_ANON_KEY: anonKey, VITE_MEDIA_TRANSFORMS: 'true' }
   for (const url of ['', 'http://images.example.com', 'https://x.r2.dev', 'https://u:p@images.example.com', 'https://images.example.com/path']) {
@@ -20,3 +22,4 @@ test('görsel dönüşümü üretimde yalnız güvenli özel alan adıyla açıl
   }
   assert.doesNotThrow(() => validateProductionConfig({ ...valid, VITE_MEDIA_BASE_URL: 'https://images.efsanebaharat.com' }))
 })
+
