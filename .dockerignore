@@ -8,3 +8,4 @@ tests
 scripts/*
 !scripts/production-config.mjs
 !scripts/production-config.d.mts
+!scripts/generate-sitemap.mjs

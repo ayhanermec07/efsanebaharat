@@ -14,6 +14,15 @@ test('sitemap sabit sayfaları ve geçerli ürün adreslerini tekrarsız yazar',
   assert.ok(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>'))
 })
 
+test('Docker derlemesi sitemap üreticisini dışarıda bırakmaz', async () => {
+  const { readFileSync } = await import('node:fs')
+  const ignore = readFileSync(new URL('../.dockerignore', import.meta.url), 'utf8')
+  const docker = readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8')
+  if (docker.includes('scripts/generate-sitemap.mjs') && /^scripts\/\*/m.test(ignore)) {
+    assert.match(ignore, /^!scripts\/generate-sitemap\.mjs$/m)
+  }
+})
+
 test('katalog sayfaları imleçle sonuna kadar okunur', async () => {
   const pages = [{ data: { urunler: [{ id: A }], sonrakiImlec: 'abc' } }, { data: { urunler: [{ id: B }], sonrakiImlec: null } }]
   const seen = []
