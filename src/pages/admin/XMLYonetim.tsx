@@ -155,8 +155,8 @@ export default function XMLYonetim() {
         warnings: []
     })
     const [checking, setChecking] = useState(false)
-    const [importUrl, setImportUrl] = useState('https://efsanebaharat.appsgo.cloud/urunler.xml')
-    const [importAllowedHosts, setImportAllowedHosts] = useState('efsanebaharat.appsgo.cloud')
+    const [importUrl, setImportUrl] = useState('https://panel.efsanebaharat.com/urunler.xml')
+    const [importAllowedHosts, setImportAllowedHosts] = useState('panel.efsanebaharat.com')
     const [importSourceName, setImportSourceName] = useState('Varsayılan kaynak')
     const [updateIntervalMinutes, setUpdateIntervalMinutes] = useState(30)
     const [importSources, setImportSources] = useState<XMLImportSource[]>([])

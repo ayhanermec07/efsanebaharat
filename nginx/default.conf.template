@@ -16,10 +16,11 @@ server {
         return 200 "ok\n";
     }
 
+    # Tedarikçi XML'i (fiyatlar dahil) mağaza alan adından yayınlanmaz.
+    # İçe aktarma doğrudan panel.efsanebaharat.com adresinden yapılır;
+    # bayiler kendi yetkili beslemelerini bayi-xml-feed üzerinden alır.
     location = /urunler.xml {
-        proxy_pass https://panel.efsanebaharat.com/urunler.xml;
-        proxy_ssl_server_name on;
-        proxy_set_header Host panel.efsanebaharat.com;
+        return 404;
     }
 
     location /assets/ {
