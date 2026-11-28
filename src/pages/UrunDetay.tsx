@@ -16,12 +16,15 @@ import { loadCategories } from '../lib/category-hierarchy'
 import { resolveCategoryTheme } from '../lib/category-artwork'
 import type { CatalogCategory } from '../lib/catalog'
 import { applyProductSeo, clearProductSeo } from '../lib/productSeo'
+import { canSeePrices, PUBLIC_PRICES_ENABLED } from '../lib/price-visibility'
+import PriceLocked from '../components/PriceLocked'
 
 export default function UrunDetay() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { sepeteEkle } = useSepet()
-  const { user, musteriData, grupIskontoOrani, ozelIskontoOrani } = useAuth()
+  const { user, isAdmin, musteriData, grupIskontoOrani, ozelIskontoOrani } = useAuth()
+  const fiyatGorunur = canSeePrices({ isAdmin, musteriTipi: musteriData?.musteri_tipi })
   const [urun, setUrun] = useState<any>(null)
   const [secilenStok, setSecilenStok] = useState<any>(null)
   const [miktar, setMiktar] = useState(1)
@@ -131,7 +134,8 @@ export default function UrunDetay() {
       brand: urun.markalar?.marka_adi,
       category: urun.kategoriler?.kategori_adi,
       image: ilkGorsel ? getImageUrl(ilkGorsel) : null,
-      price: fiyatlar.length ? Math.min(...fiyatlar) : null,
+      // Google herkese açık bir ziyaretçidir: fiyat yalnız herkese açık fiyat modunda verilir.
+      price: PUBLIC_PRICES_ENABLED && fiyatlar.length ? Math.min(...fiyatlar) : null,
       sku: urun.urun_kodu,
       gtin: urun.barkod,
       inStock: (urun.urun_stoklari || []).length > 0,
@@ -151,7 +155,7 @@ export default function UrunDetay() {
       return
     }
 
-    if (!urun || !secilenStok || ekleniyor) return
+    if (!urun || !secilenStok || ekleniyor || !fiyatGorunur) return
 
     const gorsel = getImageUrl(urun.urun_gorselleri?.[0]?.gorsel_url)
     const fiyat = iskontoInfo?.varMi ? iskontoInfo.yeniFiyat : Number(secilenStok.fiyat || 0)
@@ -256,6 +260,16 @@ export default function UrunDetay() {
               <p className="mt-4 text-sm leading-7 text-zinc-600 sm:text-base">{urun.aciklama}</p>
             )}
 
+            {!fiyatGorunur ? (
+              <div className="mt-5">
+                {urun.urun_stoklari?.length > 0 && (
+                  <p className="mb-3 text-sm text-zinc-600">
+                    Paket seçenekleri: {urun.urun_stoklari.map((stok: any) => akilliBirimGoster(stok.birim_adedi || 1, stok.birim_adedi_turu || stok.birim_turu)).join(', ')}
+                  </p>
+                )}
+                <PriceLocked />
+              </div>
+            ) : (<>
             <div className="product-price-panel mt-5">
               {iskontoInfo?.varMi ? (
                 <>
@@ -350,6 +364,7 @@ export default function UrunDetay() {
             </div>
             <CategoryArtwork theme={detailTheme} part="lower" className="product-lower-art" />
             </div>
+            </>)}
 
             <div className="mt-6 border-t border-zinc-100 pt-5 text-sm">
               <div className="flex justify-between gap-3 py-2">

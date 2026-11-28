@@ -17,6 +17,8 @@ import { supabase } from '../lib/supabase'
 import { akilliBirimGoster } from '../utils/birimDonusturucu'
 import CheckoutReviewPanel from '../components/CheckoutReview'
 import type { CheckoutReview } from '../lib/commerce'
+import { canSeePrices } from '../lib/price-visibility'
+import PriceLocked from '../components/PriceLocked'
 
 const IN_PROGRESS_RETRIES = 5
 
@@ -100,7 +102,7 @@ function QuantityInput({ value, min, disabled, onCommit }: { value: number; min:
 
 export default function Sepet() {
   const { sepetItems, sepettenCikar, miktarGuncelle, toplamTutar, sepetiTemizle, sepetiYenile, sepetHatasi, bekleyenStoklar } = useSepet()
-  const { user, musteriData } = useAuth()
+  const { user, isAdmin, musteriData } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [showPaymentIframe, setShowPaymentIframe] = useState(false)
@@ -267,6 +269,18 @@ export default function Sepet() {
             />
           </div>
         </div>
+      </div>
+    )
+  }
+
+  if (!canSeePrices({ isAdmin, musteriTipi: musteriData?.musteri_tipi })) {
+    return (
+      <div className="shop-container py-6 sm:py-8">
+        <div className="shop-page-heading mb-6">
+          <div className="shop-eyebrow"><ShoppingBag className="h-4 w-4" />Sepet</div>
+          <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Sepetim</h1>
+        </div>
+        <div className="mx-auto max-w-xl"><PriceLocked /></div>
       </div>
     )
   }

@@ -9,6 +9,8 @@ import { getImageUrl } from '../utils/imageUtils'
 import { formatPrice } from '../lib/currency'
 import VariantSelect from './VariantSelect'
 import { selectCurrentVariant } from '../lib/product-variants'
+import { canSeePrices } from '../lib/price-visibility'
+import PriceLocked from './PriceLocked'
 import './urun-kart.css'
 
 interface UrunKartProps {
@@ -103,6 +105,7 @@ export default function UrunKart({ urun, kampanya, imageSizes }: UrunKartProps) 
     return { satisFiyati: hamFiyat, eskiFiyat: hamFiyat, indirimVar: false, indirimOrani: 0 }
   }
   const fiyatBilgisi = fiyatHesapla(secilenStok)
+  const fiyatGorunur = canSeePrices({ isAdmin, musteriTipi: musteriData?.musteri_tipi })
 
   const handleSepeteEkle = async () => {
     if (!user) {
@@ -161,7 +164,7 @@ export default function UrunKart({ urun, kampanya, imageSizes }: UrunKartProps) 
           )}
         </div>
 
-        {fiyatBilgisi.indirimVar && (
+        {fiyatGorunur && fiyatBilgisi.indirimVar && (
           <span className="site-secondary-bg absolute left-2 top-2 rounded-md px-2.5 py-1 text-xs font-semibold text-white">
             %{Math.max(0, Math.round(fiyatBilgisi.indirimOrani))} indirim
           </span>
@@ -186,7 +189,7 @@ export default function UrunKart({ urun, kampanya, imageSizes }: UrunKartProps) 
           options={satisaHazirStoklar.map((stok: any) => ({
             id: stok.id,
             label: `${stok.birim_adedi || 1} ${(stok.birim_adedi_turu || stok.birim_turu || '').toUpperCase()}`,
-            price: fiyatHesapla(stok).satisFiyati,
+            price: fiyatGorunur ? fiyatHesapla(stok).satisFiyati : null,
           }))}
           selectedId={secilenStok?.id || ''}
           onChange={id => setSelection({ scope, id })}
@@ -195,7 +198,9 @@ export default function UrunKart({ urun, kampanya, imageSizes }: UrunKartProps) 
 
         <div className="product-card-price flex items-end justify-between gap-2">
           <div className="min-w-0">
-            {secilenStok ? (
+            {!fiyatGorunur ? (
+              <PriceLocked compact />
+            ) : secilenStok ? (
               <>
                 <div className="break-words text-lg font-semibold leading-tight tabular-nums text-brand-ink sm:text-xl">
                   {formatPrice(fiyatBilgisi.satisFiyati)}
@@ -212,7 +217,7 @@ export default function UrunKart({ urun, kampanya, imageSizes }: UrunKartProps) 
           </div>
         </div>
 
-        {user ? (
+        {user && fiyatGorunur ? (
           <button
             type="button"
             onClick={() => { void handleSepeteEkle().catch(() => { /* SepetContext hata mesajını gösterir. */ }) }}

@@ -4,7 +4,8 @@ import { Check, ChevronDown } from 'lucide-react'
 import { variantPopupPosition } from '../lib/product-variants'
 import { formatPrice } from '../lib/currency'
 
-interface VariantOption { id: string; label: string; price: number }
+interface VariantOption { id: string; label: string; price: number | null }
+const priceText = (price: number | null) => price === null ? null : formatPrice(price)
 interface VariantSelectProps {
   options: VariantOption[]
   selectedId: string
@@ -70,12 +71,13 @@ export default function VariantSelect({ options, selectedId, onChange, disabled 
 
   if (!selected) return <div className="product-variant-static">Stok seçiniz</div>
 
-  const label = <><span className="product-variant-label">{selected.label}</span><span className="product-variant-price">{formatPrice(selected.price)}</span></>
+  const selectedPrice = priceText(selected.price)
+  const label = <><span className="product-variant-label">{selected.label}</span>{selectedPrice && <span className="product-variant-price">{selectedPrice}</span>}</>
   if (options.length === 1) return <div className="product-variant-static">{label}</div>
 
   return <>
     <button ref={trigger} type="button" className="product-variant-trigger" disabled={disabled}
-      aria-label={`Paket seçimi: ${selected.label}, ${formatPrice(selected.price)}`}
+      aria-label={`Paket seçimi: ${selected.label}${selectedPrice ? `, ${selectedPrice}` : ''}`}
       aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? id : undefined}
       onClick={() => open ? close() : show()}
       onKeyDown={event => {
@@ -97,7 +99,7 @@ export default function VariantSelect({ options, selectedId, onChange, disabled 
           tabIndex={index === activeIndex ? 0 : -1} className="product-variant-option"
           onClick={() => { onChange(option.id); close(true) }}>
           <span className="product-variant-label">{option.label}</span>
-          <span className="product-variant-price">{formatPrice(option.price)}</span>
+          {option.price !== null && <span className="product-variant-price">{formatPrice(option.price)}</span>}
           <Check size={15} className={option.id === selectedId ? '' : 'invisible'} aria-hidden="true" />
         </button>)}
       </div>, document.body)}
