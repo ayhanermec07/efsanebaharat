@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import SellerInformation from '../components/SellerInformation'
-import { legalDocuments } from '../lib/legal-documents'
+import { legalDocuments, publishedLegalText } from '../lib/legal-documents'
 import Bulunamadi from './Bulunamadi'
 import {useEffect,useState} from 'react'
 import {supabase} from '../lib/supabase'
@@ -9,9 +9,11 @@ export default function YasalBilgiler() {
   const { pathname } = useLocation()
   const document = legalDocuments.find(item => item.path === pathname)
   const [published,setPublished]=useState<Record<string,string>>({})
-  useEffect(()=>{let active=true;void supabase.from('commerce_configuration').select('consumer_ready,documents').eq('id',true).maybeSingle().then(({data})=>{if(active)setPublished(data?.consumer_ready?data.documents:{})});return()=>{active=false}},[])
+  // Yönetimde girilen nihai metin, satış açık olmasa da yayımlanır; satışın
+  // açılması (consumer_ready / business_ready) ayrı bir karardır.
+  useEffect(()=>{let active=true;void supabase.from('commerce_configuration').select('documents').eq('id',true).maybeSingle().then(({data})=>{if(active)setPublished(data?.documents||{})});return()=>{active=false}},[])
   if (!document) return <Bulunamadi />
-  const finalText=published[pathname.slice(1)]
+  const finalText=publishedLegalText(published[pathname.slice(1)])
   if(finalText)return <div className="shop-container py-8 sm:py-12"><article className="mx-auto min-w-0 max-w-3xl space-y-6"><h1 className="break-words text-3xl sm:text-4xl">{document.title}</h1><SellerInformation/><p className="whitespace-pre-wrap break-words text-sm leading-7">{finalText}</p></article></div>
   return <div className="shop-container py-8 sm:py-12">
     <article className="mx-auto min-w-0 max-w-3xl space-y-8">

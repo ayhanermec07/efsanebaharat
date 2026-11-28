@@ -1,6 +1,6 @@
 type Section = { heading: string; paragraphs: string[] }
 export type LegalDocument = {
-  path: string; title: string; audience: 'b2c' | 'all'; missing: string[]; sections: Section[];
+  path: string; title: string; audience: 'b2c' | 'b2b' | 'all'; missing: string[]; sections: Section[];
   sources?: { title: string; url: string }[]
 }
 const consumerSource = { title: 'Ticaret Bakanlığı — Mesafeli sözleşmeler', url: 'https://tuketici.ticaret.gov.tr/yayinlar/tuketici-bilgi-rehberi/mesafeli-sozlesmeler-hakkinda-bilgilendirme' }
@@ -47,4 +47,17 @@ export const legalDocuments: LegalDocument[] = [
     paymentSection,
     { heading: 'Sipariş takibi ve düzeltme', paragraphs: ['Sipariş kaydı oluşmadan önce sepet ve iletişim alanlarını düzeltebilirsiniz. Kayıt oluştuktan sonra Hesabım alanından sipariş durumunu ve havale bilgilerini görüntüleyebilir; değişiklik talebi için satıcıyla sipariş numaranız üzerinden iletişime geçebilirsiniz.', 'E-posta doğrulama ve şifre sıfırlama mesajlarının teslimi, e-posta sağlayıcısı yapılandırılıp doğrulanınca hazır olacaktır.'] },
   ] },
+  { path: '/b2b-satis-kosullari', title: 'Bayi ve Toptan Satış Koşulları', audience: 'b2b', missing: [], sections: [
+    { heading: 'Kapsam', paragraphs: ['Bayi ve XML müşteri hesaplarıyla ticari veya mesleki amaçla yapılan alımlara uygulanacak koşullar yönetim tarafından yayımlandığında bu sayfada yer alır.'] },
+  ] },
 ]
+
+// Yönetimde kaydedilen nihai metni sayfa için hazırlar: taslak işaretli veya
+// çok kısa metinleri yok sayar, sayfa başlığıyla aynı olan büyük harfli ilk satırı atar.
+export function publishedLegalText(text: string | null | undefined): string | null {
+  const value = (text || '').trim()
+  if (value.length < 100 || /NEEDS INFORMATION|Çalışma taslağı/i.test(value)) return null
+  const [first, ...rest] = value.split('\n')
+  const isHeading = first.trim().length > 0 && first.trim() === first.trim().toLocaleUpperCase('tr-TR')
+  return (isHeading ? rest.join('\n') : value).trim()
+}

@@ -14,6 +14,7 @@ const draftLegalTitles: Record<string, string> = {
   '/kvkk': 'KVKK Aydınlatma Metni',
   '/gizlilik': 'Gizlilik Politikası',
   '/islem-rehberi': 'İşlem Rehberi',
+  '/b2b-satis-kosullari': 'Bayi ve Toptan Satış Koşulları',
 }
 
 export function seoForPath(path: string, origin: string) {
