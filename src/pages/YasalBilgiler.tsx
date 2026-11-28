@@ -9,10 +9,13 @@ export default function YasalBilgiler() {
   const { pathname } = useLocation()
   const document = legalDocuments.find(item => item.path === pathname)
   const [published,setPublished]=useState<Record<string,string>>({})
+  const [loaded,setLoaded]=useState(false)
   // Yönetimde girilen nihai metin, satış açık olmasa da yayımlanır; satışın
-  // açılması (consumer_ready / business_ready) ayrı bir karardır.
-  useEffect(()=>{let active=true;void supabase.from('commerce_configuration').select('documents').eq('id',true).maybeSingle().then(({data})=>{if(active)setPublished(data?.documents||{})});return()=>{active=false}},[])
+  // açılması (consumer_ready / business_ready) ayrı bir karardır. Metin gelene
+  // kadar taslak gösterilmez (aksi halde taslak uyarısı kısa süre yanıp söner).
+  useEffect(()=>{let active=true;void Promise.resolve(supabase.from('commerce_configuration').select('documents').eq('id',true).maybeSingle()).then(({data})=>{if(active)setPublished(data?.documents||{})}).catch(()=>{}).finally(()=>{if(active)setLoaded(true)});return()=>{active=false}},[])
   if (!document) return <Bulunamadi />
+  if (!loaded) return <div role="status" className="shop-container py-16 text-center text-sm text-brand-muted">Yükleniyor…</div>
   const finalText=publishedLegalText(published[pathname.slice(1)])
   if(finalText)return <div className="shop-container py-8 sm:py-12"><article className="mx-auto min-w-0 max-w-3xl space-y-6"><h1 className="break-words text-3xl sm:text-4xl">{document.title}</h1><SellerInformation/><p className="whitespace-pre-wrap break-words text-sm leading-7">{finalText}</p></article></div>
   return <div className="shop-container py-8 sm:py-12">
