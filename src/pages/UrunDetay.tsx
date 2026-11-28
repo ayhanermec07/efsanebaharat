@@ -15,6 +15,7 @@ import AccessibleModal from '../components/admin/AccessibleModal'
 import { loadCategories } from '../lib/category-hierarchy'
 import { resolveCategoryTheme } from '../lib/category-artwork'
 import type { CatalogCategory } from '../lib/catalog'
+import { applyProductSeo, clearProductSeo } from '../lib/productSeo'
 
 export default function UrunDetay() {
   const { id } = useParams()
@@ -119,6 +120,25 @@ export default function UrunDetay() {
       loadUrun()
     }
   }, [id, loadUrun])
+
+  useEffect(() => {
+    if (!urun) return
+    const ilkGorsel = urun.urun_gorselleri?.[0]?.gorsel_url || urun.ana_gorsel_url
+    const fiyatlar = (urun.urun_stoklari || []).map((s: any) => Number(s.fiyat)).filter((f: number) => f > 0)
+    applyProductSeo({
+      name: urun.urun_adi,
+      description: urun.aciklama,
+      brand: urun.markalar?.marka_adi,
+      category: urun.kategoriler?.kategori_adi,
+      image: ilkGorsel ? getImageUrl(ilkGorsel) : null,
+      price: fiyatlar.length ? Math.min(...fiyatlar) : null,
+      sku: urun.urun_kodu,
+      gtin: urun.barkod,
+      inStock: (urun.urun_stoklari || []).length > 0,
+      url: new URL(`/urun/${urun.id}`, window.location.origin).href
+    })
+    return clearProductSeo
+  }, [urun])
 
   function selectStok(stok: any) {
     setSecilenStok(stok)

@@ -25,8 +25,16 @@ test('açık mağaza rotaları ayrı başlık, açıklama ve temiz canonical ür
   assert.equal(seoForPath('/kampanyalar', 'https://efsanebaharat.appsgo.cloud').canonical, 'https://efsanebaharat.appsgo.cloud/kampanyalar')
 })
 
-test('hesap, ödeme, yönetim, bilinmeyen ve ürün detay yolları indekslenmez', () => {
-  for (const route of ['/admin', '/admin/siparisler', '/hesabim', '/sepet', '/odeme-basarili', '/urun/123', '/bilinmeyen']) {
+test('ürün detayları Google\'a açıktır ve kendi canonical adresini taşır', () => {
+  const seo = seoForPath('/urun/abc-123', 'https://www.efsanebaharat.com')
+  assert.equal(seo.robots, 'index,follow')
+  assert.equal(seo.canonical, 'https://www.efsanebaharat.com/urun/abc-123')
+  const robotsTxt = readFileSync(path.join(root, 'public/robots.txt'), 'utf8')
+  assert.ok(!/Disallow:\s*\/urun\//.test(robotsTxt), 'robots.txt ürün sayfalarını engellememeli')
+})
+
+test('hesap, ödeme, yönetim ve bilinmeyen yollar indekslenmez', () => {
+  for (const route of ['/admin', '/admin/siparisler', '/hesabim', '/sepet', '/odeme-basarili', '/urun/123/ek', '/bilinmeyen']) {
     const seo = seoForPath(route, 'https://efsanebaharat.appsgo.cloud')
     assert.equal(seo.robots, 'noindex,nofollow', route)
     assert.equal(seo.canonical, null, route)

@@ -10,6 +10,5 @@ Disallow: /bayi-
 Disallow: /xml-
 Disallow: /odeme-
 Disallow: /sorularim
-Disallow: /urun/
 
 Sitemap: https://www.efsanebaharat.com/sitemap.xml

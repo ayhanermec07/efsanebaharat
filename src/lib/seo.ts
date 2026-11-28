@@ -25,8 +25,16 @@ export function seoForPath(path: string, origin: string) {
     robots: 'index,follow'
   }
 
+  // Ürün detayları Google'a açıktır. Başlık/açıklama ürün yüklenince UrunDetay
+  // tarafından ürün adıyla güncellenir (bkz. lib/productSeo.ts).
+  if (/^\/urun\/[^/]+$/.test(normalizedPath)) return {
+    title: 'Ürün | Efsane Baharat',
+    description: 'Efsane Baharat ürününü inceleyin.',
+    canonical: new URL(normalizedPath, origin).href,
+    robots: 'index,follow'
+  }
+
   const title = draftLegalTitles[normalizedPath] || (normalizedPath.startsWith('/admin') ? 'Yönetim' :
-    normalizedPath.startsWith('/urun/') ? 'Ürün Detayı' :
       normalizedPath === '/giris' ? 'Giriş' :
         normalizedPath === '/kayit' ? 'Kayıt' : 'Sayfa')
   return {

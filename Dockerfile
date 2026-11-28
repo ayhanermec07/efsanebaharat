@@ -8,6 +8,8 @@ ARG VITE_SUPABASE_ANON_KEY
 ARG VITE_MEDIA_BASE_URL
 ARG VITE_MEDIA_TRANSFORMS=false
 RUN test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_ANON_KEY" && npm run build
+# Ürün sayfalarını içeren sitemap; katalog okunamazsa sabit sayfalarla devam eder.
+RUN VITE_SUPABASE_URL="$VITE_SUPABASE_URL" VITE_SUPABASE_ANON_KEY="$VITE_SUPABASE_ANON_KEY" node scripts/generate-sitemap.mjs
 
 FROM nginx:1.27-alpine
 ARG VITE_SUPABASE_URL
